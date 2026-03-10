@@ -1,0 +1,4 @@
+cybel-engine provides CMake targets:
+
+    find_package(CybelEngine CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE CybelEngine::CybelEngine)

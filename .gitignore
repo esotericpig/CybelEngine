@@ -1,41 +1,42 @@
-# Prerequisites
-*.d
+# Project files.
+/stock/
 
-# Compiled Object files
-*.slo
+# IDE files.
+.idea/*
+!.idea/cmake.xml
+!.idea/runConfigurations/
+vcpkg_root
+
+# CMake files.
+CMakeUserPresets.json
+
+# Library files.
+*.a
+*.dll
+*.dylib
+*.la
+*.lai
+*.lib
+*.so
+
+# Build files.
+build/
+build_web/
+*.d
+*.dwo
+*.gch
+*.ilk
 *.lo
+*.mod
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
 *.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
 *.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
+*.slo
 *.smod
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
+# Executable files.
+*.app
+*.AppImage
 *.exe
 *.out
-*.app
-
-# debug information files
-*.dwo
