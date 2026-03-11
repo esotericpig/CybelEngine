@@ -41,7 +41,7 @@ message("
 # Project Config
 #===========================================
 set(CYBEL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(CYBEL_CMAKE_IN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CYBEL_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CYBEL_RENDERER_GL OFF)
 set(CYBEL_RENDERER_GLES OFF)
@@ -267,7 +267,7 @@ if(NOT CYBEL_OBJECT_LIB)
   )
 
   configure_package_config_file(
-      "${CYBEL_CMAKE_IN_DIR}/CybelEngineConfig.cmake.in"
+      "${CYBEL_CMAKE_DIR}/CybelEngineConfig.cmake.in"
       "${CMAKE_CURRENT_BINARY_DIR}/CybelEngineConfig.cmake"
       INSTALL_DESTINATION "${CYBEL_INSTALL_CMAKE_DIR}"
   )
