@@ -49,7 +49,7 @@ void InputMan::load_joypads() {
 void InputMan::map_input(input_id_t id,const MapInputCallback& callback) {
   if(id >= id_to_state_.size()) {
     // Growable?
-    if(max_id_ <= 0) {
+    if(max_id_ == 0) {
       const auto new_size = std::max<std::size_t>({id,id_to_state_.size(),1}) << 1;
       id_to_state_.resize(new_size,false);
     }
