@@ -57,13 +57,18 @@ endif()
 #===========================================
 set(CYBEL_CXX_V "20")
 set(CYBEL_SANITIZE_FLAGS "")
+set(CYBEL_FIND_PKG_ARGS "")
 
 if(CYBEL_USE_SANITIZE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  set(CYBEL_SANITIZE_FLAGS
+  list(APPEND CYBEL_SANITIZE_FLAGS
       -O0 -g
       -fsanitize=address,leak,undefined
       -fno-omit-frame-pointer
   )
+endif()
+
+if(CYBEL_USE_CONFIG_PKGS)
+  list(APPEND CYBEL_FIND_PKG_ARGS CONFIG)
 endif()
 
 #===========================================
@@ -154,16 +159,9 @@ if(CYBEL_USE_LIBS)
   if(NOT EMSCRIPTEN)
     find_package(GLEW REQUIRED)
     find_package(OpenGL REQUIRED) # GLU should be included.
-
-    if(CYBEL_USE_CONFIG_PKGS)
-      find_package(SDL2 CONFIG REQUIRED)
-      find_package(SDL2_image CONFIG REQUIRED)
-      find_package(SDL2_mixer CONFIG REQUIRED)
-    else()
-      find_package(SDL2 REQUIRED)
-      find_package(SDL2_image REQUIRED)
-      find_package(SDL2_mixer REQUIRED)
-    endif()
+    find_package(SDL2 ${CYBEL_FIND_PKG_ARGS} REQUIRED)
+    find_package(SDL2_image ${CYBEL_FIND_PKG_ARGS} REQUIRED)
+    find_package(SDL2_mixer ${CYBEL_FIND_PKG_ARGS} REQUIRED)
 
     target_link_libraries(CybelEngine PUBLIC
         GLEW::GLEW
@@ -177,11 +175,7 @@ if(CYBEL_USE_LIBS)
   endif()
 
   if(CYBEL_RENDERER_GLES)
-    if(CYBEL_USE_CONFIG_PKGS)
-      find_package(glm CONFIG REQUIRED)
-    else()
-      find_package(glm REQUIRED)
-    endif()
+    find_package(glm ${CYBEL_FIND_PKG_ARGS} REQUIRED)
 
     target_link_libraries(CybelEngine PUBLIC
         glm::glm
