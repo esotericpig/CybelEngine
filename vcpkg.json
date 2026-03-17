@@ -1,18 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
 
-  "name": "cybel-engine",
-  "version": "1.0",
-  "license": "MPL-2.0",
-
-  "homepage": "https://github.com/esotericpig/CybelEngine",
-  "documentation": "https://github.com/esotericpig/CybelEngine",
-  "description": "Cybel Engine is a simple C++20 game engine using SDL2 and OpenGL Legacy/ES.",
-
   "dependencies": [
-    { "name": "vcpkg-cmake"       , "host": true },
-    { "name": "vcpkg-cmake-config", "host": true },
-
     { "name": "glew"      , "platform": "!emscripten" },
     { "name": "opengl"    , "platform": "!emscripten" },
     { "name": "sdl2"      , "platform": "!emscripten", "version>=": "2.32.0" },
