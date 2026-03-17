@@ -52,6 +52,10 @@ else()
   set(CYBEL_RENDERER_GL ON)
 endif()
 
+if(NOT "${CYBEL_CMAKE_DIR}/modules" IN_LIST CMAKE_MODULE_PATH)
+  list(APPEND CMAKE_MODULE_PATH "${CYBEL_CMAKE_DIR}/modules")
+endif()
+
 #===========================================
 # Build Config
 #===========================================
@@ -250,6 +254,9 @@ if(NOT CYBEL_OBJECT_LIB)
       RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
       INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   )
+  install(DIRECTORY "${CYBEL_CMAKE_DIR}/modules"
+      DESTINATION "${CYBEL_INSTALL_CMAKE_DIR}"
+  )
   install(DIRECTORY "${CYBEL_SRC_DIR}/"
       TYPE INCLUDE
       FILES_MATCHING PATTERN "*.h"
@@ -280,36 +287,22 @@ endif()
 #===========================================
 # Custom Targets
 #===========================================
-set(CYBEL_CPPCHECK_DIR "${CMAKE_CURRENT_BINARY_DIR}/cppcheck")
-set(CYBEL_CPPCHECK_BUILD_DIR "${CYBEL_CPPCHECK_DIR}/build")
+if(PROJECT_IS_TOP_LEVEL)
+  include(cybel/Cppcheck)
 
-file(MAKE_DIRECTORY "${CYBEL_CPPCHECK_BUILD_DIR}")
-add_custom_target(cppcheck
-    COMMAND cppcheck
-      --quiet --inline-suppr
-      --enable=all --check-level=exhaustive --inconclusive
-      --platform=native "--language=c++" "--std=c++${CYBEL_CXX_V}"
-
-      "--relative-paths=${CMAKE_CURRENT_SOURCE_DIR}"
-      "--checkers-report=${CYBEL_CPPCHECK_DIR}/checkers_report.txt"
-      "--cppcheck-build-dir=${CYBEL_CPPCHECK_BUILD_DIR}"
-
-      --suppress=checkersReport
-      --suppress=functionConst
-      --suppress=functionStatic
-      --suppress=missingInclude
-      --suppress=missingIncludeSystem
-#      "--suppress=noExplicitConstructor:src/cybel/types/"
-      --suppress=shadowFunction
-      --suppress=unknownMacro # For Emscripten: EM_ASM(), etc.
-      --suppress=unmatchedSuppression
-      --suppress=unusedFunction
-#      --suppress=unusedPrivateFunction
-
-#      "-I=${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include"
-#      "${CYBEL_SRC_DIR}"
-      "--project=${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    USES_TERMINAL
-    VERBATIM
-)
+  cybel_add_cppcheck_target(
+      CXX_V "${CYBEL_CXX_V}"
+      ARGS
+        --suppress=checkersReport
+        --suppress=functionConst
+        --suppress=functionStatic
+        --suppress=missingInclude
+        --suppress=missingIncludeSystem
+#        "--suppress=noExplicitConstructor:src/cybel/types/"
+        --suppress=shadowFunction
+        --suppress=unknownMacro # For Emscripten: EM_ASM(), etc.
+        --suppress=unmatchedSuppression
+        --suppress=unusedFunction
+#        --suppress=unusedPrivateFunction
+  )
+endif()
