@@ -1,8 +1,8 @@
 /*
- * This file is part of EkoScape.
+ * This file is part of Cybel Engine.
  * Copyright (c) 2025 Bradley Whited
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 #ifndef CYBEL_INPUT_GAME_CTRL_H_
