@@ -20,8 +20,7 @@ CMakeUserPresets.json
 *.so
 
 # Build files.
-build/
-build_web/
+/build/
 *.d
 *.dwo
 *.gch

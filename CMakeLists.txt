@@ -54,6 +54,7 @@ endif()
 
 if(NOT "${CYBEL_CMAKE_DIR}/modules" IN_LIST CMAKE_MODULE_PATH)
   list(APPEND CMAKE_MODULE_PATH "${CYBEL_CMAKE_DIR}/modules")
+  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
 endif()
 
 #===========================================
@@ -288,7 +289,7 @@ endif()
 # Custom Targets
 #===========================================
 if(PROJECT_IS_TOP_LEVEL)
-  include(cybel/Cppcheck)
+  include(cybel/CustomTargets)
 
   cybel_add_cppcheck_target(
       CXX_V "${CYBEL_CXX_V}"
