@@ -16,21 +16,7 @@ Duration Duration::from_millis(double millis) noexcept { return Duration{}.set_f
 Duration Duration::from_secs(double secs) noexcept { return Duration{}.set_from_secs(secs); }
 
 Duration::Duration(double value) noexcept
-  : value_(value) {}
-
-bool Duration::operator<(const Duration& other) const { return value_ < other.value_; }
-
-bool Duration::operator<=(const Duration& other) const { return value_ <= other.value_; }
-
-bool Duration::operator==(const Duration& other) const { return value_ == other.value_; }
-
-bool Duration::operator!=(const Duration& other) const { return value_ != other.value_; }
-
-bool Duration::operator>(const Duration& other) const { return value_ > other.value_; }
-
-bool Duration::operator>=(const Duration& other) const { return value_ >= other.value_; }
-
-auto Duration::operator<=>(const Duration& other) const { return value_ <=> other.value_; }
+  : value_{value} {}
 
 Duration Duration::operator+(const Duration& other) const { return Duration{value_ + other.value_}; }
 
@@ -81,7 +67,7 @@ Duration& Duration::set_from_millis(double millis) {
 }
 
 Duration& Duration::set_from_secs(double secs) {
-  value_ = secs * 1000;
+  value_ = secs * 1'000;
 
   return *this;
 }
@@ -94,7 +80,7 @@ Duration& Duration::set_to_zero() {
 
 double Duration::millis() const { return value_; }
 
-double Duration::secs() const { return value_ / 1000.0; }
+double Duration::secs() const { return value_ / 1'000.0; }
 
 std::uint32_t Duration::round_millis() const { return static_cast<std::uint32_t>(std::round(millis())); }
 

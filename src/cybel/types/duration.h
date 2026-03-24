@@ -21,13 +21,7 @@ public:
 
   explicit Duration() noexcept = default;
 
-  bool operator<(const Duration& other) const;
-  bool operator<=(const Duration& other) const;
-  bool operator==(const Duration& other) const;
-  bool operator!=(const Duration& other) const;
-  bool operator>(const Duration& other) const;
-  bool operator>=(const Duration& other) const;
-  auto operator<=>(const Duration& other) const;
+  auto operator<=>(const Duration& other) const = default;
 
   Duration operator+(const Duration& other) const;
   Duration& operator+=(const Duration& other);
@@ -54,9 +48,7 @@ public:
   std::uint32_t whole_secs() const;
 
 private:
-  /**
-   * Milliseconds, but made the name generic in case change it in the future.
-   */
+  /// Milliseconds, but made the name generic in case change it in the future.
   double value_ = 0;
 
   explicit Duration(double value) noexcept;
