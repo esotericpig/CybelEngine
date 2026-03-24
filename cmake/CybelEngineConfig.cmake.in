@@ -7,7 +7,7 @@
 
 include(CMakeFindDependencyMacro)
 
-set(CYBEL_FIND_PKG_ARGS @CYBEL_FIND_PKG_ARGS@)
+set(CYBEL_FIND_PKG_CONFIG @CYBEL_FIND_PKG_CONFIG@)
 set(CYBEL_RENDERER_GLES @CYBEL_RENDERER_GLES@)
 
 if(NOT "${CMAKE_CURRENT_LIST_DIR}/modules" IN_LIST CMAKE_MODULE_PATH)
@@ -17,13 +17,13 @@ endif()
 if(NOT EMSCRIPTEN)
   find_dependency(GLEW)
   find_dependency(OpenGL)
-  find_dependency(SDL2 ${CYBEL_FIND_PKG_ARGS})
-  find_dependency(SDL2_image ${CYBEL_FIND_PKG_ARGS})
-  find_dependency(SDL2_mixer ${CYBEL_FIND_PKG_ARGS})
+  find_dependency(SDL2 ${CYBEL_FIND_PKG_CONFIG})
+  find_dependency(SDL2_image ${CYBEL_FIND_PKG_CONFIG})
+  find_dependency(SDL2_mixer ${CYBEL_FIND_PKG_CONFIG})
 endif()
 
 if(CYBEL_RENDERER_GLES)
-  find_dependency(glm ${CYBEL_FIND_PKG_ARGS})
+  find_dependency(glm ${CYBEL_FIND_PKG_CONFIG})
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/CybelEngineTargets.cmake")

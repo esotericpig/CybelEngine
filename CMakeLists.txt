@@ -21,20 +21,22 @@ option(CYBEL_USE_CONFIG_PKGS
     "Use CONFIG in find_package()? (ON to use vcpkg libs; OFF to use system libs only.)"
     ON
 )
+
 set(CYBEL_RENDERER "GL" CACHE STRING "Desktop Renderer to use: GL or GLES.")
 set_property(CACHE CYBEL_RENDERER PROPERTY STRINGS "GL" "GLES")
 
 message("
 [CybelEngine::UserConfig]
-    CMAKE_TOOLCHAIN_FILE:           '${CMAKE_TOOLCHAIN_FILE}'
-    VCPKG_CHAINLOAD_TOOLCHAIN_FILE: '${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}'
-    VCPKG_TARGET_TRIPLET:           '${VCPKG_TARGET_TRIPLET}'
+  CMAKE_TOOLCHAIN_FILE:           '${CMAKE_TOOLCHAIN_FILE}'
+  VCPKG_CHAINLOAD_TOOLCHAIN_FILE: '${VCPKG_CHAINLOAD_TOOLCHAIN_FILE}'
+  VCPKG_TARGET_TRIPLET:           '${VCPKG_TARGET_TRIPLET}'
 
-    CYBEL_OBJECT_LIB?               ${CYBEL_OBJECT_LIB}
-    CYBEL_USE_SANITIZE?             ${CYBEL_USE_SANITIZE}
-    CYBEL_USE_LIBS?                 ${CYBEL_USE_LIBS}
-    CYBEL_USE_CONFIG_PKGS?          ${CYBEL_USE_CONFIG_PKGS}
-    CYBEL_RENDERER:                 '${CYBEL_RENDERER}'
+  CYBEL_OBJECT_LIB?               ${CYBEL_OBJECT_LIB}
+  CYBEL_USE_SANITIZE?             ${CYBEL_USE_SANITIZE}
+  CYBEL_USE_LIBS?                 ${CYBEL_USE_LIBS}
+  CYBEL_USE_CONFIG_PKGS?          ${CYBEL_USE_CONFIG_PKGS}
+
+  CYBEL_RENDERER:                 '${CYBEL_RENDERER}'
 ")
 
 #===========================================
@@ -54,7 +56,10 @@ endif()
 
 if(NOT "${CYBEL_CMAKE_DIR}/modules" IN_LIST CMAKE_MODULE_PATH)
   list(APPEND CMAKE_MODULE_PATH "${CYBEL_CMAKE_DIR}/modules")
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
+
+  if(NOT PROJECT_IS_TOP_LEVEL)
+    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
+  endif()
 endif()
 
 #===========================================
@@ -62,7 +67,7 @@ endif()
 #===========================================
 set(CYBEL_CXX_V "20")
 set(CYBEL_SANITIZE_FLAGS "")
-set(CYBEL_FIND_PKG_ARGS "")
+set(CYBEL_FIND_PKG_CONFIG "")
 
 if(CYBEL_USE_SANITIZE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   list(APPEND CYBEL_SANITIZE_FLAGS
@@ -73,7 +78,7 @@ if(CYBEL_USE_SANITIZE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 if(CYBEL_USE_CONFIG_PKGS)
-  list(APPEND CYBEL_FIND_PKG_ARGS CONFIG)
+  list(APPEND CYBEL_FIND_PKG_CONFIG CONFIG)
 endif()
 
 #===========================================
@@ -164,9 +169,9 @@ if(CYBEL_USE_LIBS)
   if(NOT EMSCRIPTEN)
     find_package(GLEW REQUIRED)
     find_package(OpenGL REQUIRED) # GLU should be included.
-    find_package(SDL2 ${CYBEL_FIND_PKG_ARGS} REQUIRED)
-    find_package(SDL2_image ${CYBEL_FIND_PKG_ARGS} REQUIRED)
-    find_package(SDL2_mixer ${CYBEL_FIND_PKG_ARGS} REQUIRED)
+    find_package(SDL2 ${CYBEL_FIND_PKG_CONFIG} REQUIRED)
+    find_package(SDL2_image ${CYBEL_FIND_PKG_CONFIG} REQUIRED)
+    find_package(SDL2_mixer ${CYBEL_FIND_PKG_CONFIG} REQUIRED)
 
     target_link_libraries(CybelEngine PUBLIC
         GLEW::GLEW
@@ -180,7 +185,7 @@ if(CYBEL_USE_LIBS)
   endif()
 
   if(CYBEL_RENDERER_GLES)
-    find_package(glm ${CYBEL_FIND_PKG_ARGS} REQUIRED)
+    find_package(glm ${CYBEL_FIND_PKG_CONFIG} REQUIRED)
 
     target_link_libraries(CybelEngine PUBLIC
         glm::glm

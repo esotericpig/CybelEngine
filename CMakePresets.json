@@ -22,6 +22,7 @@
         "CYBEL_USE_SANITIZE": false,
         "CYBEL_USE_LIBS": true,
         "CYBEL_USE_CONFIG_PKGS": true,
+
         "CYBEL_RENDERER": "GL"
       }
     },
@@ -32,6 +33,7 @@
 
       "cacheVariables": {
         "CYBEL_USE_SANITIZE": false,
+
         "CYBEL_RENDERER": "GL"
       }
     },
