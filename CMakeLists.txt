@@ -72,7 +72,7 @@ set(CYBEL_FIND_PKG_CONFIG "")
 if(CYBEL_USE_SANITIZE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   list(APPEND CYBEL_SANITIZE_FLAGS
       -O0 -g
-      -fsanitize=address,leak,undefined
+      "-fsanitize=address,leak,undefined"
       -fno-omit-frame-pointer
   )
 endif()
@@ -100,7 +100,7 @@ endif()
 
 add_library(CybelEngine::CybelEngine ALIAS CybelEngine)
 
-# See: https://cmake.org/cmake/help/latest/guide/importing-exporting/index.html#creating-a-package-version-file
+# - https://cmake.org/cmake/help/latest/guide/importing-exporting/index.html#creating-a-package-version-file
 set_target_properties(CybelEngine PROPERTIES
     COMPATIBLE_INTERFACE_STRING "CybelEngine_MAJOR_VERSION"
     INTERFACE_CybelEngine_MAJOR_VERSION "${PROJECT_VERSION_MAJOR}"
@@ -128,9 +128,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(CybelEngine PRIVATE
-      -finput-charset=UTF-8
+      "-finput-charset=UTF-8"
 
-      $<$<PLATFORM_ID:Linux>:
+      $<$<OR:$<PLATFORM_ID:Linux>,$<PLATFORM_ID:Emscripten>>:
         -Wall -Wconversion -Wextra -Wpedantic -Wsign-conversion -Wundef
         -fno-common
       >
@@ -144,27 +144,33 @@ target_link_options(CybelEngine PRIVATE
     $<$<CONFIG:Debug>:${CYBEL_SANITIZE_FLAGS}>
 )
 
+set(cybel_compile_defs "")
+
 if(EMSCRIPTEN)
-  target_compile_definitions(CybelEngine PUBLIC CYBEL_PLATFORM_WEB)
+  list(APPEND cybel_compile_defs CYBEL_PLATFORM_WEB)
 elseif(APPLE)
-  target_compile_definitions(CybelEngine PUBLIC CYBEL_PLATFORM_MACOS)
+  list(APPEND cybel_compile_defs CYBEL_PLATFORM_MACOS)
 elseif(WIN32)
-  target_compile_definitions(CybelEngine PUBLIC CYBEL_PLATFORM_WINDOWS)
+  list(APPEND cybel_compile_defs CYBEL_PLATFORM_WINDOWS)
 else() # Linux.
-  target_compile_definitions(CybelEngine PUBLIC CYBEL_PLATFORM_LINUX)
+  list(APPEND cybel_compile_defs CYBEL_PLATFORM_LINUX)
 endif()
 
 if(CYBEL_RENDERER_GL)
-  target_compile_definitions(CybelEngine PUBLIC CYBEL_RENDERER_GL)
+  list(APPEND cybel_compile_defs CYBEL_RENDERER_GL)
 elseif(CYBEL_RENDERER_GLES)
-  target_compile_definitions(CybelEngine PUBLIC CYBEL_RENDERER_GLES)
+  list(APPEND cybel_compile_defs CYBEL_RENDERER_GLES)
 endif()
+
+target_compile_definitions(CybelEngine PUBLIC
+  ${cybel_compile_defs}
+)
 
 #===========================================
 # Libraries
 #===========================================
 if(CYBEL_USE_LIBS)
-  # See 'vcpkg.json' & CMake config output for find_package()/link usage.
+  # See `vcpkg.json` & CMake config output for find_package()/link usage.
 
   if(NOT EMSCRIPTEN)
     find_package(GLEW REQUIRED)
@@ -201,48 +207,48 @@ target_include_directories(CybelEngine PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 target_sources(CybelEngine PRIVATE
-    # @glob_src=src:${CYBEL_SRC_DIR}/
-    "${CYBEL_SRC_DIR}/cybel/cybel_engine.cpp"
-    "${CYBEL_SRC_DIR}/cybel/asset/asset_man.cpp"
-    "${CYBEL_SRC_DIR}/cybel/asset/font_atlas_ref.cpp"
-    "${CYBEL_SRC_DIR}/cybel/asset/sprite_ref.cpp"
-    "${CYBEL_SRC_DIR}/cybel/asset/texture_ref.cpp"
-    "${CYBEL_SRC_DIR}/cybel/audio/audio.cpp"
-    "${CYBEL_SRC_DIR}/cybel/audio/audio_player.cpp"
-    "${CYBEL_SRC_DIR}/cybel/audio/music.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/font_atlas.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/image.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/renderer.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/renderer_gl.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/renderer_gles.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/sprite.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/sprite_atlas.cpp"
-    "${CYBEL_SRC_DIR}/cybel/gfx/texture.cpp"
-    "${CYBEL_SRC_DIR}/cybel/input/game_ctrl.cpp"
-    "${CYBEL_SRC_DIR}/cybel/input/input_man.cpp"
-    "${CYBEL_SRC_DIR}/cybel/input/joystick.cpp"
-    "${CYBEL_SRC_DIR}/cybel/io/text_reader.cpp"
-    "${CYBEL_SRC_DIR}/cybel/io/text_reader_buf.cpp"
-    "${CYBEL_SRC_DIR}/cybel/scene/scene_bag.cpp"
-    "${CYBEL_SRC_DIR}/cybel/scene/scene_man.cpp"
-    "${CYBEL_SRC_DIR}/cybel/str/utf8/rune_iterator.cpp"
-    "${CYBEL_SRC_DIR}/cybel/str/utf8/rune_range.cpp"
-    "${CYBEL_SRC_DIR}/cybel/str/utf8/rune_util.cpp"
-    "${CYBEL_SRC_DIR}/cybel/str/utf8/str_util.cpp"
-    "${CYBEL_SRC_DIR}/cybel/stubs/glew_stub.cpp"
-    "${CYBEL_SRC_DIR}/cybel/types/color.cpp"
-    "${CYBEL_SRC_DIR}/cybel/types/cybel_error.cpp"
-    "${CYBEL_SRC_DIR}/cybel/types/duration.cpp"
-    "${CYBEL_SRC_DIR}/cybel/types/range.cpp"
-    "${CYBEL_SRC_DIR}/cybel/ui/ui_box_node.cpp"
-    "${CYBEL_SRC_DIR}/cybel/ui/ui_flex_grid.cpp"
-    "${CYBEL_SRC_DIR}/cybel/ui/ui_quad.cpp"
-    "${CYBEL_SRC_DIR}/cybel/ui/ui_sprite.cpp"
-    "${CYBEL_SRC_DIR}/cybel/ui/ui_texture.cpp"
-    "${CYBEL_SRC_DIR}/cybel/util/rando.cpp"
-    "${CYBEL_SRC_DIR}/cybel/util/timer.cpp"
-    "${CYBEL_SRC_DIR}/cybel/util/util.cpp"
-    "${CYBEL_SRC_DIR}/cybel/vfx/particle.cpp"
+    # @glob_src=src:src/
+    "src/cybel/cybel_engine.cpp"
+    "src/cybel/asset/asset_man.cpp"
+    "src/cybel/asset/font_atlas_ref.cpp"
+    "src/cybel/asset/sprite_ref.cpp"
+    "src/cybel/asset/texture_ref.cpp"
+    "src/cybel/audio/audio.cpp"
+    "src/cybel/audio/audio_player.cpp"
+    "src/cybel/audio/music.cpp"
+    "src/cybel/gfx/font_atlas.cpp"
+    "src/cybel/gfx/image.cpp"
+    "src/cybel/gfx/renderer.cpp"
+    "src/cybel/gfx/renderer_gl.cpp"
+    "src/cybel/gfx/renderer_gles.cpp"
+    "src/cybel/gfx/sprite.cpp"
+    "src/cybel/gfx/sprite_atlas.cpp"
+    "src/cybel/gfx/texture.cpp"
+    "src/cybel/input/game_ctrl.cpp"
+    "src/cybel/input/input_man.cpp"
+    "src/cybel/input/joystick.cpp"
+    "src/cybel/io/text_reader.cpp"
+    "src/cybel/io/text_reader_buf.cpp"
+    "src/cybel/scene/scene_bag.cpp"
+    "src/cybel/scene/scene_man.cpp"
+    "src/cybel/str/utf8/rune_iterator.cpp"
+    "src/cybel/str/utf8/rune_range.cpp"
+    "src/cybel/str/utf8/rune_util.cpp"
+    "src/cybel/str/utf8/str_util.cpp"
+    "src/cybel/stubs/glew_stub.cpp"
+    "src/cybel/types/color.cpp"
+    "src/cybel/types/cybel_error.cpp"
+    "src/cybel/types/duration.cpp"
+    "src/cybel/types/range.cpp"
+    "src/cybel/ui/ui_box_node.cpp"
+    "src/cybel/ui/ui_flex_grid.cpp"
+    "src/cybel/ui/ui_quad.cpp"
+    "src/cybel/ui/ui_sprite.cpp"
+    "src/cybel/ui/ui_texture.cpp"
+    "src/cybel/util/rando.cpp"
+    "src/cybel/util/timer.cpp"
+    "src/cybel/util/util.cpp"
+    "src/cybel/vfx/particle.cpp"
     # @glob_src
 )
 
@@ -250,7 +256,9 @@ target_sources(CybelEngine PRIVATE
 # Install Setup
 #===========================================
 if(NOT CYBEL_OBJECT_LIB)
-  # See: https://cmake.org/cmake/help/latest/guide/importing-exporting/index.html#exporting-targets
+  # See:
+  # - https://cmake.org/cmake/help/latest/guide/importing-exporting/index.html#exporting-targets
+  #
   # TEST: cmake --install build/default --config Debug --prefix build/test_install
 
   install(TARGETS CybelEngine
