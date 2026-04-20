@@ -39,10 +39,9 @@ function(cybel_add_cppcheck_target)
 
   set(bin_dir "${CMAKE_CURRENT_BINARY_DIR}")
   set(cppcheck_dir "${bin_dir}/cppcheck")
-  set(cppcheck_build_dir "${cppcheck_dir}/build")
 
-  if(EXISTS "${bin_dir}" AND NOT EXISTS "${cppcheck_build_dir}")
-    file(MAKE_DIRECTORY "${cppcheck_build_dir}")
+  if(EXISTS "${bin_dir}" AND NOT EXISTS "${cppcheck_dir}/build")
+    file(MAKE_DIRECTORY "${cppcheck_dir}/build")
   endif()
 
   list(APPEND cppcheck_args
@@ -52,7 +51,7 @@ function(cybel_add_cppcheck_target)
 
       "--relative-paths=${CMAKE_CURRENT_SOURCE_DIR}"
       "--checkers-report=${cppcheck_dir}/checkers_report.txt"
-      "--cppcheck-build-dir=${cppcheck_build_dir}"
+      "--cppcheck-build-dir=${cppcheck_dir}/build"
 
       ${arg_ARGS}
 

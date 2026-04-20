@@ -34,7 +34,6 @@ message("
   CYBEL_USE_SANITIZE?             ${CYBEL_USE_SANITIZE}
   CYBEL_USE_LIBS?                 ${CYBEL_USE_LIBS}
   CYBEL_USE_CONFIG_PKGS?          ${CYBEL_USE_CONFIG_PKGS}
-
   CYBEL_RENDERER:                 '${CYBEL_RENDERER}'
 ")
 
