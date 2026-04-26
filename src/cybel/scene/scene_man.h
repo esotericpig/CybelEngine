@@ -20,16 +20,10 @@ namespace cybel {
 
 class SceneMan {
 public:
-  using SceneBuilder = std::function<SceneBag(int type)>;
-  using SceneIniter = std::function<void(Scene&)>;
+  using BuildScene = std::function<SceneBag(int type)>;
+  using OnSceneChange = std::function<void(Scene&)>;
 
-  static inline const SceneBag kEmptySceneBag{
-    Scene::kNilType,
-    std::make_shared<Scene>(), // Current scene should never be null.
-    true,
-  };
-
-  explicit SceneMan(const SceneBuilder& build_scene,const SceneIniter& init_scene);
+  explicit SceneMan(const BuildScene& build_scene,const OnSceneChange& on_scene_change);
 
   bool push_scene(int type);
   bool pop_scene();
@@ -38,13 +32,13 @@ public:
 
   Scene& curr_scene() const;
   int curr_scene_type() const;
-  std::vector<SceneBag>& prev_scene_bags();
+  const std::vector<SceneBag>& prev_scene_bags() const;
 
 private:
-  SceneBuilder build_scene_{};
-  SceneIniter init_scene_{};
+  BuildScene build_scene_{};
+  OnSceneChange on_scene_change_{};
 
-  SceneBag curr_scene_bag_ = kEmptySceneBag;
+  SceneBag curr_scene_bag_ = SceneBag::kEmpty;
   std::vector<SceneBag> prev_scene_bags_{};
 
   void set_scene(SceneBag scene_bag);

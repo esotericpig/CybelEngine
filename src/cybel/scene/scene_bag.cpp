@@ -9,8 +9,11 @@
 
 namespace cybel {
 
-SceneBag::SceneBag(int type,std::shared_ptr<Scene> scene,bool persist)
-  : type(type),scene(std::move(scene)),persist(persist) {}
+const SceneBag SceneBag::kEmpty{
+  .type = Scene::kNilType,
+  .scene = std::make_shared<Scene>(), // Current scene should never be null.
+  .persist = true,
+};
 
 SceneBag::operator bool() const { return static_cast<bool>(scene); }
 

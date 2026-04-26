@@ -10,6 +10,7 @@
 
 #include "cybel/common.h"
 
+#include "cybel/game.h"
 #include "cybel/audio/audio_player.h"
 #include "cybel/gfx/image.h"
 #include "cybel/gfx/renderer.h"
@@ -25,26 +26,24 @@
 
 namespace cybel {
 
-class CybelEngine {
-  /**
-   * This is necessary for RAII, since CybelEngine() ctor can throw an exception.
-   * I decided to do this over using `unique_ptr`s or individual wrappers.
-   */
-  // NOTE: This must be defined first so that its dtor is called last.
-  class Resources {
+class CybelEngine final {
+  // NOTE: The variables in this section must be defined first so that their dtors are called last.
+
+  /// This is necessary for RAII, since CybelEngine() ctor can throw an exception.
+  /// I decided to do this over using `unique_ptr`s or individual wrappers.
+  class Platform {
   public:
-    SDL_Window* window = NULL;
-    SDL_GLContext context = NULL;
+    SDL_Window* window = nullptr;
+    SDL_GLContext context = nullptr;
 
-    explicit Resources() noexcept = default;
+    explicit Platform() noexcept = default;
+    Platform(const Platform& other) = delete;
+    Platform(Platform&& other) noexcept = delete;
+    virtual ~Platform() noexcept;
 
-    Resources(const Resources& other) = delete;
-    Resources(Resources&& other) noexcept = delete;
-    virtual ~Resources() noexcept;
-
-    Resources& operator=(const Resources& other) = delete;
-    Resources& operator=(Resources&& other) noexcept = delete;
-  } res_{};
+    Platform& operator=(const Platform& other) = delete;
+    Platform& operator=(Platform&& other) noexcept = delete;
+  } plat_{}; // Chris Pratt?
 
   std::unique_ptr<AudioPlayer> audio_player_{};
 
@@ -54,30 +53,28 @@ public:
     float scale_factor = 0.0f;
     Size2i size{kFallbackWidth,kFallbackHeight};
     Size2i target_size{0,0};
+
     int fps = kFallbackFps;
     bool vsync = false;
     Color4f clear_color{0.0f,1.0f};
+
     input_id_t max_input_id = 0;
 
-    /**
-     * All:
-     *   IMG_INIT_AVIF | IMG_INIT_JPG  | IMG_INIT_JXL | IMG_INIT_PNG |
-     *   IMG_INIT_TIF  | IMG_INIT_WEBP
-     *
-     * See: https://wiki.libsdl.org/SDL2_image/IMG_Init
-     */
+    /// All:
+    ///   IMG_INIT_AVIF | IMG_INIT_JPG  | IMG_INIT_JXL | IMG_INIT_PNG |
+    ///   IMG_INIT_TIF  | IMG_INIT_WEBP
+    ///
+    /// See: https://wiki.libsdl.org/SDL2_image/IMG_Init
     int image_types = IMG_INIT_PNG;
 
-    /**
-     * All:
-     *   MIX_INIT_FLAC | MIX_INIT_MID  | MIX_INIT_MOD     | MIX_INIT_MP3 |
-     *   MIX_INIT_OGG  | MIX_INIT_OPUS | MIX_INIT_WAVPACK
-     *
-     * For MIDI on Linux, need to install:
-     *   timidity++ libtimidity-devel
-     *
-     * See: https://wiki.libsdl.org/SDL2_mixer/Mix_Init
-     */
+    /// All:
+    ///   MIX_INIT_FLAC | MIX_INIT_MID  | MIX_INIT_MOD     | MIX_INIT_MP3 |
+    ///   MIX_INIT_OGG  | MIX_INIT_OPUS | MIX_INIT_WAVPACK
+    ///
+    /// For MIDI on Linux, need to install:
+    ///   timidity++ libtimidity-devel
+    ///
+    /// See: https://wiki.libsdl.org/SDL2_mixer/Mix_Init
     int music_types = MIX_INIT_OGG;
   };
 
@@ -85,22 +82,17 @@ public:
   static constexpr int kFallbackHeight = 900;
   static constexpr int kFallbackFps = 60;
 
-  explicit CybelEngine(Scene& main_scene,Config config,const SceneMan::SceneBuilder& build_scene);
+  static CybelEngine& init(const Config& config);
 
   CybelEngine(const CybelEngine& other) = delete;
   CybelEngine(CybelEngine&& other) noexcept = delete;
-  virtual ~CybelEngine() noexcept = default;
+  ~CybelEngine() noexcept = default;
 
   CybelEngine& operator=(const CybelEngine& other) = delete;
   CybelEngine& operator=(CybelEngine&& other) noexcept = delete;
 
-  void run_loop();
-  void run_on_web(std::shared_ptr<CybelEngine> cybel_engine);
-  bool run_frame();
+  void run(std::unique_ptr<Game> game);
   void request_stop();
-
-  void on_context_lost();
-  void restore_context();
 
   void sync_size(bool force = true);
   void resize(const Size2i& size,bool force = true);
@@ -123,12 +115,12 @@ public:
   bool is_vsync() const;
   bool is_logic_running() const;
 
-  Renderer& renderer() const;
+  Renderer& renderer();
   const ViewDimens& dimens() const;
-  Scene& main_scene() const;
-  SceneMan& scene_man() const;
-  InputMan& input_man() const;
-  AudioPlayer& audio_player() const;
+  Game& game();
+  SceneMan& scene_man();
+  InputMan& input_man();
+  AudioPlayer& audio_player();
 
   int target_fps() const;
   const Duration& target_dpf() const;
@@ -139,8 +131,6 @@ public:
 private:
   static constexpr float kAvgFpsSmoothing = 0.3f; // Smoothing factor. Usually from 0.1 to 0.3.
 
-  void on_input_event(input_id_t input_id);
-
   std::string title_{};
   int target_fps_ = 0;
   Duration target_dpf_{};
@@ -148,30 +138,44 @@ private:
   bool is_vsync_ = false;
 
   std::unique_ptr<Renderer> renderer_{};
-  Scene& main_scene_;
-  std::unique_ptr<SceneMan> scene_man_{}; // Must be defined after `renderer_`.
+  std::unique_ptr<Game> game_ = std::make_unique<Game>();
+  SceneMan scene_man_{
+    [this](int type) { return game_->build_scene(type); },
+    [this](Scene& scene) { init_scene(scene); },
+  };
   std::unique_ptr<InputMan> input_man_{};
-  InputMan::OnInputEvent on_input_event_ = [&](input_id_t id) { on_input_event(id); };
 
   bool is_running_ = false;
   bool is_logic_running_ = true;
   Timer frame_timer_{};
   FrameStep frame_step_{};
 
-  static Size2i calc_scaled_view(const Size2i& view,float scale_factor,const Size2i& target_size);
+  explicit CybelEngine(Config config);
 
   void init_hints();
   void init_config(Config& config);
+  static Size2i calc_scaled_view(const Size2i& view,float scale_factor,const Size2i& target_size);
   void init_gui(const Config& config);
   void init_context();
   void check_versions();
   void init_scene(Scene& scene);
-  void init_run();
+
+  bool run_frame();
+
+#if defined(__EMSCRIPTEN__)
+  static void run_web_frame(void* user_data);
+
+  static bool on_webgl_context_change(int event_type,const void* reserved,void* user_data);
+#endif // __EMSCRIPTEN__
+
+  void on_context_loss();
+  void on_context_restore();
 
   void start_frame_timer();
   void stop_frame_timer();
   void handle_events();
   void handle_non_context_events_only();
+  void on_input_event(input_id_t input_id);
   void handle_input();
 
   static void show_error_global(const std::string& title,const std::string& error,SDL_Window* window);

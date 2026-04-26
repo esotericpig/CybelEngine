@@ -52,7 +52,7 @@
 #include <SDL2/SDL_mixer.h>
 
 #if defined(CYBEL_RENDERER_GLES)
-  #if defined(CYBEL_PLATFORM_MACOS) || defined(__IPHONEOS__)
+  #if defined(CYBEL_PLATFORM_MACOS)
     #include <OpenGLES/ES3/gl.h>
   #else
     #include <GLES3/gl3.h>

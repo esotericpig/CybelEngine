@@ -23,10 +23,8 @@
 
 namespace cybel {
 
-/**
- * TODO: Touch (finger) input is not implemented seriously for now, but just for fun,
- *       and it currently relies on the joypad logic.
- */
+/// TODO: Touch (finger) input is not implemented seriously for now, but just for fun,
+///       and it currently relies on the joypad logic.
 class InputMan {
 public:
   class InputMapper {
@@ -46,14 +44,14 @@ public:
     input_id_t id_{};
   };
 
-  using MapInputCallback = std::function<void(InputMapper&)>;
+  using WrapMapInput = std::function<void(InputMapper&)>;
   using OnInputEvent = std::function<void(input_id_t id)>;
 
   static inline const InputIds kEmptyIds{};
 
-  explicit InputMan(input_id_t max_id = 0);
+  explicit InputMan(const OnInputEvent& on_input_event,input_id_t max_id = 0);
 
-  void map_input(input_id_t id,const MapInputCallback& callback);
+  void map_input(input_id_t id,const WrapMapInput& wrap);
 
   /// TEST: Only use for testing purposes.
   void use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type);
@@ -61,7 +59,7 @@ public:
   void use_mouse_as_finger();
 
   void begin_input();
-  void handle_event(const SDL_Event& event,const OnInputEvent& on_input_event);
+  void handle_event(const SDL_Event& event);
 
   void set_state(const RawKeyInput& key,bool state);
   void set_state(const SymKeyInput& key,bool state);
@@ -76,10 +74,10 @@ private:
   // About 24% of range: SDL_JOYSTICK_AXIS_MAX(32'767) * 0.24f
   static constexpr Sint16 kJoypadAxisDeadZone = 8'000;
 
+  OnInputEvent on_input_event_{};
   input_id_t max_id_ = 0;
   std::vector<bool> id_to_state_{};
   std::unordered_set<input_id_t> processed_ids_{};
-  OnInputEvent on_input_event_{};
 
   std::unordered_map<RawKeyInput,InputIds,RawKeyInput::Hash> raw_key_to_ids_{};
   std::unordered_map<SymKeyInput,InputIds,SymKeyInput::Hash> sym_key_to_ids_{};

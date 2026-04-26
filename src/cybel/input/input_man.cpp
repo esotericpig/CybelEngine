@@ -11,10 +11,13 @@
 
 namespace cybel {
 
-InputMan::InputMan(input_id_t max_id)
-  : max_id_(max_id),
+InputMan::InputMan(const OnInputEvent& on_input_event,input_id_t max_id)
+  : on_input_event_{on_input_event},
+    max_id_{max_id},
     id_to_state_((max_id > 0) ? (max_id + 1) : 32,false),
     touch_input_to_state_(static_cast<std::size_t>(JoypadInput::kMax),false) {
+  if(!on_input_event_) { throw CybelError{"OnInputEvent is null."}; }
+
   init_joypad();
 }
 
@@ -46,7 +49,7 @@ void InputMan::load_joypads() {
   }
 }
 
-void InputMan::map_input(input_id_t id,const MapInputCallback& callback) {
+void InputMan::map_input(input_id_t id,const WrapMapInput& wrap) {
   if(id >= id_to_state_.size()) {
     // Growable?
     if(max_id_ == 0) {
@@ -60,7 +63,7 @@ void InputMan::map_input(input_id_t id,const MapInputCallback& callback) {
   }
 
   InputMapper mapper{*this,id};
-  callback(mapper);
+  wrap(mapper);
 }
 
 void InputMan::use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type) {
@@ -103,9 +106,7 @@ void InputMan::begin_input() {
   processed_ids_.clear();
 }
 
-void InputMan::handle_event(const SDL_Event& event,const OnInputEvent& on_input_event) {
-  on_input_event_ = on_input_event;
-
+void InputMan::handle_event(const SDL_Event& event) {
   if(is_fake_joypad_ && emit_fake_joypad_events(event)) { return; }
 
   switch(event.type) {

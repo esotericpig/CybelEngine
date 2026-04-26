@@ -16,12 +16,11 @@ namespace cybel {
 
 class SceneBag {
 public:
-  int type = -1;
+  static const SceneBag kEmpty;
+
+  int type = Scene::kNilType;
   std::shared_ptr<Scene> scene{};
   bool persist = false;
-
-  explicit SceneBag() noexcept = default;
-  explicit SceneBag(int type,std::shared_ptr<Scene> scene = nullptr,bool persist = false);
 
   explicit operator bool() const;
   Scene* operator->() const;

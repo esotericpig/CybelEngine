@@ -11,8 +11,12 @@
 
 namespace cybel {
 
-SceneMan::SceneMan(const SceneBuilder& build_scene,const SceneIniter& init_scene)
-  : build_scene_(build_scene),init_scene_(init_scene) {}
+SceneMan::SceneMan(const BuildScene& build_scene,const OnSceneChange& on_scene_change)
+  : build_scene_{build_scene},
+    on_scene_change_{on_scene_change} {
+  if(!build_scene_) { throw CybelError{"BuildScene is null."}; }
+  if(!on_scene_change_) { throw CybelError{"OnSceneChange is null."}; }
+}
 
 bool SceneMan::push_scene(int type) {
   if(type == Scene::kNilType) { return false; }
@@ -23,7 +27,7 @@ bool SceneMan::push_scene(int type) {
   SceneBag prev = curr_scene_bag_;
   set_scene(std::move(scene));
 
-  // Don't push kEmptySceneBag.
+  // Don't push empty scene.
   if(prev.type != Scene::kNilType) {
     if(!prev.persist) { prev.scene = nullptr; }
     prev_scene_bags_.push_back(std::move(prev));
@@ -33,7 +37,7 @@ bool SceneMan::push_scene(int type) {
 }
 
 bool SceneMan::pop_scene() {
-  // Avoid setting scene to kEmptySceneBag over & over.
+  // Avoid setting scene to empty scene over & over.
   if(prev_scene_bags_.empty()) { return false; }
 
   do {
@@ -52,7 +56,7 @@ bool SceneMan::pop_scene() {
     return true; // Success.
   } while(!prev_scene_bags_.empty());
 
-  set_scene(kEmptySceneBag);
+  set_scene(SceneBag::kEmpty);
 
   return false;
 }
@@ -61,7 +65,7 @@ void SceneMan::pop_all_scenes() {
   if(prev_scene_bags_.empty()) { return; }
 
   prev_scene_bags_.clear();
-  set_scene(kEmptySceneBag);
+  set_scene(SceneBag::kEmpty);
 }
 
 bool SceneMan::restart_scene() {
@@ -77,15 +81,15 @@ void SceneMan::set_scene(SceneBag scene_bag) {
   if(!scene_bag.scene) { throw CybelError{"Scene is null."}; }
 
   curr_scene_bag_->on_scene_exit();
-
   curr_scene_bag_ = std::move(scene_bag);
-  init_scene_(*curr_scene_bag_.scene);
+
+  on_scene_change_(*curr_scene_bag_.scene);
 }
 
 Scene& SceneMan::curr_scene() const { return *curr_scene_bag_.scene; }
 
 int SceneMan::curr_scene_type() const { return curr_scene_bag_.type; }
 
-std::vector<SceneBag>& SceneMan::prev_scene_bags() { return prev_scene_bags_; }
+const std::vector<SceneBag>& SceneMan::prev_scene_bags() const { return prev_scene_bags_; }
 
 } // namespace cybel

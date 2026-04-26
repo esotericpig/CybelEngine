@@ -19,112 +19,25 @@
 
 namespace cybel {
 
+CybelEngine& CybelEngine::init(const Config& config) {
+  static CybelEngine cybel_engine{config};
+
 #if defined(__EMSCRIPTEN__)
-
-std::shared_ptr<CybelEngine> g_cybel_engine{};
-
-void run_ems_frame() {
-  if(!g_cybel_engine) { return; }
-
-  try {
-    if(!g_cybel_engine->run_frame()) {
-      std::cout << "[INFO] Stopping gracefully." << std::endl;
-      g_cybel_engine = nullptr;
-      emscripten_cancel_main_loop();
-    }
-  } catch(const CybelError& e) {
-    g_cybel_engine->show_error(e.what());
-    g_cybel_engine = nullptr;
+  if(!cybel_engine.is_running_) {
+    emscripten_set_webglcontextlost_callback("#canvas",&cybel_engine,false,on_webgl_context_change);
+    emscripten_set_webglcontextrestored_callback("#canvas",&cybel_engine,false,on_webgl_context_change);
     emscripten_cancel_main_loop();
+    emscripten_set_main_loop_arg(run_web_frame,&cybel_engine,0,false);
   }
-}
-
-/**
- * To simulate GL context lost & restored in JS:
- *   // On itch.io, select `index.html` or inspect the canvas first.
- *   let gle = Module.canvas.getContext('webgl2').getExtension('WEBGL_lose_context');
- *   gle.loseContext();
- *   gle.restoreContext();
- *
- * See:
- * - https://www.khronos.org/webgl/wiki/HandlingContextLost
- * - https://emscripten.org/docs/api_reference/html5.h.html#id93
- */
-bool on_ems_gl_context_changed(int event_type,const void* /*reserved*/,void* /*user_data*/) {
-  switch(event_type) {
-    case EMSCRIPTEN_EVENT_WEBGLCONTEXTLOST:
-      std::cerr << "[WARN] WebGL context lost." << std::endl;
-      if(g_cybel_engine) { g_cybel_engine->on_context_lost(); }
-      break;
-
-    case EMSCRIPTEN_EVENT_WEBGLCONTEXTRESTORED:
-      if(!g_cybel_engine) {
-        std::cerr << "[WARN] WebGL context restored, but the game was destroyed." << std::endl;
-        break;
-      }
-
-      std::cout << "[INFO] WebGL context restored. Attempting to restore the game." << std::endl;
-      EM_ASM( Module.setStatus("<br>WebGL context restored. Attempting to restore the game...<br><br>"); );
-
-      try {
-        g_cybel_engine->restore_context();
-        EM_ASM( Module.setStatus(""); );
-      } catch(const CybelError& e) {
-        g_cybel_engine->show_error(e.what());
-        g_cybel_engine = nullptr;
-        emscripten_cancel_main_loop();
-      }
-      break;
-  }
-
-  return false;
-}
-
 #endif // __EMSCRIPTEN__
 
-CybelEngine::Resources::~Resources() noexcept {
-  if(context != NULL) {
-    SDL_GL_DeleteContext(context);
-    context = NULL;
-  }
-  if(window != NULL) {
-    SDL_DestroyWindow(window);
-    window = NULL;
-  }
-
-  IMG_Quit();
-  SDL_Quit();
+  return cybel_engine;
 }
 
-Size2i CybelEngine::calc_scaled_view(const Size2i& view,float scale_factor,const Size2i& target_size) {
-  // Scaled size.
-  float sw = static_cast<float>(view.w) * scale_factor;
-  float sh = static_cast<float>(view.h) * scale_factor;
-
-  // If target size set, preserve aspect ratio of target size.
-  if(target_size.w > 0 && target_size.h > 0) {
-    // Aspect ratio.
-    const float ar = static_cast<float>(target_size.w) / static_cast<float>(target_size.h);
-    const float ar_h = std::round(sw / ar);
-
-    if(ar_h <= std::round(sh)) {
-      sh = ar_h; // Adjust height based on width.
-    } else {
-      sw = sh * ar; // Adjust width based on height.
-    }
-  }
-
-  return Size2i{
-    static_cast<int>(std::round(sw)),
-    static_cast<int>(std::round(sh))
-  };
-}
-
-CybelEngine::CybelEngine(Scene& main_scene,Config config,const SceneMan::SceneBuilder& build_scene)
-  : title_(config.title),
-    avg_fps_(static_cast<float>((config.fps > 0) ? config.fps : kFallbackFps)),
-    is_vsync_(config.vsync),
-    main_scene_(main_scene) {
+CybelEngine::CybelEngine(Config config)
+  : title_{config.title},
+    avg_fps_{static_cast<float>((config.fps > 0) ? config.fps : kFallbackFps)},
+    is_vsync_{config.vsync} {
   init_hints();
 
   // Don't use SDL_INIT_AUDIO here, since audio is optional.
@@ -146,11 +59,11 @@ CybelEngine::CybelEngine(Scene& main_scene,Config config,const SceneMan::SceneBu
   renderer_ = std::make_unique<RendererGl>(config.size,config.target_size,config.clear_color);
 #endif
 
-  scene_man_ = std::make_unique<SceneMan>(build_scene,[&](Scene& scene) { init_scene(scene); });
-  input_man_ = std::make_unique<InputMan>(config.max_input_id);
+  input_man_ = std::make_unique<InputMan>(
+    [this](auto id) { on_input_event(id); },
+    config.max_input_id
+  );
   audio_player_ = std::make_unique<AudioPlayer>(config.music_types);
-
-  init_run();
 }
 
 void CybelEngine::init_hints() {
@@ -169,7 +82,7 @@ void CybelEngine::init_config(Config& config) {
   Size2i size = config.size;
 
   // If getting the current display mode fails, we fall back to Config.size.
-  //     Therefore, scale_factor needs to have priority over Config.size.
+  // Therefore, scale_factor needs to have priority over Config.size.
   if(config.scale_factor > 0.0f) {
     SDL_DisplayMode dm{};
 
@@ -194,6 +107,30 @@ void CybelEngine::init_config(Config& config) {
     // Convert from FPS to Duration (millis) Per Frame.
     target_dpf_.set_from_millis(std::round(1000.0 / static_cast<double>(target_fps_)));
   }
+}
+
+Size2i CybelEngine::calc_scaled_view(const Size2i& view,float scale_factor,const Size2i& target_size) {
+  // Scaled size.
+  float sw = static_cast<float>(view.w) * scale_factor;
+  float sh = static_cast<float>(view.h) * scale_factor;
+
+  // If target size set, preserve aspect ratio of target size.
+  if(target_size.w > 0 && target_size.h > 0) {
+    // Aspect ratio.
+    const float ar = static_cast<float>(target_size.w) / static_cast<float>(target_size.h);
+    const float ar_h = std::round(sw / ar);
+
+    if(ar_h <= std::round(sh)) {
+      sh = ar_h; // Adjust height based on width.
+    } else {
+      sw = sh * ar; // Adjust width based on height.
+    }
+  }
+
+  return Size2i{
+    static_cast<int>(std::round(sw)),
+    static_cast<int>(std::round(sh))
+  };
 }
 
 void CybelEngine::init_gui(const Config& config) {
@@ -221,27 +158,27 @@ void CybelEngine::init_gui(const Config& config) {
   // NOTE: There is a bug in SDL2 where SDL_SetWindowResizable() doesn't work to enable receiving resize
   //       events from the browser. We must explicitly pass SDL_WINDOW_RESIZABLE in the flags.
   window_flags |= SDL_WINDOW_RESIZABLE;
-#endif
+#endif // __EMSCRIPTEN__
 
-  // With the SDL_WINDOW_ALLOW_HIGHDPI flag, the size might change after, therefore it's important that
-  //     we call sync_size() later, which we do in init_run().
-  res_.window = SDL_CreateWindow(
+  // With the SDL_WINDOW_ALLOW_HIGHDPI flag, the size might change after.
+  // Therefore, it's important that we call sync_size() later, which we do in run().
+  plat_.window = SDL_CreateWindow(
     title_.c_str(),SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,config.size.w,config.size.h,window_flags
   );
 
-  if(res_.window == NULL) {
+  if(!plat_.window) {
     throw CybelError{"Failed to create window: ",Util::get_sdl_error(),'.'};
   }
 
-  // The SDL_WINDOW_RESIZABLE flag in SDL_CreateWindow() increases the size for some reason
-  //     (even w/o SDL_WINDOW_ALLOW_HIGHDPI), but this explicit call doesn't.
-  SDL_SetWindowResizable(res_.window,SDL_TRUE);
+  // On Desktop, the SDL_WINDOW_RESIZABLE flag in SDL_CreateWindow() increases the size for some reason
+  // (even w/o SDL_WINDOW_ALLOW_HIGHDPI), but this explicit call doesn't.
+  SDL_SetWindowResizable(plat_.window,SDL_TRUE);
 }
 
 void CybelEngine::init_context() {
-  res_.context = SDL_GL_CreateContext(res_.window);
+  plat_.context = SDL_GL_CreateContext(plat_.window);
 
-  if(res_.context == NULL) {
+  if(!plat_.context) {
     throw CybelError{"Failed to create OpenGL context: ",Util::get_sdl_error(),'.'};
   }
 
@@ -258,14 +195,13 @@ void CybelEngine::init_context() {
 void CybelEngine::check_versions() {
 #if defined(__EMSCRIPTEN__)
   // Output Emscripten version because different/newer versions can break the build,
-  //     and Emscripten doesn't store the version anywhere in the generated files.
+  // and Emscripten doesn't store the version anywhere in the generated files.
   std::cout << "[INFO] Emscripten version: " << __EMSCRIPTEN_major__ << '.' << __EMSCRIPTEN_minor__ << '.'
             << __EMSCRIPTEN_tiny__ << '.' << std::endl;
-#endif
+#endif // __EMSCRIPTEN__
 
-  const auto gl_version_cstr = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-  const std::string gl_version = (gl_version_cstr != nullptr)
-                                 ? gl_version_cstr : "Failed to get OpenGL version";
+  const auto* gl_version_cstr = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+  const auto* gl_version = (gl_version_cstr) ? gl_version_cstr : "Failed to get OpenGL version";
 
   std::cout << "[INFO] OpenGL version: " << gl_version << '.' << std::endl;
 
@@ -279,7 +215,7 @@ void CybelEngine::check_versions() {
       "OpenGL version: ",gl_version,'.'
     );
 
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,title_.c_str(),msg.c_str(),res_.window);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING,title_.c_str(),msg.c_str(),plat_.window);
   }
 }
 
@@ -288,46 +224,45 @@ void CybelEngine::init_scene(Scene& scene) {
   scene.resize_scene(*renderer_,renderer_->dimens());
 }
 
-void CybelEngine::init_run() {
+void CybelEngine::run(std::unique_ptr<Game> game) {
+  if(!game) { throw CybelError{"Game is null."}; }
+
+  scene_man_.pop_all_scenes();
+
+  game_ = std::move(game);
   is_running_ = true;
 
-  // No need to init the current scene in scene_man_,
-  //     since it would have already been called on push_scene().
-  main_scene_.init_scene(renderer_->dimens());
+  game_->on_game_start();
+  game_->init_scene(renderer_->dimens());
 
   // Check the size again, due to SDL_WINDOW_ALLOW_HIGHDPI,
-  //     and also need to call the scenes' resize() after init_scene().
+  // and also need to call the scenes' resize() after init_scene().
   sync_size(true);
-}
 
-void CybelEngine::run_loop() { while(run_frame()) {} }
+#if !defined(__EMSCRIPTEN__)
+  while(run_frame()) {}
 
-void CybelEngine::run_on_web([[maybe_unused]] std::shared_ptr<CybelEngine> cybel_engine) {
-#if defined(__EMSCRIPTEN__)
-  g_cybel_engine = std::move(cybel_engine);
-
-  emscripten_set_webglcontextlost_callback("#canvas",nullptr,false,on_ems_gl_context_changed);
-  emscripten_set_webglcontextrestored_callback("#canvas",nullptr,false,on_ems_gl_context_changed);
-  emscripten_set_main_loop(run_ems_frame,0,false);
-#endif
+  std::cout << "[INFO] Stopping gracefully." << std::endl;
+#endif // !__EMSCRIPTEN__
 }
 
 bool CybelEngine::run_frame() {
   if(!is_running_) { return false; }
 
-  if(res_.context == NULL) {
+  if(!plat_.context) {
     // NOTE: Don't sleep or call SDL_Delay()/stop_frame_timer(), since SDL_Delay()/sleep is just a while-loop
     //       in Emscripten, and because requestAnimationFrame() is used, it won't hog the CPU unnecessarily.
     handle_non_context_events_only();
     start_frame_timer();
+
     return is_running_;
   }
 
-  // NOTE: For the Web, we must call stop_frame_timer() here and not at the end of this function.
-  //       I'm not sure of the exact cause, but could be because of double/Uint32 [Duration/SDL_Delay()],
-  //           Chrome's async rendering, and/or Timer [SDL_GetTicks64()].
-  //       I can only recreate it on an older laptop (but with up-to-date software & Fedora Linux) with
-  //           "graphics acceleration" turned off in Chrome.
+  // NOTE: For Web, we must call stop_frame_timer() here and not at the end of this function.
+  //       - I'm not sure of the exact cause, but could be because of double/Uint32 [Duration/SDL_Delay()],
+  //         Chrome's async rendering, and/or Timer [SDL_GetTicks64()].
+  //       - I can only recreate it on an older laptop (but with up-to-date software) with
+  //         "graphics acceleration" turned off in Chrome.
   stop_frame_timer();
   start_frame_timer();
 
@@ -339,62 +274,127 @@ bool CybelEngine::run_frame() {
   if(!is_running_) { return false; }
 
   if(is_logic_running_) {
-    main_scene_.update_scene_logic(frame_step_,renderer_->dimens());
-    const int scene_result = scene_man_->curr_scene().update_scene_logic(frame_step_,renderer_->dimens());
+    game_->update_scene_logic(frame_step_,renderer_->dimens());
+    const int scene_result = scene_man_.curr_scene().update_scene_logic(frame_step_,renderer_->dimens());
 
     if(scene_result != Scene::kNilType) {
-      scene_man_->push_scene(scene_result);
+      scene_man_.push_scene(scene_result);
     }
   }
 
   renderer_->clear_view();
-  main_scene_.draw_scene(*renderer_,renderer_->dimens());
-  scene_man_->curr_scene().draw_scene(*renderer_,renderer_->dimens());
-  SDL_GL_SwapWindow(res_.window);
+  game_->draw_scene(*renderer_,renderer_->dimens());
+  scene_man_.curr_scene().draw_scene(*renderer_,renderer_->dimens());
+  SDL_GL_SwapWindow(plat_.window);
 
   return true;
 }
 
-void CybelEngine::request_stop() { is_running_ = false; }
+#if defined(__EMSCRIPTEN__)
 
-void CybelEngine::on_context_lost() {
-  main_scene_.on_scene_exit();
-  scene_man_->curr_scene().on_scene_exit();
+void CybelEngine::run_web_frame(void* user_data) {
+  if(!user_data) {
+    std::cerr << "[ERROR] User data is null (no CybelEngine) in run_web_frame()." << std::endl;
+    emscripten_cancel_main_loop();
+    return;
+  }
 
-  main_scene_.on_scene_context_lost();
-  scene_man_->curr_scene().on_scene_context_lost();
+  auto& cybel_engine = *static_cast<CybelEngine*>(user_data);
 
-  for(auto& bag : scene_man_->prev_scene_bags()) {
+  try {
+    cybel_engine.run_frame();
+  } catch(const CybelError& e) {
+    cybel_engine.show_error(e.what());
+    cybel_engine.request_stop();
+    emscripten_cancel_main_loop();
+  }
+}
+
+/// To simulate GL context lost & restored in JS:
+///   // On itch.io, select `index.html` or inspect the canvas first.
+///   let gle = Module.canvas.getContext('webgl2').getExtension('WEBGL_lose_context');
+///   gle.loseContext();
+///   gle.restoreContext();
+///
+/// See:
+/// - https://www.khronos.org/webgl/wiki/HandlingContextLost
+/// - https://emscripten.org/docs/api_reference/html5.h.html#id93
+bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const void* reserved,void* user_data) {
+  if(!user_data) {
+    std::cerr << "[ERROR] User data is null (no CybelEngine) in on_webgl_context_change()." << std::endl;
+    emscripten_cancel_main_loop();
+    return false;
+  }
+
+  auto& cybel_engine = *static_cast<CybelEngine*>(user_data);
+
+  switch(event_type) {
+    case EMSCRIPTEN_EVENT_WEBGLCONTEXTLOST:
+      std::cerr << "[WARN] WebGL context lost." << std::endl;
+      cybel_engine.on_context_loss();
+      return true;
+
+    case EMSCRIPTEN_EVENT_WEBGLCONTEXTRESTORED:
+      std::cout << "[INFO] WebGL context restored. Attempting to restore the game." << std::endl;
+      EM_ASM( Module.setStatus("<br>WebGL context restored. Attempting to restore the game...<br><br>"); );
+
+      try {
+        cybel_engine.on_context_restore();
+        EM_ASM( Module.setStatus(""); );
+      } catch(const CybelError& e) {
+        cybel_engine.show_error(e.what());
+        // emscripten_cancel_main_loop();
+      }
+      return true;
+  }
+
+  return false;
+}
+
+#endif // __EMSCRIPTEN__
+
+void CybelEngine::on_context_loss() {
+  game_->on_scene_exit();
+  scene_man_.curr_scene().on_scene_exit();
+
+  game_->on_scene_context_lost();
+  scene_man_.curr_scene().on_scene_context_lost();
+
+  for(auto& bag : scene_man_.prev_scene_bags()) {
     if(bag.scene) { bag.scene->on_scene_context_lost(); }
   }
 
   renderer_->on_context_lost();
-  res_.context = NULL;
+  plat_.context = nullptr;
 }
 
-void CybelEngine::restore_context() {
+void CybelEngine::on_context_restore() {
   init_context();
   renderer_->on_context_restored();
 
-  // NOTE: Must call main scene first so that it can reload textures, etc.
-  main_scene_.on_scene_context_restored();
-  scene_man_->curr_scene().on_scene_context_restored();
+  // NOTE: Must call `game_` first so that it can reload textures, etc.
+  game_->on_scene_context_restored();
+  scene_man_.curr_scene().on_scene_context_restored();
 
-  for(auto& bag : scene_man_->prev_scene_bags()) {
+  for(auto& bag : scene_man_.prev_scene_bags()) {
     if(bag.scene) { bag.scene->on_scene_context_restored(); }
   }
 
-  main_scene_.init_scene(renderer_->dimens());
-  scene_man_->curr_scene().init_scene(renderer_->dimens());
+  game_->init_scene(renderer_->dimens());
+  scene_man_.curr_scene().init_scene(renderer_->dimens());
   sync_size(true); // Call renderer's resize() & scenes' resize_scene().
 
   start_frame_timer(); // Try to set delta time close to 0 to allow player to adjust.
 }
 
+void CybelEngine::request_stop() {
+  is_running_ = false;
+}
+
 void CybelEngine::sync_size(bool force) {
   Size2i size{};
 
-  SDL_GL_GetDrawableSize(res_.window,&size.w,&size.h);
+  SDL_GL_GetDrawableSize(plat_.window,&size.w,&size.h);
   resize(size,force);
 }
 
@@ -404,8 +404,8 @@ void CybelEngine::resize(const Size2i& size,bool force) {
   }
 
   renderer_->resize(size);
-  main_scene_.resize_scene(*renderer_,renderer_->dimens());
-  scene_man_->curr_scene().resize_scene(*renderer_,renderer_->dimens());
+  game_->resize_scene(*renderer_,renderer_->dimens());
+  scene_man_.curr_scene().resize_scene(*renderer_,renderer_->dimens());
 }
 
 void CybelEngine::start_frame_timer() {
@@ -427,14 +427,14 @@ void CybelEngine::stop_frame_timer() {
   const float fps = (mpf > 0.0f) ? (1000.0f / mpf) : 0.0f;
 
   // Exponential Moving Average (EMA) to reduce the effects of hiccups,
-  //     instead of a typical average: avg = (avg + fps) / 2.
+  // instead of a typical average: avg = (avg + fps) / 2.
   avg_fps_ = (avg_fps_ * (1.0f - kAvgFpsSmoothing)) + (fps * kAvgFpsSmoothing);
 }
 
 void CybelEngine::handle_events() {
   SDL_Event event{};
   // Store in a var to prevent re-sizing a bunch of times in the loop (costly),
-  //     while the user is still dragging the window corner/edge.
+  // while the user is still dragging the window corner/edge.
   bool should_resize = false;
 
   while(is_running_ && SDL_PollEvent(&event) != 0) {
@@ -454,7 +454,7 @@ void CybelEngine::handle_events() {
         break;
 
       default:
-        input_man_->handle_event(event,on_input_event_);
+        input_man_->handle_event(event);
         break;
     }
   }
@@ -477,13 +477,13 @@ void CybelEngine::handle_non_context_events_only() {
 }
 
 void CybelEngine::on_input_event(input_id_t input_id) {
-  main_scene_.on_scene_input_event(input_id,renderer_->dimens());
-  scene_man_->curr_scene().on_scene_input_event(input_id,renderer_->dimens());
+  game_->on_scene_input_event(input_id,renderer_->dimens());
+  scene_man_.curr_scene().on_scene_input_event(input_id,renderer_->dimens());
 }
 
 void CybelEngine::handle_input() {
-  main_scene_.handle_scene_input(input_man_->states(),*input_man_,renderer_->dimens());
-  scene_man_->curr_scene().handle_scene_input(input_man_->states(),*input_man_,renderer_->dimens());
+  game_->handle_scene_input(input_man_->states(),*input_man_,renderer_->dimens());
+  scene_man_.curr_scene().handle_scene_input(input_man_->states(),*input_man_,renderer_->dimens());
 }
 
 void CybelEngine::show_error(const std::string& error) const {
@@ -491,11 +491,11 @@ void CybelEngine::show_error(const std::string& error) const {
 }
 
 void CybelEngine::show_error(const std::string& title,const std::string& error) const {
-  show_error_global(title,error,res_.window);
+  show_error_global(title,error,plat_.window);
 }
 
 void CybelEngine::show_error_global(const std::string& title,const std::string& error) {
-  show_error_global(title,error,NULL);
+  show_error_global(title,error,nullptr);
 }
 
 void CybelEngine::show_error_global(const std::string& title,const std::string& error,SDL_Window* window) {
@@ -514,28 +514,26 @@ void CybelEngine::show_error_global(const std::string& title,const std::string& 
   }
 }
 
-void CybelEngine::set_icon(const Image& img) { SDL_SetWindowIcon(res_.window,img.handle_); }
+void CybelEngine::set_icon(const Image& img) { SDL_SetWindowIcon(plat_.window,img.handle_); }
 
-void CybelEngine::set_title(const std::string& title) { SDL_SetWindowTitle(res_.window,title.c_str()); }
+void CybelEngine::set_title(const std::string& title) { SDL_SetWindowTitle(plat_.window,title.c_str()); }
 
 void CybelEngine::reset_title() { set_title(title_); }
 
 void CybelEngine::set_fullscreen(bool fullscreen,bool windowed) {
   const auto result = SDL_SetWindowFullscreen(
-    res_.window,
+    plat_.window,
     fullscreen ? (windowed ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0
   );
 
   if(result != 0) {
-    const std::string desc = fullscreen ? (windowed ? "windowed fullscreen" : "fullscreen") : "windowed";
+    const auto* desc = fullscreen ? (windowed ? "windowed fullscreen" : "fullscreen") : "windowed";
     std::cerr << "[WARN] Failed to set window to [" << desc << "] with error [" << result << "]: "
               << Util::get_sdl_error() << '.' << std::endl;
   }
 }
 
-void CybelEngine::set_cursor_visible(bool visible) {
-  SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
-}
+void CybelEngine::set_cursor_visible(bool visible) { SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE); }
 
 void CybelEngine::set_vsync(bool enable) {
   if(enable) {
@@ -558,9 +556,8 @@ void CybelEngine::set_logic_running(bool running) { is_logic_running_ = running;
 const std::string& CybelEngine::title() const { return title_; }
 
 bool CybelEngine::is_fullscreen() const {
-  const auto flags = SDL_GetWindowFlags(res_.window);
-
-  return (flags & SDL_WINDOW_FULLSCREEN) || (flags & SDL_WINDOW_FULLSCREEN_DESKTOP);
+  // This also covers SDL_WINDOW_FULLSCREEN_DESKTOP.
+  return (SDL_GetWindowFlags(plat_.window) & SDL_WINDOW_FULLSCREEN);
 }
 
 bool CybelEngine::is_cursor_visible() const { return SDL_ShowCursor(SDL_QUERY) == SDL_ENABLE; }
@@ -569,17 +566,17 @@ bool CybelEngine::is_vsync() const { return is_vsync_; }
 
 bool CybelEngine::is_logic_running() const { return is_logic_running_; }
 
-Renderer& CybelEngine::renderer() const { return *renderer_; }
+Renderer& CybelEngine::renderer() { return *renderer_; }
 
 const ViewDimens& CybelEngine::dimens() const { return renderer_->dimens(); }
 
-Scene& CybelEngine::main_scene() const { return main_scene_; }
+Game& CybelEngine::game() { return *game_; }
 
-SceneMan& CybelEngine::scene_man() const { return *scene_man_; }
+SceneMan& CybelEngine::scene_man() { return scene_man_; }
 
-InputMan& CybelEngine::input_man() const { return *input_man_; }
+InputMan& CybelEngine::input_man() { return *input_man_; }
 
-AudioPlayer& CybelEngine::audio_player() const { return *audio_player_; }
+AudioPlayer& CybelEngine::audio_player() { return *audio_player_; }
 
 int CybelEngine::target_fps() const { return target_fps_; }
 
@@ -590,5 +587,19 @@ const Duration& CybelEngine::dpf() const { return frame_step_.dpf; }
 double CybelEngine::delta_time() const { return frame_step_.delta_time; }
 
 float CybelEngine::avg_fps() const { return avg_fps_; }
+
+CybelEngine::Platform::~Platform() noexcept {
+  if(context) {
+    SDL_GL_DeleteContext(context);
+    context = nullptr;
+  }
+  if(window) {
+    SDL_DestroyWindow(window);
+    window = nullptr;
+  }
+
+  IMG_Quit();
+  SDL_Quit();
+}
 
 } // namespace cybel

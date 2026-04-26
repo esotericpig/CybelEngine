@@ -16,7 +16,7 @@ SpriteAtlas::SpriteAtlas(const Builder& builder)
   : tex_(builder.tex_),
     grid_size_(builder.grid_size_),
     index_to_src_(static_cast<std::size_t>(grid_size_.area()),Pos4f{}) {
-  if(!tex_) { throw CybelError{"Texture is null on SpriteAtlas."}; }
+  if(!tex_) { throw CybelError{"Texture is null."}; }
 
   const int p2 = builder.cell_padding_ * 2;
 
