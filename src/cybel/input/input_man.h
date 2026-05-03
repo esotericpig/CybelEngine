@@ -17,9 +17,9 @@
 #include "cybel/input/key_input.h"
 
 #include <functional>
+#include <initializer_list>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 
 namespace cybel {
 
@@ -68,7 +68,7 @@ public:
   const InputIds& fetch_ids(const RawKeyInput& key) const;
   const InputIds& fetch_ids(const SymKeyInput& key) const;
   const InputIds& fetch_ids(JoypadInput input) const;
-  const std::vector<bool>& states() const;
+  const InputStates& states() const;
 
 private:
   // About 24% of range: SDL_JOYSTICK_AXIS_MAX(32'767) * 0.24f
@@ -76,7 +76,7 @@ private:
 
   OnInputEvent on_input_event_{};
   input_id_t max_id_ = 0;
-  std::vector<bool> id_to_state_{};
+  InputStates id_to_state_{};
   std::unordered_set<input_id_t> processed_ids_{};
 
   std::unordered_map<RawKeyInput,InputIds,RawKeyInput::Hash> raw_key_to_ids_{};
@@ -91,7 +91,7 @@ private:
   bool is_fake_joypad_game_ctrl_ = false;
   FakeJoypadInputType fake_joypad_input_type_{};
 
-  std::vector<bool> touch_input_to_state_{};
+  InputStates touch_input_to_state_{};
 
   void init_joypad();
   void load_joypads();

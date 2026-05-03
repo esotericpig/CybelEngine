@@ -10,15 +10,17 @@
 
 #include "cybel/common.h"
 
-#include "cybel/scene/scene.h"
-
 namespace cybel {
 
-class SceneBag {
+class Scene;
+
+class SceneBag final {
 public:
+  /// Do not use this for your own scene types, else they'll be ignored.
+  static constexpr int kTypeNone = 0;
   static const SceneBag kEmpty;
 
-  int type = Scene::kNilType;
+  int type = kTypeNone;
   std::shared_ptr<Scene> scene{};
   bool persist = false;
 

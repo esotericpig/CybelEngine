@@ -15,10 +15,15 @@
 
 namespace cybel {
 
+class CybelEngine;
+
 class Game : public Scene {
 public:
-  virtual void on_game_start() {}
-  virtual SceneBag build_scene([[maybe_unused]] int type) { return SceneBag{}; }
+  virtual void on_game_start([[maybe_unused]] CybelEngine& engine) {}
+
+  virtual SceneBag build_scene([[maybe_unused]] int type,[[maybe_unused]] SceneContext& ctx) {
+    return SceneBag{};
+  }
 };
 
 } // namespace cybel

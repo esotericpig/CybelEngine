@@ -10,7 +10,6 @@
 
 #include "cybel/common.h"
 
-#include "cybel/scene/scene.h"
 #include "cybel/scene/scene_bag.h"
 
 #include <functional>
@@ -18,28 +17,54 @@
 
 namespace cybel {
 
-class SceneMan {
+class CybelEngine;
+class Scene;
+
+/// Only one scene action can occur per frame and first one wins.
+class SceneMan final {
 public:
   using BuildScene = std::function<SceneBag(int type)>;
   using OnSceneChange = std::function<void(Scene&)>;
 
-  explicit SceneMan(const BuildScene& build_scene,const OnSceneChange& on_scene_change);
+  explicit SceneMan(const BuildScene& build_scene,const OnSceneChange& on_scene_enter,
+                    const OnSceneChange& on_scene_exit);
 
   bool push_scene(int type);
   bool pop_scene();
-  void pop_all_scenes();
+  bool pop_all_scenes();
   bool restart_scene();
 
   Scene& curr_scene() const;
   int curr_scene_type() const;
   const std::vector<SceneBag>& prev_scene_bags() const;
 
+  friend class CybelEngine;
+
 private:
+  enum class Action {
+    kNone,
+    kPushScene,
+    kPopScene,
+    kPopAllScenes,
+    kRestartScene,
+  };
+
   BuildScene build_scene_{};
-  OnSceneChange on_scene_change_{};
+  OnSceneChange on_scene_enter_{};
+  OnSceneChange on_scene_exit_{};
 
   SceneBag curr_scene_bag_ = SceneBag::kEmpty;
   std::vector<SceneBag> prev_scene_bags_{};
+
+  Action action_ = Action::kNone;
+  SceneBag next_scene_bag_{};
+
+  void commit();
+  void commit_push_scene();
+  void commit_pop_scene();
+  void commit_pop_all_scenes();
+  void commit_restart_scene();
+  void cancel();
 
   void set_scene(SceneBag scene_bag);
 };

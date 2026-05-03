@@ -28,8 +28,8 @@ class RendererGles final : public Renderer {
 public:
   explicit RendererGles(const Size2i& size,const Size2i& target_size,const Color4f& clear_color);
 
-  void on_context_lost() override;
-  void on_context_restored() override;
+  void on_context_loss() override;
+  void on_context_restore() override;
   void resize(const Size2i& size) override;
 
   Renderer& begin_2d_scene() override;
@@ -57,13 +57,13 @@ public:
 private:
   enum class InfoLogType { kShader,kProgram };
 
-  class Shader {
+  class Shader final {
   public:
     explicit Shader(GLenum type,const std::string& src);
 
     Shader(const Shader& other) = delete;
     Shader(Shader&& other) noexcept = delete;
-    virtual ~Shader() noexcept;
+    ~Shader() noexcept;
 
     Shader& operator=(const Shader& other) = delete;
     Shader& operator=(Shader&& other) noexcept = delete;
@@ -76,14 +76,14 @@ private:
     void destroy() noexcept;
   };
 
-  class Program {
+  class Program final {
   public:
     explicit Program() = default;
     void init(const Shader& vert_shader,const Shader& frag_shader);
 
     Program(const Program& other) = delete;
     Program(Program&& other) noexcept = delete;
-    virtual ~Program() noexcept;
+    ~Program() noexcept;
 
     Program& operator=(const Program& other) = delete;
     Program& operator=(Program&& other) noexcept = delete;
@@ -98,14 +98,14 @@ private:
     void destroy() noexcept;
   };
 
-  class QuadBuffer {
+  class QuadBuffer final {
   public:
     explicit QuadBuffer() = default;
     void init();
 
     QuadBuffer(const QuadBuffer& other) = delete;
     QuadBuffer(QuadBuffer&& other) noexcept;
-    virtual ~QuadBuffer() noexcept;
+    ~QuadBuffer() noexcept;
 
     QuadBuffer& operator=(const QuadBuffer& other) = delete;
     QuadBuffer& operator=(QuadBuffer&& other) noexcept;

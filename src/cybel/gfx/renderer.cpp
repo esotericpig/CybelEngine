@@ -58,9 +58,9 @@ void Renderer::init_context() {
   }
 }
 
-void Renderer::on_context_lost() {}
+void Renderer::on_context_loss() {}
 
-void Renderer::on_context_restored() {
+void Renderer::on_context_restore() {
   Util::clear_gl_errors();
   init_context();
 }

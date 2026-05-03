@@ -39,8 +39,8 @@ void RendererGl::init() {
   }
 }
 
-void RendererGl::on_context_restored() {
-  Renderer::on_context_restored();
+void RendererGl::on_context_restore() {
+  Renderer::on_context_restore();
   init();
 }
 

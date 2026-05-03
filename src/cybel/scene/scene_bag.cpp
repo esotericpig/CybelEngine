@@ -7,10 +7,12 @@
 
 #include "scene_bag.h"
 
+#include "cybel/scene/scene.h"
+
 namespace cybel {
 
 const SceneBag SceneBag::kEmpty{
-  .type = Scene::kNilType,
+  .type = kTypeNone,
   .scene = std::make_shared<Scene>(), // Current scene should never be null.
   .persist = true,
 };

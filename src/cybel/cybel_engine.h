@@ -31,7 +31,7 @@ class CybelEngine final {
 
   /// This is necessary for RAII, since CybelEngine() ctor can throw an exception.
   /// I decided to do this over using `unique_ptr`s or individual wrappers.
-  class Platform {
+  class Platform final {
   public:
     SDL_Window* window = nullptr;
     SDL_GLContext context = nullptr;
@@ -39,7 +39,7 @@ class CybelEngine final {
     explicit Platform() noexcept = default;
     Platform(const Platform& other) = delete;
     Platform(Platform&& other) noexcept = delete;
-    virtual ~Platform() noexcept;
+    ~Platform() noexcept;
 
     Platform& operator=(const Platform& other) = delete;
     Platform& operator=(Platform&& other) noexcept = delete;
@@ -99,7 +99,7 @@ public:
 
   void show_error(const std::string& error) const;
   void show_error(const std::string& title,const std::string& error) const;
-  static void show_error_global(const std::string& title,const std::string& error);
+  static void show_error_no_window(const std::string& title,const std::string& error);
 
   void set_icon(const Image& img);
   void set_title(const std::string& title);
@@ -116,12 +116,12 @@ public:
   bool is_logic_running() const;
 
   Renderer& renderer();
-  const ViewDimens& dimens() const;
-  Game& game();
-  SceneMan& scene_man();
   InputMan& input_man();
   AudioPlayer& audio_player();
+  Game& game();
+  SceneMan& scene_man();
 
+  const ViewDimens& dimens() const;
   int target_fps() const;
   const Duration& target_dpf() const;
   const Duration& dpf() const;
@@ -138,12 +138,14 @@ private:
   bool is_vsync_ = false;
 
   std::unique_ptr<Renderer> renderer_{};
+  std::unique_ptr<InputMan> input_man_{};
+  std::unique_ptr<SceneContext> scene_ctx_{};
   std::unique_ptr<Game> game_ = std::make_unique<Game>();
   SceneMan scene_man_{
-    [this](int type) { return game_->build_scene(type); },
-    [this](Scene& scene) { init_scene(scene); },
+    [this](int type) { return build_scene(type); },
+    [this](Scene& scene) { on_scene_enter(scene); },
+    [this](Scene& scene) { on_scene_exit(scene); },
   };
-  std::unique_ptr<InputMan> input_man_{};
 
   bool is_running_ = false;
   bool is_logic_running_ = true;
@@ -158,7 +160,6 @@ private:
   void init_gui(const Config& config);
   void init_context();
   void check_versions();
-  void init_scene(Scene& scene);
 
   bool run_frame();
 
@@ -171,6 +172,10 @@ private:
   void on_context_loss();
   void on_context_restore();
 
+  SceneBag build_scene(int type);
+  void on_scene_enter(Scene& scene);
+  void on_scene_exit(Scene& scene);
+
   void start_frame_timer();
   void stop_frame_timer();
   void handle_events();
@@ -178,7 +183,7 @@ private:
   void on_input_event(input_id_t input_id);
   void handle_input();
 
-  static void show_error_global(const std::string& title,const std::string& error,SDL_Window* window);
+  static void show_error(const std::string& title,const std::string& error,SDL_Window* window);
 };
 
 } // namespace cybel

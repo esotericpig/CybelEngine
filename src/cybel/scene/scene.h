@@ -14,56 +14,48 @@
 #include "cybel/input/input_man.h"
 #include "cybel/input/input_types.h"
 #include "cybel/types/frame_step.h"
-#include "cybel/types/view_dimens.h"
-
-#include <vector>
 
 namespace cybel {
 
+class SceneContext;
+
 class Scene {
 public:
-  /**
-   * Return this in update_scene_logic() to indicate no scene change (default).
-   * Do not use this for your own scene types, else they'll be ignored.
-   */
-  static constexpr int kNilType = 0;
-
+  explicit Scene() = default;
   virtual ~Scene() noexcept = default;
 
-  virtual void init_scene([[maybe_unused]] const ViewDimens& dimens) {}
+  virtual void on_scene_enter([[maybe_unused]] SceneContext& ctx) {}
+  /// Called when this scene is no longer the current scene (i.e., scene changed).
+  /// Should not delete objects in here (i.e., not a destructor).
+  virtual void on_scene_exit([[maybe_unused]] SceneContext& ctx) {}
 
-  /**
-   * If you know that all of your scenes will only either be in 2D or 3D, then you can call
-   *     begin_2d_scene()/begin_3d_scene() in resize_scene(), instead of in the main loop with draw_scene().
-   * This also applies to: begin_*center(), begin_*scale(), begin_*offset(), etc.
-   */
-  virtual void resize_scene([[maybe_unused]] Renderer& ren,[[maybe_unused]] const ViewDimens& dimens) {}
+  /// If you know that all of your scenes will only either be in 2D or 3D, then you can call
+  /// Renderer.begin_2d_scene()/begin_3d_scene() in here, instead of in the main loop with draw_scene().
+  ///
+  /// This also applies to: begin_*center(), begin_*scale(), begin_*offset(), etc.
+  virtual void on_scene_resize([[maybe_unused]] Renderer& ren,[[maybe_unused]] SceneContext& ctx) {}
 
-  /**
-   * Called when this scene is no longer the current scene (scene changed).
-   * Should not delete objects in here (i.e., not a destructor).
-   */
-  virtual void on_scene_exit() {}
-
-  /**
-   * On WebGL context lost, zombify textures, etc.
-   */
-  virtual void on_scene_context_lost() {}
-
-  /**
-   * On WebGL context restored, reload textures, re-init OpenGL states, etc.
-   */
-  virtual void on_scene_context_restored() {}
+  /// On WebGL context lost, zombify textures, etc.
+  virtual void on_scene_context_loss([[maybe_unused]] SceneContext& ctx) {}
+  /// On WebGL context restored, reload textures, re-init WebGL states, etc.
+  virtual void on_scene_context_restore([[maybe_unused]] SceneContext& ctx) {}
 
   virtual void on_scene_input_event([[maybe_unused]] input_id_t input_id,
-                                    [[maybe_unused]] const ViewDimens& dimens) {}
-  virtual void handle_scene_input([[maybe_unused]] const std::vector<bool>& states,
+                                    [[maybe_unused]] SceneContext& ctx) {}
+  virtual void handle_scene_input([[maybe_unused]] const InputStates& states,
                                   [[maybe_unused]] InputMan& input,
-                                  [[maybe_unused]] const ViewDimens& dimens) {}
+                                  [[maybe_unused]] SceneContext& ctx) {}
 
-  virtual int update_scene_logic([[maybe_unused]] const FrameStep& step,
-                                 [[maybe_unused]] const ViewDimens& dimens) { return kNilType; }
-  virtual void draw_scene([[maybe_unused]] Renderer& ren,[[maybe_unused]] const ViewDimens& dimens) {}
+  virtual void update_scene_logic([[maybe_unused]] const FrameStep& step,
+                                  [[maybe_unused]] SceneContext& ctx) {}
+  virtual void draw_scene([[maybe_unused]] Renderer& ren,[[maybe_unused]] SceneContext& ctx) {}
+
+protected:
+  Scene(const Scene& other) = default;
+  Scene(Scene&& other) noexcept = default;
+
+  Scene& operator=(const Scene& other) = default;
+  Scene& operator=(Scene&& other) noexcept = default;
 };
 
 } // namespace cybel

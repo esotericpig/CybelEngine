@@ -509,11 +509,11 @@ void InputMan::handle_touch_event(JoypadInput input,bool state) {
 }
 
 void InputMan::reset_states() {
-  std::fill(id_to_state_.begin(),id_to_state_.end(),false);
+  std::ranges::fill(id_to_state_,false);
 }
 
 void InputMan::reset_touch_states() {
-  std::fill(touch_input_to_state_.begin(),touch_input_to_state_.end(),false);
+  std::ranges::fill(touch_input_to_state_,false);
   reset_states();
 }
 
@@ -562,7 +562,7 @@ const InputIds& InputMan::fetch_ids(JoypadInput input) const {
   return (it != joypad_input_to_ids_.end()) ? it->second : kEmptyIds;
 }
 
-const std::vector<bool>& InputMan::states() const { return id_to_state_; }
+const InputStates& InputMan::states() const { return id_to_state_; }
 
 InputMan::InputMapper::InputMapper(InputMan& input_man,input_id_t id)
   : input_man_(input_man),id_(id) {}

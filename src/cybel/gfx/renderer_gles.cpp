@@ -145,8 +145,8 @@ void RendererGles::init_prog() {
   }
 }
 
-void RendererGles::on_context_lost() {
-  Renderer::on_context_lost();
+void RendererGles::on_context_loss() {
+  Renderer::on_context_loss();
   prog_.zombify();
   quad_buffer_.zombify();
 
@@ -155,8 +155,8 @@ void RendererGles::on_context_lost() {
   }
 }
 
-void RendererGles::on_context_restored() {
-  Renderer::on_context_restored();
+void RendererGles::on_context_restore() {
+  Renderer::on_context_restore();
   init();
 }
 
