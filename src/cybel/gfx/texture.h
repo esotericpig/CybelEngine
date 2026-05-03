@@ -19,7 +19,7 @@ namespace cybel {
 /**
  * Only supports images with pixel formats: RGB, RGBA, BGR, or BGRA.
  */
-class Texture {
+class Texture final {
 public:
   explicit Texture(Image& img);
   explicit Texture(Image&& img);
@@ -27,7 +27,7 @@ public:
 
   Texture(const Texture& other) = delete;
   Texture(Texture&& other) noexcept;
-  virtual ~Texture() noexcept;
+  ~Texture() noexcept;
 
   Texture& operator=(const Texture& other) = delete;
   Texture& operator=(Texture&& other) noexcept;

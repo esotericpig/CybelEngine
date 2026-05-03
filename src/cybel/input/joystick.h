@@ -12,13 +12,13 @@
 
 namespace cybel {
 
-class Joystick {
+class Joystick final {
 public:
   explicit Joystick() noexcept = default;
 
   Joystick(const Joystick& other) = delete;
   Joystick(Joystick&& other) noexcept;
-  virtual ~Joystick() noexcept;
+  ~Joystick() noexcept;
 
   Joystick& operator=(const Joystick& other) = delete;
   Joystick& operator=(Joystick&& other) noexcept;

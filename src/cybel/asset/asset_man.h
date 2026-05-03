@@ -26,6 +26,7 @@ namespace cybel {
 
 class AssetMan {
 public:
+  explicit AssetMan() = default;
   virtual ~AssetMan() noexcept = default;
 
   TextureRef tex_ref(asset_id_t id);
@@ -40,6 +41,13 @@ public:
 
   virtual Audio* audio([[maybe_unused]] asset_id_t id) { return nullptr; }
   virtual Music* music([[maybe_unused]] asset_id_t id) { return nullptr; }
+
+protected:
+  AssetMan(const AssetMan& other) = default;
+  AssetMan(AssetMan&& other) noexcept = default;
+
+  AssetMan& operator=(const AssetMan& other) = default;
+  AssetMan& operator=(AssetMan&& other) noexcept = default;
 };
 
 } // namespace cybel

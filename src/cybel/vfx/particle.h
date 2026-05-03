@@ -16,34 +16,28 @@
 
 namespace cybel {
 
-/**
- * For birth, you only need to set:
- * - lifespan
- * - pos
- * - (optional) pos_vel
- * - (optional) spin_angle, spin_vel
- * - (optional) baby_size, elder_size
- * - (optional) baby_color, elder_color
- *
- * The rest of the vars are updated by the other functions.
- */
-class Particle {
+/// For birth, you only need to set:
+/// - lifespan
+/// - pos
+/// - (optional) pos_vel
+/// - (optional) spin_angle, spin_vel
+/// - (optional) baby_size, elder_size
+/// - (optional) baby_color, elder_color
+///
+/// The rest of the vars are updated by the other functions.
+class Particle final {
 public:
   float lifespan = 1.0f;
   float age = 0.0f;
   int past_lives = 0;
 
-  /**
-   * Use this for drawing so that the size changes around a center point.
-   * Else, the size fans out towards the bottom right unnaturally.
-   *
-   * For rotation, you should use `pos` instead, since it's the center.
-   */
+  /// Use this for drawing so that the size changes around a center point.
+  /// Else, the size fans out towards the bottom right unnaturally.
+  ///
+  /// For rotation, you should use `pos` instead, since it's the center.
   Pos3f render_pos{};
 
-  /**
-   * This is the center position. Use this for rotation, not for drawing.
-   */
+  /// This is the center position. Use this for rotation, not for drawing.
   Pos3f pos{};
   Pos3f pos_vel{};
   float spin_angle = 0.0f;
@@ -55,8 +49,6 @@ public:
   Color4f color{};
   Color4f baby_color{1.0f};
   Color4f elder_color{1.0f};
-
-  virtual ~Particle() noexcept = default;
 
   Particle& birth();
   Particle& die();

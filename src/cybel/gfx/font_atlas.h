@@ -19,7 +19,7 @@
 
 namespace cybel {
 
-class FontAtlas : public SpriteAtlas {
+class FontAtlas final : public SpriteAtlas {
 public:
   class Builder final {
   public:

@@ -48,6 +48,7 @@ public:
     Size2i grid_size_{};
   };
 
+  explicit SpriteAtlas() = default;
   virtual ~SpriteAtlas() noexcept = default;
 
   void zombify();
@@ -66,6 +67,12 @@ protected:
   std::vector<Pos4f> index_to_src_{};
 
   explicit SpriteAtlas(const Builder& builder);
+
+  SpriteAtlas(const SpriteAtlas& other) = default;
+  SpriteAtlas(SpriteAtlas&& other) noexcept = default;
+
+  SpriteAtlas& operator=(const SpriteAtlas& other) = default;
+  SpriteAtlas& operator=(SpriteAtlas&& other) noexcept = default;
 };
 
 } // namespace cybel

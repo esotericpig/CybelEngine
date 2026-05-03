@@ -18,11 +18,19 @@ namespace cybel {
 
 class UiNode {
 public:
+  explicit UiNode() = default;
   virtual ~UiNode() noexcept = default;
 
   virtual void resize([[maybe_unused]] const Pos3i& pos,[[maybe_unused]] const Size2i& size) {}
   void resize(const Size2i& size) { resize(Pos3i{},size); }
   virtual void draw([[maybe_unused]] Renderer& ren) {}
+
+protected:
+  UiNode(const UiNode& other) = default;
+  UiNode(UiNode&& other) noexcept = default;
+
+  UiNode& operator=(const UiNode& other) = default;
+  UiNode& operator=(UiNode&& other) noexcept = default;
 };
 
 inline auto kUiSpacer = std::make_shared<UiNode>();

@@ -16,7 +16,7 @@
 
 namespace cybel {
 
-class Sprite {
+class Sprite final {
 public:
   static Pos4f build_src(const Texture& tex,const Pos2i& offset,const Size2i& size,int padding = 0);
 
@@ -26,8 +26,6 @@ public:
   explicit Sprite(std::unique_ptr<Texture> tex,const Pos2i& offset,const Size2i& size,int padding = 0);
   explicit Sprite(std::shared_ptr<Texture> tex,int padding = 0);
   explicit Sprite(std::shared_ptr<Texture> tex,const Pos2i& offset,const Size2i& size,int padding = 0);
-
-  virtual ~Sprite() noexcept = default;
 
   void zombify();
 

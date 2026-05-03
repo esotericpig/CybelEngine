@@ -44,7 +44,7 @@ namespace cybel {
  *   audio_player.play_music(nullptr); // No-op, no err, no prob!
  *   @endcode
  */
-class AudioPlayer {
+class AudioPlayer final {
 public:
   /**
    * All:
@@ -60,7 +60,7 @@ public:
 
   AudioPlayer(const AudioPlayer& other) = delete;
   AudioPlayer(AudioPlayer&& other) noexcept = delete;
-  virtual ~AudioPlayer() noexcept;
+  ~AudioPlayer() noexcept;
 
   AudioPlayer& operator=(const AudioPlayer& other) = delete;
   AudioPlayer& operator=(AudioPlayer&& other) noexcept = delete;

@@ -12,13 +12,13 @@
 
 namespace cybel {
 
-class GameCtrl {
+class GameCtrl final {
 public:
   explicit GameCtrl() noexcept = default;
 
   GameCtrl(const GameCtrl& other) = delete;
   GameCtrl(GameCtrl&& other) noexcept;
-  virtual ~GameCtrl() noexcept;
+  ~GameCtrl() noexcept;
 
   GameCtrl& operator=(const GameCtrl& other) = delete;
   GameCtrl& operator=(GameCtrl&& other) noexcept;

@@ -16,13 +16,13 @@ namespace cybel {
 
 class AudioPlayer;
 
-class Audio {
+class Audio final {
 public:
   explicit Audio(const std::filesystem::path& file);
 
   Audio(const Audio& other) = delete;
   Audio(Audio&& other) noexcept;
-  virtual ~Audio() noexcept;
+  ~Audio() noexcept;
 
   Audio& operator=(const Audio& other) = delete;
   Audio& operator=(Audio&& other) noexcept;

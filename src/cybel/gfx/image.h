@@ -21,7 +21,7 @@ namespace cybel {
 class CybelEngine;
 class Texture;
 
-class Image {
+class Image final {
 public:
   using EditPixel = std::function<void(Color4f&)>;
 
@@ -30,7 +30,7 @@ public:
 
   Image(const Image& other) = delete;
   Image(Image&& other) noexcept;
-  virtual ~Image() noexcept;
+  ~Image() noexcept;
 
   Image& operator=(const Image& other) = delete;
   Image& operator=(Image&& other) noexcept;
