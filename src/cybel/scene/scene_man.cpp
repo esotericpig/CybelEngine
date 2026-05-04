@@ -11,29 +11,30 @@
 
 namespace cybel {
 
-SceneMan::SceneMan(const BuildScene& build_scene,const OnSceneChange& on_scene_enter,
-                   const OnSceneChange& on_scene_exit)
-  : build_scene_{build_scene},
-    on_scene_enter_{on_scene_enter},
-    on_scene_exit_{on_scene_exit} {
-  if(!build_scene_) { throw CybelError{"BuildScene is null."}; }
-  if(!on_scene_enter_) { throw CybelError{"OnSceneEnter is null."}; }
-  if(!on_scene_exit_) { throw CybelError{"OnSceneExit is null."}; }
+SceneMan::SceneMan(BuildScene build_scene,OnSceneChange on_scene_enter,OnSceneChange on_scene_exit)
+  : build_scene_{std::move(build_scene)},
+    on_scene_enter_{std::move(on_scene_enter)},
+    on_scene_exit_{std::move(on_scene_exit)} {
+  if(!build_scene_) { throw CybelError{__func__,"(): `build_scene` is empty."}; }
+  if(!on_scene_enter_) { throw CybelError{__func__,"(): `on_scene_enter` is empty."}; }
+  if(!on_scene_exit_) { throw CybelError{__func__,"(): `on_scene_exit` is empty."}; }
 }
 
 bool SceneMan::push_scene(int type) {
-  if(action_ != Action::kNone) { return action_ == Action::kPushScene && next_scene_bag_.type == type; }
+  if(pending_action_ != Action::kNone) {
+    return pending_action_ == Action::kPushScene && pending_scene_bag_.type == type;
+  }
   if(type == SceneBag::kTypeNone) { return false; }
 
-  next_scene_bag_ = build_scene_(type);
-  if(!next_scene_bag_.scene) { return false; }
+  pending_scene_bag_ = build_scene_(type);
+  if(!pending_scene_bag_.scene) { return false; }
 
-  action_ = Action::kPushScene;
+  pending_action_ = Action::kPushScene;
   return true;
 }
 
 bool SceneMan::pop_scene() {
-  if(action_ != Action::kNone) { return action_ == Action::kPopScene; }
+  if(pending_action_ != Action::kNone) { return pending_action_ == Action::kPopScene; }
 
   for(std::size_t i = prev_scene_bags_.size(); i-- > 0;) {
     SceneBag& prev_bag = prev_scene_bags_[i];
@@ -48,7 +49,7 @@ bool SceneMan::pop_scene() {
     }
 
     // Success.
-    action_ = Action::kPopScene;
+    pending_action_ = Action::kPopScene;
     return true;
   }
 
@@ -56,21 +57,21 @@ bool SceneMan::pop_scene() {
 }
 
 bool SceneMan::pop_all_scenes() {
-  if(action_ != Action::kNone) { return action_ == Action::kPopAllScenes; }
+  if(pending_action_ != Action::kNone) { return pending_action_ == Action::kPopAllScenes; }
   if(prev_scene_bags_.empty()) { return true; }
 
-  action_ = Action::kPopAllScenes;
+  pending_action_ = Action::kPopAllScenes;
   return true;
 }
 
 bool SceneMan::restart_scene() {
-  if(action_ != Action::kNone) {
-    return action_ == Action::kRestartScene && next_scene_bag_.type == curr_scene_bag_.type;
+  if(pending_action_ != Action::kNone) {
+    return pending_action_ == Action::kRestartScene && pending_scene_bag_.type == curr_scene_bag_.type;
   }
 
-  next_scene_bag_ = build_scene_(curr_scene_bag_.type);
+  pending_scene_bag_ = build_scene_(curr_scene_bag_.type);
 
-  if(!next_scene_bag_.scene) {
+  if(!pending_scene_bag_.scene) {
     // If we can't restart the scene, then we need to pop this scene off instead.
     std::cerr << "[ERROR] Failed to restart scene [" << curr_scene_bag_.type
               << "]; popping the scene off instead." << std::endl;
@@ -79,12 +80,12 @@ bool SceneMan::restart_scene() {
     return false;
   }
 
-  action_ = Action::kRestartScene;
+  pending_action_ = Action::kRestartScene;
   return true;
 }
 
-void SceneMan::commit() {
-  switch(action_) {
+void SceneMan::commit_pending() {
+  switch(pending_action_) {
     case Action::kNone: return;
 
     case Action::kPushScene:
@@ -101,14 +102,14 @@ void SceneMan::commit() {
       break;
   }
 
-  cancel();
+  cancel_pending(); // Reset.
 }
 
 void SceneMan::commit_push_scene() {
-  if(!next_scene_bag_.scene) { return; }
+  if(!pending_scene_bag_.scene) { return; }
 
   SceneBag prev_bag = curr_scene_bag_;
-  set_scene(std::move(next_scene_bag_)); // `next_scene_bag_` is safely reset in cancel() in commit().
+  set_scene(std::move(pending_scene_bag_));
 
   // Don't store Empty scene.
   if(prev_bag.type != SceneBag::kTypeNone) {
@@ -149,18 +150,18 @@ void SceneMan::commit_pop_all_scenes() {
 }
 
 void SceneMan::commit_restart_scene() {
-  if(!next_scene_bag_.scene) { return; }
+  if(!pending_scene_bag_.scene) { return; }
 
-  set_scene(std::move(next_scene_bag_)); // `next_scene_bag_` is safely reset in cancel() in commit().
+  set_scene(std::move(pending_scene_bag_));
 }
 
-void SceneMan::cancel() {
-  action_ = Action::kNone;
-  next_scene_bag_ = SceneBag{};
+void SceneMan::cancel_pending() {
+  pending_action_ = Action::kNone;
+  pending_scene_bag_ = SceneBag{};
 }
 
 void SceneMan::set_scene(SceneBag scene_bag) {
-  if(!scene_bag.scene) { throw CybelError{"Scene is null."}; }
+  if(!scene_bag.scene) { throw CybelError{__func__,"(): `scene_bag.scene` is null."}; }
 
   on_scene_exit_(*curr_scene_bag_.scene);
   curr_scene_bag_ = std::move(scene_bag);

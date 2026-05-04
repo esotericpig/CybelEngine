@@ -167,7 +167,7 @@ private:
   static void run_web_frame(void* user_data);
 
   static bool on_webgl_context_change(int event_type,const void* reserved,void* user_data);
-#endif // __EMSCRIPTEN__
+#endif
 
   void on_context_loss();
   void on_context_restore();

@@ -26,8 +26,7 @@ public:
   using BuildScene = std::function<SceneBag(int type)>;
   using OnSceneChange = std::function<void(Scene&)>;
 
-  explicit SceneMan(const BuildScene& build_scene,const OnSceneChange& on_scene_enter,
-                    const OnSceneChange& on_scene_exit);
+  explicit SceneMan(BuildScene build_scene,OnSceneChange on_scene_enter,OnSceneChange on_scene_exit);
 
   bool push_scene(int type);
   bool pop_scene();
@@ -56,15 +55,15 @@ private:
   SceneBag curr_scene_bag_ = SceneBag::kEmpty;
   std::vector<SceneBag> prev_scene_bags_{};
 
-  Action action_ = Action::kNone;
-  SceneBag next_scene_bag_{};
+  Action pending_action_ = Action::kNone;
+  SceneBag pending_scene_bag_{};
 
-  void commit();
+  void commit_pending();
   void commit_push_scene();
   void commit_pop_scene();
   void commit_pop_all_scenes();
   void commit_restart_scene();
-  void cancel();
+  void cancel_pending();
 
   void set_scene(SceneBag scene_bag);
 };

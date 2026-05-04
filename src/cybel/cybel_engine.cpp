@@ -224,9 +224,9 @@ void CybelEngine::check_versions() {
 void CybelEngine::run(std::unique_ptr<Game> game) {
   if(!game) { throw CybelError{"Game is null."}; }
 
-  scene_man_.cancel();
+  scene_man_.cancel_pending();
   scene_man_.pop_all_scenes();
-  scene_man_.commit();
+  scene_man_.commit_pending();
 
   game_ = std::move(game);
   is_running_ = true;
@@ -275,7 +275,7 @@ bool CybelEngine::run_frame() {
   if(is_logic_running_) {
     game_->update_scene_logic(frame_step_,*scene_ctx_);
     scene_man_.curr_scene().update_scene_logic(frame_step_,*scene_ctx_);
-    scene_man_.commit();
+    scene_man_.commit_pending();
   }
 
   renderer_->clear_view();
