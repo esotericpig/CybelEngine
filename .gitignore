@@ -21,6 +21,7 @@ CMakeUserPresets.json
 
 # Build files.
 /build/
+
 *.d
 *.dwo
 *.gch
