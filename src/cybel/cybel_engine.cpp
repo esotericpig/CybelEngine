@@ -104,11 +104,7 @@ void CybelEngine::init_config(Config& config) {
   // Allow 0 if the user wants to use delta time only (no delay).
   // - See: stop_frame_timer()
   target_fps_ = (config.fps >= 0) ? config.fps : kFallbackFps;
-
-  if(target_fps_ > 0) { // Avoid divide by 0.
-    // Convert from FPS to Duration (millis) Per Frame.
-    target_dpf_.set_from_millis(std::round(1000.0 / static_cast<double>(target_fps_)));
-  }
+  target_dpf_.set_from_fps(target_fps_); // Avoids divide by 0 internally.
 }
 
 Size2i CybelEngine::calc_scaled_view(const Size2i& view,float scale_factor,const Size2i& target_size) {
@@ -223,10 +219,6 @@ void CybelEngine::check_versions() {
 
 void CybelEngine::run(std::unique_ptr<Game> game) {
   if(!game) { throw CybelError{"Game is null."}; }
-
-  scene_man_.cancel_pending();
-  scene_man_.pop_all_scenes();
-  scene_man_.commit_pending();
 
   game_ = std::move(game);
   is_running_ = true;
@@ -423,19 +415,12 @@ void CybelEngine::start_frame_timer() {
 }
 
 void CybelEngine::stop_frame_timer() {
-  frame_step_.dpf = frame_timer_.peek();
-
-  // If target_dpf_ (target_fps_) is 0, then will use delta time only (no delay).
-  if(frame_step_.dpf < target_dpf_) {
-    SDL_Delay((target_dpf_ - frame_step_.dpf).round_millis());
-  }
+  frame_timer_.sleep_for_fps(target_dpf_);
 
   frame_step_.dpf = frame_timer_.pause();
   frame_step_.delta_time = frame_step_.dpf.secs(); // Delta time should be in fractional seconds.
 
-  const float mpf = static_cast<float>(frame_step_.dpf.millis()); // Milliseconds Per Frame.
-  const float fps = (mpf > 0.0f) ? (1000.0f / mpf) : 0.0f;
-
+  const auto fps = static_cast<float>(frame_step_.dpf.fps());
   // Exponential Moving Average (EMA) to reduce the effects of hiccups,
   // instead of a typical average: avg = (avg + fps) / 2.
   avg_fps_ = (avg_fps_ * (1.0f - kAvgFpsSmoothing)) + (fps * kAvgFpsSmoothing);
@@ -542,7 +527,9 @@ void CybelEngine::set_fullscreen(bool fullscreen,bool windowed) {
   }
 }
 
-void CybelEngine::set_cursor_visible(bool visible) { SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE); }
+void CybelEngine::set_cursor_visible(bool visible) {
+  SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
+}
 
 void CybelEngine::set_vsync(bool enable) {
   if(enable) {

@@ -236,7 +236,6 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/stubs/glew_stub.cpp"
     "src/cybel/types/color.cpp"
     "src/cybel/types/cybel_error.cpp"
-    "src/cybel/types/duration.cpp"
     "src/cybel/types/range.cpp"
     "src/cybel/ui/ui_box_node.cpp"
     "src/cybel/ui/ui_flex_grid.cpp"

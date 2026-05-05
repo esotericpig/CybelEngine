@@ -7,44 +7,59 @@
 
 #include "timer.h"
 
+#include <thread>
+
 namespace cybel {
 
-Timer::timestamp_t Timer::now() { return SDL_GetTicks64(); }
+Timer::time_stamp_t Timer::now() {
+  return clock_t::now();
+}
 
 Timer::Timer(bool start) {
   if(start) { this->start(); }
 }
 
 Timer& Timer::start() {
-  raw_duration_ = 0;
   duration_.set_to_zero();
 
   return resume();
 }
 
+Duration Timer::stop() {
+  const auto dur = pause();
+  duration_.set_to_zero();
+
+  return dur;
+}
+
+const Duration& Timer::pause() {
+  if(is_ticking_) {
+    duration_ += Duration{now() - start_time_}; // Add to duration for resuming.
+    is_ticking_ = false;
+  }
+
+  return duration_;
+}
+
 Timer& Timer::resume() {
-  start_time_ = now();
-  is_paused_ = false;
+  if(!is_ticking_) {
+    is_ticking_ = true;
+    start_time_ = now();
+  }
 
   return *this;
 }
 
-Duration Timer::peek() const {
-  if(is_paused_) { return duration_; }
+void Timer::sleep_for_fps(const Duration& target_fps) {
+  if(!is_ticking_) { return; }
 
-  const auto dur = raw_duration_ + (now() - start_time_); // Add to duration for resuming.
-
-  return Duration::from_millis(static_cast<double>(dur));
+  std::this_thread::sleep_until(start_time_ + target_fps.value_);
 }
 
-const Duration& Timer::pause() {
-  if(!is_paused_) {
-    is_paused_ = true;
-    raw_duration_ += (now() - start_time_); // Add to duration for resuming.
-    duration_.set_from_millis(static_cast<double>(raw_duration_));
-  }
+Duration Timer::peek() const {
+  if(!is_ticking_) { return duration_; }
 
-  return duration_;
+  return duration_ + Duration{now() - start_time_}; // Add to duration for resuming.
 }
 
 const Duration& Timer::duration() const { return duration_; }

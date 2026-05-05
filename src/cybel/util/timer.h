@@ -12,28 +12,34 @@
 
 #include "cybel/types/duration.h"
 
+#include <chrono>
+
 namespace cybel {
 
-class Timer {
+class Timer final {
 public:
   explicit Timer(bool start = false);
 
   Timer& start();
-  Timer& resume();
-  Duration peek() const;
-  const Duration& pause();
+  Duration stop();
 
+  const Duration& pause();
+  Timer& resume();
+
+  void sleep_for_fps(const Duration& target_fps);
+
+  Duration peek() const;
   const Duration& duration() const;
 
 private:
-  using timestamp_t = Uint64;
+  using clock_t = std::chrono::steady_clock;
+  using time_stamp_t = clock_t::time_point;
 
-  timestamp_t start_time_{};
-  bool is_paused_ = true;
-  timestamp_t raw_duration_{};
+  time_stamp_t start_time_{};
+  bool is_ticking_ = false;
   Duration duration_{};
 
-  static timestamp_t now();
+  static time_stamp_t now();
 };
 
 } // namespace cybel
