@@ -9,6 +9,7 @@
 
 #if defined(CYBEL_RENDERER_GLES)
 
+#include "cybel/metrics/metric_man.h"
 #include "cybel/types/cybel_error.h"
 #include "cybel/util/util.h"
 
@@ -17,7 +18,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace cybel {
-
 std::string RendererGles::fetch_info_log(GLuint handle,InfoLogType type) {
   GLint len = 0;
 
@@ -333,9 +333,8 @@ RendererGles::QuadBuffer* RendererGles::quad_buffer(GLuint id,int index) {
   return bag->buffer(index);
 }
 
-RendererGles::Shader::Shader(GLenum type,const std::string& src) {
-  handle_ = glCreateShader(type);
-
+RendererGles::Shader::Shader(GLenum type,const std::string& src)
+  : handle_{glCreateShader(type)} {
   if(handle_ == 0) {
     throw CybelError{"Failed to create GLES shader [",type,"]: ",Util::get_gl_error(glGetError()),'.'};
   }
@@ -525,6 +524,8 @@ void RendererGles::QuadBuffer::zombify() {
 }
 
 void RendererGles::QuadBuffer::draw() {
+  CYBEL_METRICS_COUNT("Draw Quad",1);
+
   glBindVertexArray(vao_);
   glDrawElements(GL_TRIANGLES,kIndices.size(),GL_UNSIGNED_INT,0);
   glBindVertexArray(0); // Unbind VAO.

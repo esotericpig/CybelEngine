@@ -14,6 +14,11 @@ vcpkg_from_github(
 )
 
 set(FEATURE_OPTIONS "")
+vcpkg_check_features(
+    OUT_FEATURE_OPTIONS FEATURE_OPTIONS
+    FEATURES
+      metrics CYBEL_USE_METRICS
+)
 
 if("gles" IN_LIST FEATURES)
   list(APPEND FEATURE_OPTIONS

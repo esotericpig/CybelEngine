@@ -14,12 +14,14 @@ project("CybelEngine"
 # User Config
 #===========================================
 option(CYBEL_OBJECT_LIB "Build as an Object Library?" ON)
-option(CYBEL_USE_SANITIZE "Use sanitizers in Debug build to detect memory leaks?" OFF)
 option(CYBEL_USE_LIBS "Use external libs? (OFF for running standalone custom targets/scripts faster.)" ON)
 option(CYBEL_USE_CONFIG_PKGS
     "Use CONFIG in find_package()? (ON to use vcpkg libs; OFF to use system libs only.)"
     ON
 )
+
+option(CYBEL_USE_SANITIZE "Use sanitizers in Debug build to detect memory leaks?" OFF)
+option(CYBEL_USE_METRICS "Use metrics, such as profiling and draw count?" OFF)
 
 set(CYBEL_RENDERER "GL" CACHE STRING "Desktop Renderer to use: GL or GLES.")
 set_property(CACHE CYBEL_RENDERER PROPERTY STRINGS "GL" "GLES")
@@ -31,9 +33,11 @@ message("
   VCPKG_TARGET_TRIPLET:           '${VCPKG_TARGET_TRIPLET}'
 
   CYBEL_OBJECT_LIB?               ${CYBEL_OBJECT_LIB}
-  CYBEL_USE_SANITIZE?             ${CYBEL_USE_SANITIZE}
   CYBEL_USE_LIBS?                 ${CYBEL_USE_LIBS}
   CYBEL_USE_CONFIG_PKGS?          ${CYBEL_USE_CONFIG_PKGS}
+
+  CYBEL_USE_SANITIZE?             ${CYBEL_USE_SANITIZE}
+  CYBEL_USE_METRICS?              ${CYBEL_USE_METRICS}
   CYBEL_RENDERER:                 '${CYBEL_RENDERER}'
 ")
 
@@ -160,6 +164,10 @@ elseif(CYBEL_RENDERER_GLES)
   list(APPEND cybel_compile_defs CYBEL_RENDERER_GLES)
 endif()
 
+if(CYBEL_USE_METRICS)
+  list(APPEND cybel_compile_defs CYBEL_METRICS)
+endif()
+
 target_compile_definitions(CybelEngine PUBLIC
   ${cybel_compile_defs}
 )
@@ -227,6 +235,7 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/input/joystick.cpp"
     "src/cybel/io/text_reader.cpp"
     "src/cybel/io/text_reader_buf.cpp"
+    "src/cybel/metrics/metric_man.cpp"
     "src/cybel/scene/scene_bag.cpp"
     "src/cybel/scene/scene_man.cpp"
     "src/cybel/str/utf8/rune_iterator.cpp"

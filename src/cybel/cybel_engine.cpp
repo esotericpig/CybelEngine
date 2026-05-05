@@ -7,6 +7,7 @@
 
 #include "cybel_engine.h"
 
+#include "cybel/metrics/metric_man.h"
 #include "cybel/scene/scene_context.h"
 #include "cybel/str/utf8/str_util.h"
 #include "cybel/types/cybel_error.h"
@@ -261,6 +262,9 @@ bool CybelEngine::run_frame() {
   stop_frame_timer();
   start_frame_timer();
 
+  CYBEL_METRICS_END_FRAME();
+  CYBEL_METRICS_PROFILE_SCOPE("Frame");
+
   input_man_->begin_input();
   handle_events();
   handle_input();
@@ -274,10 +278,14 @@ bool CybelEngine::run_frame() {
     scene_man_.commit_pending();
   }
 
-  renderer_->clear_view();
-  game_->draw_scene(*renderer_,*scene_ctx_);
-  scene_man_.curr_scene().draw_scene(*renderer_,*scene_ctx_);
-  SDL_GL_SwapWindow(plat_.window);
+  {
+    CYBEL_METRICS_PROFILE_SCOPE("Render");
+
+    renderer_->clear_view();
+    game_->draw_scene(*renderer_,*scene_ctx_);
+    scene_man_.curr_scene().draw_scene(*renderer_,*scene_ctx_);
+    SDL_GL_SwapWindow(plat_.window);
+  }
 
   return true;
 }

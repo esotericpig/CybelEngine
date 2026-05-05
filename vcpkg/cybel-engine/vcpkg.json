@@ -28,6 +28,9 @@
       "dependencies": [
         { "name": "glm", "version>=": "1.0.0" }
       ]
+    },
+    "metrics": {
+      "description": "Enable metrics, such as profiling and draw count."
     }
   }
 }
