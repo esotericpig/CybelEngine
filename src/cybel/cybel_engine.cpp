@@ -237,6 +237,10 @@ void CybelEngine::run(std::unique_ptr<Game> game) {
 #endif
 }
 
+void CybelEngine::request_stop() {
+  is_running_ = false;
+}
+
 bool CybelEngine::run_frame() {
   if(!is_running_) { return false; }
 
@@ -276,10 +280,6 @@ bool CybelEngine::run_frame() {
   SDL_GL_SwapWindow(plat_.window);
 
   return true;
-}
-
-void CybelEngine::request_stop() {
-  is_running_ = false;
 }
 
 #if defined(__EMSCRIPTEN__)
@@ -378,6 +378,12 @@ void CybelEngine::on_context_restore() {
   sync_size(true); // Call Renderer.resize() & Game/Scene.on_scene_resize().
 
   start_frame_timer(); // Try to set delta time close to 0 to allow player to adjust.
+}
+
+void CybelEngine::nav_back_in_web() {
+#if defined(__EMSCRIPTEN__)
+  EM_ASM( window.history.back(); );
+#endif
 }
 
 SceneBag CybelEngine::build_scene(int type) {

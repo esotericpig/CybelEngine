@@ -93,6 +93,7 @@ public:
 
   void run(std::unique_ptr<Game> game);
   void request_stop();
+  void nav_back_in_web();
 
   void sync_size(bool force = true);
   void resize(const Size2i& size,bool force = true);
@@ -165,7 +166,6 @@ private:
 
 #if defined(__EMSCRIPTEN__)
   static void run_web_frame(void* user_data);
-
   static bool on_webgl_context_change(int event_type,const void* reserved,void* user_data);
 #endif
 
