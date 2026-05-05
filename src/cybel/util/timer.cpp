@@ -16,25 +16,20 @@ Timer::time_stamp_t Timer::now() {
 }
 
 Timer::Timer(bool start) {
-  if(start) { this->start(); }
+  if(start) { restart(); }
 }
 
-Timer& Timer::start() {
+Timer& Timer::restart() {
   duration_.set_to_zero();
+  is_ticking_ = true;
+  start_time_ = now();
 
-  return resume();
-}
-
-Duration Timer::stop() {
-  const auto dur = pause();
-  duration_.set_to_zero();
-
-  return dur;
+  return *this;
 }
 
 const Duration& Timer::pause() {
   if(is_ticking_) {
-    duration_ += Duration{now() - start_time_}; // Add to duration for resuming.
+    duration_.value_ += (now() - start_time_); // Add to duration for resuming.
     is_ticking_ = false;
   }
 

@@ -20,9 +20,7 @@ class Timer final {
 public:
   explicit Timer(bool start = false);
 
-  Timer& start();
-  Duration stop();
-
+  Timer& restart();
   const Duration& pause();
   Timer& resume();
 
