@@ -38,7 +38,6 @@ CybelEngine& CybelEngine::init(const Config& config) {
 
 CybelEngine::CybelEngine(Config config)
   : title_{config.title},
-    avg_fps_{static_cast<float>((config.fps > 0) ? config.fps : kFallbackFps)},
     is_vsync_{config.vsync} {
   init_hints();
 
@@ -434,10 +433,9 @@ void CybelEngine::stop_frame_timer() {
   frame_step_.dpf = frame_timer_.pause();
   frame_step_.delta_time = frame_step_.dpf.secs(); // Delta time should be in fractional seconds.
 
-  const auto fps = static_cast<float>(frame_step_.dpf.fps());
   // Exponential Moving Average (EMA) to reduce the effects of hiccups,
   // instead of a typical average: avg = (avg + fps) / 2.
-  avg_fps_ = (avg_fps_ * (1.0f - kAvgFpsSmoothing)) + (fps * kAvgFpsSmoothing);
+  avg_fps_ = MetricMan::calc_exp_mov_avg(avg_fps_,static_cast<float>(frame_step_.dpf.fps()));
 }
 
 void CybelEngine::handle_events() {

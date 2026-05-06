@@ -130,8 +130,6 @@ public:
   float avg_fps() const;
 
 private:
-  static constexpr float kAvgFpsSmoothing = 0.3f; // Smoothing factor. Usually from 0.1 to 0.3.
-
   std::string title_{};
   int target_fps_ = 0;
   Duration target_dpf_{};

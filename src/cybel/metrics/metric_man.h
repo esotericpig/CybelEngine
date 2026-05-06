@@ -13,6 +13,7 @@
 #include "cybel/types/duration.h"
 #include "cybel/util/timer.h"
 
+#include <functional>
 #include <vector>
 
 #if defined(CYBEL_METRICS)
@@ -60,9 +61,13 @@ public:
     ScopeProfiler& operator=(ScopeProfiler&& other) noexcept = default;
 
   private:
-    MetricMan* metric_man_{};
+    std::reference_wrapper<MetricMan> metric_man_;
     std::size_t id_{};
   };
+
+  static double calc_exp_mov_avg(double em_avg,double new_value);
+  static float calc_exp_mov_avg(float em_avg,float new_value);
+  static Duration calc_exp_mov_avg(const Duration& em_avg,const Duration& new_value);
 
   static MetricMan& it();
 
@@ -84,32 +89,42 @@ public:
 private:
   struct Profiler final {
     std::string name{};
-
     Timer timer{};
-    std::uint32_t count{};
+
     Duration total{};
-    Duration em_avg{}; // Exponential Moving Average.
+    std::uint32_t count{};
+    Duration em_avg{}; /// Exponential Moving Average.
+
+    Duration life_total{};
+    std::uint32_t life_count{};
+    Duration life_em_avg{};
   };
 
   struct Counter final {
     std::string name{};
-
     std::uint32_t count{};
+
     std::uint32_t total{};
-    // Store inside of Counter (instead of in MetricMan), in case add a Counter later after several frames.
     std::uint32_t frame_count{};
+    double em_avg{};
+
+    std::uint32_t life_total{};
+    // Store inside of Counter (instead of in MetricMan), in case add a Counter later after several frames.
+    std::uint32_t life_frame_count{};
+    double life_em_avg{};
   };
 
-  static constexpr double kSmoothingFactor = 0.3; // For Exponential Moving Average.
-  static constexpr Duration kPrintInterval = Duration::from_secs(3.0);
+  /// For Exponential Moving Average. Usually from 0.1 to 0.3.
+  static constexpr float kEmAvgSmoothingFactor = 0.3f;
+  static constexpr Duration kPrintAndResetInterval = Duration::from_secs(3.0);
 
   std::vector<Profiler> profilers_{};
   std::vector<Counter> counters_{};
 
-  Timer print_timer_{};
+  Timer print_and_reset_timer_{true};
   std::size_t max_name_len_ = 1;
 
-  explicit MetricMan();
+  explicit MetricMan() = default;
 
   void begin_profile(std::size_t id);
   void end_profile(std::size_t id);

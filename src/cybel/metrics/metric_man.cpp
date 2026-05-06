@@ -7,19 +7,34 @@
 
 #include "metric_man.h"
 
+#include <algorithm>
 #include <cassert>
 #include <format>
 #include <iostream>
 
 namespace cybel {
 
+double MetricMan::calc_exp_mov_avg(double em_avg,double new_value) {
+  if(em_avg <= 0.0) [[unlikely]] { return new_value; }
+
+  return (em_avg * (1.0 - kEmAvgSmoothingFactor)) + (new_value * kEmAvgSmoothingFactor);
+}
+
+float MetricMan::calc_exp_mov_avg(float em_avg,float new_value) {
+  if(em_avg <= 0.0f) [[unlikely]] { return new_value; }
+
+  return (em_avg * (1.0f - kEmAvgSmoothingFactor)) + (new_value * kEmAvgSmoothingFactor);
+}
+
+Duration MetricMan::calc_exp_mov_avg(const Duration& em_avg,const Duration& new_value) {
+  if(em_avg <= Duration::kZero) [[unlikely]] { return new_value; }
+
+  return (em_avg * (1.0 - kEmAvgSmoothingFactor)) + (new_value * kEmAvgSmoothingFactor);
+}
+
 MetricMan& MetricMan::it() {
   static MetricMan it_{};
   return it_;
-}
-
-MetricMan::MetricMan() {
-  print_timer_.restart();
 }
 
 std::size_t MetricMan::register_profiler(std::string_view name) {
@@ -30,7 +45,7 @@ std::size_t MetricMan::register_profiler(std::string_view name) {
 
   if(name.length() > max_name_len_) { max_name_len_ = name.length(); }
 
-  profilers_.emplace_back(std::string{name});
+  profilers_.push_back({.name = std::string{name}});
   return profilers_.size() - 1;
 }
 
@@ -42,7 +57,7 @@ std::size_t MetricMan::register_counter(std::string_view name) {
 
   if(name.length() > max_name_len_) { max_name_len_ = name.length(); }
 
-  counters_.emplace_back(std::string{name});
+  counters_.push_back({.name = std::string{name}});
   return counters_.size() - 1;
 }
 
@@ -62,76 +77,102 @@ void MetricMan::end_profile(std::size_t id) {
   auto& profiler = profilers_[id];
   const auto& dur = profiler.timer.pause();
 
-  ++profiler.count;
   profiler.total += dur;
+  ++profiler.count;
+  profiler.em_avg = calc_exp_mov_avg(profiler.em_avg,dur);
 
-  if(profiler.em_avg <= Duration::kZero) {
-    profiler.em_avg = dur;
-  } else {
-    profiler.em_avg = (profiler.em_avg * (1.0f - kSmoothingFactor)) + (dur * kSmoothingFactor);
-  }
+  profiler.life_total += dur;
+  ++profiler.life_count;
+  profiler.life_em_avg = calc_exp_mov_avg(profiler.life_em_avg,dur);
 }
 
 void MetricMan::inc_count(std::size_t id,std::uint32_t count) {
   assert(id < counters_.size());
 
-  counters_[id].count += count;
-  counters_[id].total += count;
+  auto& counter = counters_[id];
+  counter.count += count;
+
+  counter.total += count;
+  counter.life_total += count;
 }
 
 void MetricMan::end_frame() {
   if(profilers_.empty() && counters_.empty()) { return; }
 
+  // Set frame data.
   for(auto& counter : counters_) {
     ++counter.frame_count;
+    counter.em_avg = calc_exp_mov_avg(counter.em_avg,counter.count);
+
+    ++counter.life_frame_count;
+    counter.life_em_avg = calc_exp_mov_avg(counter.life_em_avg,counter.count);
   }
 
-  if(print_timer_.peek() >= kPrintInterval) {
-    print_timer_.restart();
+  if(print_and_reset_timer_.peek() >= kPrintAndResetInterval) {
+    print_and_reset_timer_.restart();
 
     std::cout << "[METRICS]\n";
     std::cout << std::format(
-      "  {:<7} , {:<{}} , {:<11} , {:<11} , {:<11}\n",
-      "[Type]","[Name]",max_name_len_,"[Last]","[Avg]","[EMA]"
+      "  {:<7} , {:<{}} , {:<11} , {:<11} , {:<11} , {:<11} , {:<11}\n",
+      "[Type]","[Name]",max_name_len_,"[Last]","[Avg]","[EMA]","[Life Avg]","[Life EMA]"
     );
 
     for(const auto& profiler : profilers_) {
       std::cout << std::format(
-        "  {:<7} , {:<{}} , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms\n",
+        "  {:<7} , {:<{}} , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms\n",
         "[PROF]",
         profiler.name,max_name_len_,
         profiler.timer.duration().millis(),
-        (profiler.total / profiler.count).millis(),
-        profiler.em_avg.millis()
+        (profiler.total / std::max(profiler.count,1u)).millis(),
+        profiler.em_avg.millis(),
+        (profiler.life_total / std::max(profiler.life_count,1u)).millis(),
+        profiler.life_em_avg.millis()
       );
     }
     for(const auto& counter : counters_) {
       std::cout << std::format(
-        "  {:<7} , {:<{}} , {:>8}    , {:>8.2f}    ,\n",
+        "  {:<7} , {:<{}} , {:>11} , {:>11.2f} , {:>11.2f} , {:>11.2f} , {:>11.2f}\n",
         "[COUNT]",
         counter.name,max_name_len_,
         counter.count,
-        static_cast<double>(counter.total) / counter.frame_count
+        static_cast<double>(counter.total) / std::max(counter.frame_count,1u),
+        counter.em_avg,
+        static_cast<double>(counter.life_total) / std::max(counter.life_frame_count,1u),
+        counter.life_em_avg
       );
     }
 
     std::cout << "[/METRICS]\n";
     std::cout.flush();
-  }
 
-  // Reset for next frame.
-  for(auto& counter : counters_) {
-    counter.count = 0;
+    // Reset non-life (interval) data.
+    for(auto& profiler : profilers_) {
+      profiler.total.set_to_zero();
+      profiler.count = 0;
+      profiler.em_avg.set_to_zero();
+    }
+    for(auto& counter : counters_) {
+      counter.count = 0; // Reset frame.
+
+      counter.total = 0;
+      counter.frame_count = 0;
+      counter.em_avg = 0.0;
+    }
+  } else {
+    // Reset data for next frame.
+    for(auto& counter : counters_) {
+      counter.count = 0;
+    }
   }
 }
 
 MetricMan::ScopeProfiler::ScopeProfiler(MetricMan& metric_man,std::size_t id)
-  : metric_man_{&metric_man},id_{id} {
-  metric_man_->begin_profile(id_);
+  : metric_man_{metric_man},id_{id} {
+  metric_man_.get().begin_profile(id_);
 }
 
 MetricMan::ScopeProfiler::~ScopeProfiler() noexcept {
-  metric_man_->end_profile(id_);
+  metric_man_.get().end_profile(id_);
 }
 
 } // namespace cybel
