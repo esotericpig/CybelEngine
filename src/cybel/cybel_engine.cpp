@@ -261,30 +261,34 @@ bool CybelEngine::run_frame() {
   stop_frame_timer();
   start_frame_timer();
 
-  CYBEL_METRICS_END_FRAME();
-  CYBEL_METRICS_PROFILE_SCOPE("Frame");
-
-  input_man_->begin_input();
-  handle_events();
-  handle_input();
-
-  // Event/Input requested to stop.
-  if(!is_running_) { return false; }
-
-  if(is_logic_running_) {
-    game_->update_scene_logic(frame_step_,*scene_ctx_);
-    scene_man_.curr_scene().update_scene_logic(frame_step_,*scene_ctx_);
-    scene_man_.commit_pending();
-  }
-
   {
-    CYBEL_METRICS_PROFILE_SCOPE("Render");
+    CYBEL_METRICS_PROFILE_SCOPE("Frame");
 
-    renderer_->clear_view();
-    game_->draw_scene(*renderer_,*scene_ctx_);
-    scene_man_.curr_scene().draw_scene(*renderer_,*scene_ctx_);
-    SDL_GL_SwapWindow(plat_.window);
+    input_man_->begin_input();
+    handle_events();
+    handle_input();
+
+    // Event/Input requested to stop.
+    if(!is_running_) { return false; }
+
+    if(is_logic_running_) {
+      game_->update_scene_logic(frame_step_,*scene_ctx_);
+      scene_man_.curr_scene().update_scene_logic(frame_step_,*scene_ctx_);
+      scene_man_.commit_pending();
+    }
+
+    {
+      CYBEL_METRICS_PROFILE_SCOPE("Render");
+
+      renderer_->clear_view();
+      game_->draw_scene(*renderer_,*scene_ctx_);
+      scene_man_.curr_scene().draw_scene(*renderer_,*scene_ctx_);
+      SDL_GL_SwapWindow(plat_.window);
+    }
   }
+
+  // NOTE: Must be at end of frame so that Counter.frame_count is accurate.
+  CYBEL_METRICS_END_FRAME();
 
   return true;
 }
