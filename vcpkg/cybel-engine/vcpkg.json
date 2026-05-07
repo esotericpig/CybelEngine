@@ -7,7 +7,7 @@
 
   "homepage": "https://github.com/esotericpig/CybelEngine",
   "documentation": "https://github.com/esotericpig/CybelEngine",
-  "description": "Cybel Engine is a simple C++20 game engine using SDL2 and OpenGL Legacy/ES.",
+  "description": "Cybel Engine is a simple C++ game engine using SDL2, OpenGL, and Emscripten.",
 
   "dependencies": [
     { "name": "vcpkg-cmake"       , "host": true },

@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.22)
 project("CybelEngine"
     VERSION "1.0"
     HOMEPAGE_URL "https://github.com/esotericpig/CybelEngine"
-    DESCRIPTION "Cybel Engine is a simple C++20 game engine using SDL2 and OpenGL Legacy/ES."
+    DESCRIPTION "Cybel Engine is a simple C++ game engine using SDL2, OpenGL, and Emscripten."
     LANGUAGES C CXX
 )
 
