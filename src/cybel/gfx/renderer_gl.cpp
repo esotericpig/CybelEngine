@@ -40,8 +40,8 @@ void RendererGl::init() {
   }
 }
 
-void RendererGl::on_context_restore() {
-  Renderer::on_context_restore();
+void RendererGl::on_gpu_context_restore() {
+  Renderer::on_gpu_context_restore();
   init();
 }
 

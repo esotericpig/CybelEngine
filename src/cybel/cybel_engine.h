@@ -24,6 +24,8 @@
 #include "cybel/types/view_dimens.h"
 #include "cybel/util/timer.h"
 
+#include <atomic>
+
 namespace cybel {
 
 class CybelEngine final {
@@ -34,7 +36,7 @@ class CybelEngine final {
   class Platform final {
   public:
     SDL_Window* window = nullptr;
-    SDL_GLContext context = nullptr;
+    SDL_GLContext gl_context = nullptr;
 
     explicit Platform() noexcept = default;
     Platform(const Platform& other) = delete;
@@ -130,6 +132,8 @@ public:
   float avg_fps() const;
 
 private:
+  static inline std::atomic<bool> is_init_ = false;
+
   std::string title_{};
   int target_fps_ = 0;
   Duration target_dpf_{};
@@ -139,7 +143,7 @@ private:
   std::unique_ptr<Renderer> renderer_{};
   std::unique_ptr<InputMan> input_man_{};
   std::unique_ptr<SceneContext> scene_ctx_{};
-  std::unique_ptr<Game> game_ = std::make_unique<Game>();
+  std::unique_ptr<Game> game_{};
   SceneMan scene_man_{
     [this](int type) { return build_scene(type); },
     [this](Scene& scene) { on_scene_enter(scene); },
@@ -157,7 +161,7 @@ private:
   void init_config(Config& config);
   static Size2i calc_scaled_view(const Size2i& view,float scale_factor,const Size2i& target_size);
   void init_gui(const Config& config);
-  void init_context();
+  void init_gpu_context();
   void check_versions();
 
   bool run_frame();
@@ -167,8 +171,8 @@ private:
   static bool on_webgl_context_change(int event_type,const void* reserved,void* user_data);
 #endif
 
-  void on_context_loss();
-  void on_context_restore();
+  void on_gpu_context_loss();
+  void on_gpu_context_restore();
 
   SceneBag build_scene(int type);
   void on_scene_enter(Scene& scene);
@@ -177,7 +181,7 @@ private:
   void start_frame_timer();
   void stop_frame_timer();
   void handle_events();
-  void handle_non_context_events_only();
+  void handle_core_events_only();
   void on_input_event(input_id_t input_id);
   void handle_input();
 

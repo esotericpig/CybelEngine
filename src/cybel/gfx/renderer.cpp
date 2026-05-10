@@ -36,10 +36,10 @@ Renderer::Renderer(const Size2i& size,const Size2i& target_size,const Color4f& c
   font_colors_["white"] = Color4f::kWhite;
   font_colors_["yellow"] = Color4f::kYellow;
 
-  init_context();
+  init_gpu_context();
 }
 
-void Renderer::init_context() {
+void Renderer::init_gpu_context() {
   SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE,&depth_bits_);
   std::cout << "[INFO] OpenGL depth bits: " << depth_bits_ << '.' << std::endl;
 
@@ -58,11 +58,11 @@ void Renderer::init_context() {
   }
 }
 
-void Renderer::on_context_loss() {}
+void Renderer::on_gpu_context_loss() {}
 
-void Renderer::on_context_restore() {
+void Renderer::on_gpu_context_restore() {
   Util::clear_gl_errors();
-  init_context();
+  init_gpu_context();
 }
 
 void Renderer::resize(const Size2i& size) {

@@ -15,9 +15,9 @@ SceneMan::SceneMan(BuildScene build_scene,OnSceneChange on_scene_enter,OnSceneCh
   : build_scene_{std::move(build_scene)},
     on_scene_enter_{std::move(on_scene_enter)},
     on_scene_exit_{std::move(on_scene_exit)} {
-  if(!build_scene_) { throw CybelError{__func__,"(): `build_scene` is empty."}; }
-  if(!on_scene_enter_) { throw CybelError{__func__,"(): `on_scene_enter` is empty."}; }
-  if(!on_scene_exit_) { throw CybelError{__func__,"(): `on_scene_exit` is empty."}; }
+  if(!build_scene_) { throw CybelError{"`build_scene` is empty."}; }
+  if(!on_scene_enter_) { throw CybelError{"`on_scene_enter` is empty."}; }
+  if(!on_scene_exit_) { throw CybelError{"`on_scene_exit` is empty."}; }
 }
 
 bool SceneMan::push_scene(int type) {

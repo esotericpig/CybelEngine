@@ -36,9 +36,9 @@ public:
   virtual void on_scene_resize([[maybe_unused]] Renderer& ren,[[maybe_unused]] SceneContext& ctx) {}
 
   /// On WebGL context lost, zombify textures, etc.
-  virtual void on_scene_context_loss([[maybe_unused]] SceneContext& ctx) {}
+  virtual void on_scene_gpu_context_loss([[maybe_unused]] SceneContext& ctx) {}
   /// On WebGL context restored, reload textures, re-init WebGL states, etc.
-  virtual void on_scene_context_restore([[maybe_unused]] SceneContext& ctx) {}
+  virtual void on_scene_gpu_context_restore([[maybe_unused]] SceneContext& ctx) {}
 
   virtual void on_scene_input_event([[maybe_unused]] input_id_t input_id,
                                     [[maybe_unused]] SceneContext& ctx) {}

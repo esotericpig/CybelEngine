@@ -188,8 +188,8 @@ public:
   Renderer& operator=(const Renderer& other) = delete;
   Renderer& operator=(Renderer&& other) noexcept = delete;
 
-  virtual void on_context_loss();
-  virtual void on_context_restore();
+  virtual void on_gpu_context_loss();
+  virtual void on_gpu_context_restore();
   virtual void resize(const Size2i& size);
   void clear_view();
 
@@ -273,7 +273,7 @@ private:
   BlendMode curr_blend_mode_ = kDefaultBlendMode;
   std::unordered_map<std::string,Color4f> font_colors_{};
 
-  void init_context();
+  void init_gpu_context();
 
   Renderer& begin_blend(const BlendMode& mode);
 

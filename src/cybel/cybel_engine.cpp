@@ -22,15 +22,15 @@
 namespace cybel {
 
 CybelEngine& CybelEngine::init(const Config& config) {
+  if(is_init_.exchange(true)) { throw CybelError{"CybelEngine already initialized."}; }
+
   static CybelEngine engine{config};
 
 #if defined(__EMSCRIPTEN__)
-  if(!engine.is_running_) {
-    emscripten_set_webglcontextlost_callback("#canvas",&engine,false,on_webgl_context_change);
-    emscripten_set_webglcontextrestored_callback("#canvas",&engine,false,on_webgl_context_change);
-    emscripten_cancel_main_loop();
-    emscripten_set_main_loop_arg(run_web_frame,&engine,0,false);
-  }
+  emscripten_set_webglcontextlost_callback("#canvas",&engine,false,on_webgl_context_change);
+  emscripten_set_webglcontextrestored_callback("#canvas",&engine,false,on_webgl_context_change);
+  emscripten_cancel_main_loop();
+  emscripten_set_main_loop_arg(run_web_frame,&engine,0,false);
 #endif
 
   return engine;
@@ -51,7 +51,7 @@ CybelEngine::CybelEngine(Config config)
 
   init_config(config);
   init_gui(config);
-  init_context();
+  init_gpu_context();
   check_versions();
 
 #if defined(CYBEL_RENDERER_GLES)
@@ -173,10 +173,10 @@ void CybelEngine::init_gui(const Config& config) {
   SDL_SetWindowResizable(plat_.window,SDL_TRUE);
 }
 
-void CybelEngine::init_context() {
-  plat_.context = SDL_GL_CreateContext(plat_.window);
+void CybelEngine::init_gpu_context() {
+  plat_.gl_context = SDL_GL_CreateContext(plat_.window);
 
-  if(!plat_.context) {
+  if(!plat_.gl_context) {
     throw CybelError{"Failed to create OpenGL context: ",Util::get_sdl_error(),'.'};
   }
 
@@ -218,7 +218,8 @@ void CybelEngine::check_versions() {
 }
 
 void CybelEngine::run(std::unique_ptr<Game> game) {
-  if(!game) { throw CybelError{"Game is null."}; }
+  if(!game) { throw CybelError{"`game` is null."}; }
+  if(game_) { throw CybelError{"A Game is already set/running."}; }
 
   game_ = std::move(game);
   is_running_ = true;
@@ -244,18 +245,17 @@ void CybelEngine::request_stop() {
 bool CybelEngine::run_frame() {
   if(!is_running_) { return false; }
 
-  if(!plat_.context) {
+  if(!plat_.gl_context) {
     // NOTE: Don't sleep or call SDL_Delay()/stop_frame_timer(), since SDL_Delay()/sleep is just a while-loop
     //       in Emscripten, and because requestAnimationFrame() is used, it won't hog the CPU unnecessarily.
-    handle_non_context_events_only();
-    start_frame_timer();
+    handle_core_events_only();
+    start_frame_timer(); // Try to keep delta time close to 0.
 
     return is_running_;
   }
 
-  // NOTE: For Web, we must call stop_frame_timer() here and not at the end of this function.
-  //       - I'm not sure of the exact cause, but could be because of double/Uint32 [Duration/SDL_Delay()],
-  //         Chrome's async rendering, and/or Timer [SDL_GetTicks64()].
+  // NOTE: For Web, must call stop_frame_timer() here and not at the end of this function.
+  //       - I'm not sure of the exact cause, but could be because of Chrome's async rendering.
   //       - I can only recreate it on an older laptop (but with up-to-date software) with
   //         "graphics acceleration" turned off in Chrome.
   stop_frame_timer();
@@ -297,7 +297,7 @@ bool CybelEngine::run_frame() {
 
 void CybelEngine::run_web_frame(void* user_data) {
   if(!user_data) {
-    std::cerr << "[ERROR] User data is null (no CybelEngine) in run_web_frame()." << std::endl;
+    std::cerr << "[ERROR] `user_data` is null (no CybelEngine) in " << __func__ << "()." << std::endl;
     emscripten_cancel_main_loop();
     return;
   }
@@ -313,7 +313,7 @@ void CybelEngine::run_web_frame(void* user_data) {
   }
 }
 
-/// To simulate GL context lost & restored in JS:
+/// To simulate WebGL context lost & restored in JS:
 ///   // On itch.io, select `index.html` or inspect the canvas first.
 ///   let gle = Module.canvas.getContext('webgl2').getExtension('WEBGL_lose_context');
 ///   gle.loseContext();
@@ -322,9 +322,10 @@ void CybelEngine::run_web_frame(void* user_data) {
 /// See:
 /// - https://www.khronos.org/webgl/wiki/HandlingContextLost
 /// - https://emscripten.org/docs/api_reference/html5.h.html#id93
-bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const void* reserved,void* user_data) {
+bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const void* reserved,
+                                          void* user_data) {
   if(!user_data) {
-    std::cerr << "[ERROR] User data is null (no CybelEngine) in on_webgl_context_change()." << std::endl;
+    std::cerr << "[ERROR] `user_data` is null (no CybelEngine) in " << __func__ << "()." << std::endl;
     emscripten_cancel_main_loop();
     return false;
   }
@@ -334,7 +335,7 @@ bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const 
   switch(event_type) {
     case EMSCRIPTEN_EVENT_WEBGLCONTEXTLOST:
       std::cerr << "[WARN] WebGL context lost." << std::endl;
-      engine.on_context_loss();
+      engine.on_gpu_context_loss();
       return true;
 
     case EMSCRIPTEN_EVENT_WEBGLCONTEXTRESTORED:
@@ -342,7 +343,7 @@ bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const 
       EM_ASM( Module.setStatus("<br>WebGL context restored. Attempting to restore the game...<br><br>"); );
 
       try {
-        engine.on_context_restore();
+        engine.on_gpu_context_restore();
         EM_ASM( Module.setStatus(""); );
       } catch(const CybelError& e) {
         engine.show_error(e.what());
@@ -357,31 +358,31 @@ bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const 
 
 #endif // __EMSCRIPTEN__
 
-void CybelEngine::on_context_loss() {
+void CybelEngine::on_gpu_context_loss() {
   game_->on_scene_exit(*scene_ctx_);
   scene_man_.curr_scene().on_scene_exit(*scene_ctx_);
 
-  game_->on_scene_context_loss(*scene_ctx_);
-  scene_man_.curr_scene().on_scene_context_loss(*scene_ctx_);
+  game_->on_scene_gpu_context_loss(*scene_ctx_);
+  scene_man_.curr_scene().on_scene_gpu_context_loss(*scene_ctx_);
 
   for(auto& bag : scene_man_.prev_scene_bags()) {
-    if(bag.scene) { bag.scene->on_scene_context_loss(*scene_ctx_); }
+    if(bag.scene) { bag.scene->on_scene_gpu_context_loss(*scene_ctx_); }
   }
 
-  renderer_->on_context_loss();
-  plat_.context = nullptr;
+  renderer_->on_gpu_context_loss();
+  plat_.gl_context = nullptr;
 }
 
-void CybelEngine::on_context_restore() {
-  init_context();
-  renderer_->on_context_restore();
+void CybelEngine::on_gpu_context_restore() {
+  init_gpu_context();
+  renderer_->on_gpu_context_restore();
 
   // NOTE: Must call Game first so that it can reload textures, etc.
-  game_->on_scene_context_restore(*scene_ctx_);
-  scene_man_.curr_scene().on_scene_context_restore(*scene_ctx_);
+  game_->on_scene_gpu_context_restore(*scene_ctx_);
+  scene_man_.curr_scene().on_scene_gpu_context_restore(*scene_ctx_);
 
   for(auto& bag : scene_man_.prev_scene_bags()) {
-    if(bag.scene) { bag.scene->on_scene_context_restore(*scene_ctx_); }
+    if(bag.scene) { bag.scene->on_scene_gpu_context_restore(*scene_ctx_); }
   }
 
   game_->on_scene_enter(*scene_ctx_);
@@ -473,7 +474,7 @@ void CybelEngine::handle_events() {
   if(should_resize) { sync_size(false); }
 }
 
-void CybelEngine::handle_non_context_events_only() {
+void CybelEngine::handle_core_events_only() {
   SDL_Event event{};
 
   while(SDL_PollEvent(&event) != 0) {
@@ -601,9 +602,9 @@ double CybelEngine::delta_time() const { return frame_step_.delta_time; }
 float CybelEngine::avg_fps() const { return avg_fps_; }
 
 CybelEngine::Platform::~Platform() noexcept {
-  if(context) {
-    SDL_GL_DeleteContext(context);
-    context = nullptr;
+  if(gl_context) {
+    SDL_GL_DeleteContext(gl_context);
+    gl_context = nullptr;
   }
   if(window) {
     SDL_DestroyWindow(window);

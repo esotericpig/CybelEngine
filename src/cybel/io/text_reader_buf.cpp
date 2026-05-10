@@ -17,9 +17,9 @@ TextReaderBuf::TextReaderBuf(const std::filesystem::path& file,std::size_t buffe
   const std::u8string file_str = file.u8string();
   const auto* file_cstr = reinterpret_cast<const char*>(file_str.c_str());
 
-  context_ = SDL_RWFromFile(file_cstr,"r");
+  handle_ = SDL_RWFromFile(file_cstr,"r");
 
-  if(context_ == NULL) {
+  if(!handle_) {
     throw CybelError{"Failed to open file [",file_cstr,"] for reading: ",Util::get_sdl_error(),'.'};
   }
 
@@ -35,9 +35,7 @@ TextReaderBuf::TextReaderBuf(TextReaderBuf&& other) noexcept
 void TextReaderBuf::move_from(TextReaderBuf&& other) noexcept {
   close();
 
-  context_ = other.context_;
-  other.context_ = NULL;
-
+  handle_ = std::exchange(other.handle_,nullptr);
   buffer_ = std::move(other.buffer_);
 }
 
@@ -46,9 +44,9 @@ TextReaderBuf::~TextReaderBuf() noexcept {
 }
 
 void TextReaderBuf::close() noexcept {
-  if(context_ != NULL) {
-    SDL_RWclose(context_);
-    context_ = NULL;
+  if(handle_) {
+    SDL_RWclose(handle_);
+    handle_ = nullptr;
   }
 }
 
@@ -67,7 +65,7 @@ TextReaderBuf::int_type TextReaderBuf::underflow() {
   // On failure/EOF, gptr() must equal egptr().
   setg(buffer_.data(),buffer_.data(),buffer_.data());
 
-  if(context_ == NULL) { return traits_type::eof(); }
+  if(!handle_) { return traits_type::eof(); }
 
   std::size_t read_count = buffer_.size();
 
@@ -78,7 +76,7 @@ TextReaderBuf::int_type TextReaderBuf::underflow() {
   std::ranges::fill(buffer_,0);
   SDL_ClearError();
 
-  if(SDL_RWread(context_,buffer_.data(),sizeof(char_type) * read_count,1) == 0) {
+  if(SDL_RWread(handle_,buffer_.data(),sizeof(char_type) * read_count,1) == 0) {
     close();
 
     const std::string error = Util::get_sdl_error();
@@ -105,6 +103,6 @@ TextReaderBuf::int_type TextReaderBuf::pbackfail(int_type) { return traits_type:
 
 TextReaderBuf::int_type TextReaderBuf::overflow(int_type) { return traits_type::eof(); }
 
-bool TextReaderBuf::is_open() const { return context_ != NULL; }
+bool TextReaderBuf::is_open() const { return handle_; }
 
 } // namespace cybel
