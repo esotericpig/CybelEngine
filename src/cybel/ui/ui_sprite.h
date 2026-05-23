@@ -10,16 +10,16 @@
 
 #include "cybel/common.h"
 
-#include "cybel/asset/sprite_ref.h"
+#include "cybel/asset/asset_types.h"
 #include "cybel/ui/ui_box_node.h"
 
 namespace cybel {
 
 class UiSprite : public UiBoxNode {
 public:
-  SpriteRef sprite_ref;
+  asset_id_t id{};
 
-  explicit UiSprite(const SpriteRef& sprite_ref) noexcept;
+  explicit UiSprite(asset_id_t id) noexcept;
 
   void draw(Renderer& ren) override;
 };

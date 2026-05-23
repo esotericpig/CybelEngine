@@ -12,6 +12,7 @@
 
 #include "cybel/scene/scene.h"
 #include "cybel/scene/scene_bag.h"
+#include "cybel/scene/scene_types.h"
 
 namespace cybel {
 
@@ -21,7 +22,7 @@ class Game : public Scene {
 public:
   virtual void on_game_start([[maybe_unused]] CybelEngine& engine) {}
 
-  virtual SceneBag build_scene([[maybe_unused]] int type,[[maybe_unused]] SceneContext& ctx) {
+  virtual SceneBag build_scene([[maybe_unused]] scene_id_t id,[[maybe_unused]] SceneContext& ctx) {
     return SceneBag{};
   }
 };

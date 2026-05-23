@@ -15,7 +15,9 @@
 #include "cybel/input/joypad_input.h"
 #include "cybel/input/joystick.h"
 #include "cybel/input/key_input.h"
+#include "cybel/util/util.h"
 
+#include <cassert>
 #include <functional>
 #include <initializer_list>
 #include <unordered_map>
@@ -49,15 +51,19 @@ public:
 
   static inline const InputIds kEmptyIds{};
 
-  explicit InputMan(const OnInputEvent& on_input_event,input_id_t max_id = 0);
+  explicit InputMan(const OnInputEvent& on_input_event);
 
-  void map_input(input_id_t id,const WrapMapInput& wrap);
+  template <InputIdLike T>
+  void map_input(T id_like,const WrapMapInput& wrap);
+  template <InputIdLike T>
+  bool operator[](T id_like) const;
 
   /// TEST: Only use for testing purposes.
   void use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type);
   /// TEST: Only use for testing purposes.
   void use_mouse_as_finger();
 
+  void shrink();
   void begin_input();
   void handle_event(const SDL_Event& event);
 
@@ -75,8 +81,8 @@ private:
   static constexpr Sint16 kJoypadAxisDeadZone = 8'000;
 
   OnInputEvent on_input_event_{};
-  input_id_t max_id_ = 0;
   InputStates id_to_state_{};
+  input_id_t max_id_ = 0;
   std::unordered_set<input_id_t> processed_ids_{};
 
   std::unordered_map<RawKeyInput,InputIds,RawKeyInput::Hash> raw_key_to_ids_{};
@@ -113,6 +119,25 @@ private:
   void reset_states();
   void reset_touch_states();
 };
+
+template <InputIdLike T>
+void InputMan::map_input(T id_like,const WrapMapInput& wrap) {
+  const auto id = static_cast<input_id_t>(id_like);
+
+  Util::grow_for_index(id_to_state_,id);
+  if(id > max_id_) { max_id_ = id; }
+
+  InputMapper mapper{*this,id};
+  wrap(mapper);
+}
+
+template <InputIdLike T>
+bool InputMan::operator[](T id_like) const {
+  const auto id = static_cast<input_id_t>(id_like);
+  assert(id < id_to_state_.size());
+
+  return id_to_state_[id];
+}
 
 } // namespace cybel
 #endif

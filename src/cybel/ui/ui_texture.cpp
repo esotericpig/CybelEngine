@@ -9,14 +9,19 @@
 
 namespace cybel {
 
-UiTexture::UiTexture(const TextureRef& tex_ref) noexcept
-  : tex_ref(tex_ref) {}
+UiTexture::UiTexture(asset_id_t id) noexcept
+  : id{id} {}
 
 void UiTexture::draw(Renderer& ren) {
-  const auto* tex = tex_ref.get();
-  if(tex == nullptr) { return; }
+  // const auto* tex = tex_ref.get();
+  // if(tex == nullptr) { return; }
+  //
+  // ren.wrap_tex(*tex,[&](auto& t) { t.draw_quad(pos_,size_); });
 
-  ren.wrap_tex(*tex,[&](auto& t) { t.draw_quad(pos_,size_); });
+  // TODO: Implement UiTexture.
+  ren.begin_color(Color4f::kMagenta);
+  ren.draw_quad(pos_,size_);
+  ren.end_color();
 }
 
 } // namespace cybel

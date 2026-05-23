@@ -133,8 +133,11 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       "-finput-charset=UTF-8"
 
       $<$<OR:$<PLATFORM_ID:Linux>,$<PLATFORM_ID:Emscripten>>:
-        -Wall -Wconversion -Wextra -Wpedantic -Wsign-conversion -Wundef
+        -Wall -Wconversion -Wextra -Wpedantic -Wundef
         -fno-common
+
+        # Options added for GCC to match Clang.
+        -Wmismatched-tags -Wsign-conversion
       >
   )
 endif()
@@ -215,13 +218,11 @@ target_include_directories(CybelEngine PUBLIC
 target_sources(CybelEngine PRIVATE
     # @glob_src=src:src/
     "src/cybel/cybel_engine.cpp"
+    "src/cybel/asset/asset_loaders.cpp"
     "src/cybel/asset/asset_man.cpp"
-    "src/cybel/asset/font_atlas_ref.cpp"
-    "src/cybel/asset/sprite_ref.cpp"
-    "src/cybel/asset/texture_ref.cpp"
-    "src/cybel/audio/audio.cpp"
     "src/cybel/audio/audio_player.cpp"
     "src/cybel/audio/music.cpp"
+    "src/cybel/audio/sound.cpp"
     "src/cybel/gfx/font_atlas.cpp"
     "src/cybel/gfx/image.cpp"
     "src/cybel/gfx/renderer.cpp"
@@ -251,6 +252,7 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/ui/ui_quad.cpp"
     "src/cybel/ui/ui_sprite.cpp"
     "src/cybel/ui/ui_texture.cpp"
+    "src/cybel/util/file_sys.cpp"
     "src/cybel/util/rando.cpp"
     "src/cybel/util/timer.cpp"
     "src/cybel/util/util.cpp"
@@ -324,5 +326,7 @@ if(PROJECT_IS_TOP_LEVEL)
         --suppress=unmatchedSuppression
         --suppress=unusedFunction
 #        --suppress=unusedPrivateFunction
+#        --suppress=useStlAlgorithm
+#        --suppress=variableScope
   )
 endif()

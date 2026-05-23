@@ -25,8 +25,8 @@ class Image final {
 public:
   using EditPixel = std::function<void(Color4f&)>;
 
-  explicit Image(const std::filesystem::path& file,bool make_weird = false,
-                 const Color4f& weird_color = Color4f::kBlack);
+  explicit Image(const std::filesystem::path& file);
+  explicit Image(const Size2i& size,const Color4f& color);
 
   Image(const Image& other) = delete;
   Image(Image&& other) noexcept;
@@ -35,26 +35,30 @@ public:
   Image& operator=(const Image& other) = delete;
   Image& operator=(Image&& other) noexcept;
 
-  void make_weird();
-  void colorize(const Color4f& to_color);
-  void edit_pixels(const EditPixel& edit_pixel);
+  Image dup() const;
 
-  Image& lock();
-  Image& unlock() noexcept;
+  Image& make_weird();
+  Image& colorize(const Color4f& to_color);
+  Image& edit_pixels(const EditPixel& edit_pixel);
+
+  void lock() const;
+  void unlock() const noexcept;
 
   const std::string& id() const;
   const Size2i& size() const;
   std::uint8_t bytes_per_pixel() const;
   bool is_red_first() const;
 
-  friend class CybelEngine;
-  friend class Texture;
+  friend class CybelEngine; // For `handle_` in set_icon().
+  friend class Texture; // For pixels() & gl_type() in load().
 
 private:
   std::string id_{};
-  SDL_Surface* handle_ = NULL;
+  SDL_Surface* handle_ = nullptr;
   Size2i size_{};
-  bool is_locked_ = false;
+  mutable bool is_locked_ = false;
+
+  explicit Image() noexcept = default;
 
   void move_from(Image&& other) noexcept;
   void destroy() noexcept;

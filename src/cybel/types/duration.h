@@ -64,7 +64,6 @@ private:
 
   using value_t = millis_t;
 
-  // Name is generic in case change it in the future.
   value_t value_{};
 
   explicit constexpr Duration(value_t value) noexcept;

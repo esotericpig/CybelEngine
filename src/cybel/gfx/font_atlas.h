@@ -10,6 +10,7 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_man_key.h"
 #include "cybel/gfx/sprite_atlas.h"
 #include "cybel/gfx/texture.h"
 #include "cybel/types/pos.h"
@@ -21,40 +22,36 @@ namespace cybel {
 
 class FontAtlas final : public SpriteAtlas {
 public:
-  class Builder final {
+  class Config final {
   public:
-    FontAtlas build();
+    Config& offset(int x,int y);
+    Config& cell_size(int width,int height);
+    Config& cell_padding(int padding);
+    Config& grid_size(int cols,int rows);
 
-    Builder& tex(Texture&& tex);
-    Builder& tex(std::unique_ptr<Texture> tex);
-    Builder& tex(std::shared_ptr<Texture> tex);
-
-    Builder& offset(int x,int y);
-    Builder& cell_size(int width,int height);
-    Builder& cell_padding(int padding);
-    Builder& grid_size(int cols,int rows);
-
-    Builder& spacing(int rune_spacing,int line_spacing);
-    Builder& default_index(std::size_t index);
-    Builder& default_cell(int col,int row);
-    Builder& default_rune(char32_t rune);
-    Builder& index_to_rune(std::string_view str);
-    Builder& index_to_rune(std::initializer_list<std::string_view> lines);
+    Config& spacing(int rune_spacing,int line_spacing);
+    Config& default_index(std::size_t index);
+    Config& default_cell(int col,int row);
+    Config& default_rune(char32_t rune);
+    Config& index_to_rune(std::string_view str);
+    Config& index_to_rune(std::initializer_list<std::string_view> lines);
 
     friend class FontAtlas;
 
   private:
-    SpriteAtlas::Builder sprite_atlas_;
+    SpriteAtlas::Config sprite_atlas_{};
     Size2i spacing_{};
 
     // Since we don't know the final grid width & height until build,
-    //     we have to store both `default_index_` & `default_cell_`.
+    // we have to store both `default_index_` & `default_cell_`.
     std::size_t default_index_ = 0;
     Pos2i default_cell_{};
     char32_t default_rune_ = 0;
 
     std::unordered_map<char32_t,std::size_t> rune_to_index_{};
   };
+
+  explicit FontAtlas(AssetManKey,Texture& texture,const Config& config);
 
   const Size2i& spacing() const;
   std::size_t rune_index(char32_t rune) const;
@@ -63,8 +60,6 @@ protected:
   Size2i spacing_{};
   std::size_t default_index_ = 0;
   std::unordered_map<char32_t,std::size_t> rune_to_index_{};
-
-  explicit FontAtlas(const Builder& builder);
 };
 
 } // namespace cybel

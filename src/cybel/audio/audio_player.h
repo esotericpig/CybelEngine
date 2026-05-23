@@ -10,52 +10,47 @@
 
 #include "cybel/common.h"
 
-#include "cybel/audio/audio.h"
 #include "cybel/audio/music.h"
+#include "cybel/audio/sound.h"
 #include "cybel/types/duration.h"
 
 namespace cybel {
 
-/**
- * This class is a bit odd and unique in that it can be a Zombie, which
- * allows audio to be completely optional if the audio system doesn't load.
- *
- * Because of this, the functions take in pointers and ignores them if they are
- * nullptrs. So in this way, if the audio system doesn't load, you can avoid
- * loading the audio files/data, but still pass them in safely as nullptrs to
- * the functions, without having to write additional if-statements around the
- * calls.
- *
- * Example:
- *   @code
- *   AudioPlayer audio_player{MIX_INIT_OGG};
- *   std::unique_ptr<Music> music{};
- *
- *   if(audio_player.is_alive()) {
- *     try {
- *       music = std::make_unique<Music>("music.ogg");
- *     } catch(const CybelError& e) {
- *       // Ignore.
- *     }
- *   }
- *
- *   // If the music didn't load, no problem.
- *   audio_player.play_music(music.get());
- *   audio_player.play_music(nullptr); // No-op, no err, no prob!
- *   @endcode
- */
+/// This class is a bit odd in that it can be a Zombie, which
+/// allows audio to be completely optional if the audio system doesn't load.
+///
+/// Because of this, the functions take in pointers.
+/// So if the audio system doesn't load, you can avoid loading the audio
+/// files/data, but still pass them in safely as nulls to the functions,
+/// without having to write additional if-statements around the calls.
+///
+/// Example:
+///   @code
+///   AudioPlayer audio_player{MIX_INIT_OGG};
+///   std::unique_ptr<Music> music{};
+///
+///   if(audio_player.is_alive()) {
+///     try {
+///       music = std::make_unique<Music>("music.ogg");
+///     } catch(const CybelError& e) {
+///       // Ignore.
+///     }
+///   }
+///
+///   // If the music didn't load, no problem.
+///   audio_player.play_music(music.get());
+///   audio_player.play_music(nullptr); // No-op, no err, no prob!
+///   @endcode
 class AudioPlayer final {
 public:
-  /**
-   * All:
-   *   MIX_INIT_FLAC | MIX_INIT_MID  | MIX_INIT_MOD     | MIX_INIT_MP3 |
-   *   MIX_INIT_OGG  | MIX_INIT_OPUS | MIX_INIT_WAVPACK
-   *
-   * For MIDI on Linux, need to install:
-   *   timidity++ libtimidity-devel
-   *
-   * See: https://wiki.libsdl.org/SDL2_mixer/Mix_Init
-   */
+  /// All:
+  ///   MIX_INIT_FLAC | MIX_INIT_MID  | MIX_INIT_MOD     | MIX_INIT_MP3 |
+  ///   MIX_INIT_OGG  | MIX_INIT_OPUS | MIX_INIT_WAVPACK
+  ///
+  /// For MIDI on Linux, need to install:
+  ///   timidity++ libtimidity-devel
+  ///
+  /// See: https://wiki.libsdl.org/SDL2_mixer/Mix_Init
   explicit AudioPlayer(int music_types);
 
   AudioPlayer(const AudioPlayer& other) = delete;
@@ -70,7 +65,7 @@ public:
   void pause_music();
   void stop_music();
 
-  void play_audio(const Audio* audio);
+  void play_sound(const Sound* sound);
 
   void set_music_pos(const Duration& pos);
 

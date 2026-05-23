@@ -10,50 +10,29 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_man_key.h"
 #include "cybel/gfx/texture.h"
 #include "cybel/types/pos.h"
 #include "cybel/types/size.h"
 
+#include <functional>
 #include <vector>
 
 namespace cybel {
 
 class SpriteAtlas {
 public:
-  class Builder final {
-  public:
-    SpriteAtlas build();
-
-    Builder& tex(Texture&& tex);
-    Builder& tex(std::unique_ptr<Texture> tex);
-    Builder& tex(std::shared_ptr<Texture> tex);
-    Builder& offset(int x,int y);
-    Builder& cell_size(int width,int height);
-    Builder& cell_padding(int padding);
-    Builder& grid_size(int cols,int rows);
-
-    std::shared_ptr<Texture> tex() const;
-    const Pos2i& offset() const;
-    const Size2i& cell_size() const;
-    int cell_padding() const;
-    const Size2i& grid_size() const;
-
-    friend class SpriteAtlas;
-
-  private:
-    std::shared_ptr<Texture> tex_{};
-    Pos2i offset_{};
-    Size2i cell_size_{};
-    int cell_padding_ = 0;
-    Size2i grid_size_{};
+  struct Config final {
+    Pos2i offset{};
+    Size2i cell_size{};
+    int cell_padding = 0;
+    Size2i grid_size{};
   };
 
-  explicit SpriteAtlas() = default;
+  explicit SpriteAtlas(AssetManKey,Texture& texture,const Config& config);
   virtual ~SpriteAtlas() noexcept = default;
 
-  void zombify();
-
-  const Texture& tex() const;
+  const Texture& texture() const;
   const Pos4f* src(std::size_t index) const;
   const Pos4f* src(const Pos2i& cell) const;
   const Size2i& cell_size() const;
@@ -61,12 +40,10 @@ public:
   std::size_t cell_count() const;
 
 protected:
-  std::shared_ptr<Texture> tex_{};
+  std::reference_wrapper<Texture> texture_;
   Size2i cell_size_{};
   Size2i grid_size_{};
   std::vector<Pos4f> index_to_src_{};
-
-  explicit SpriteAtlas(const Builder& builder);
 
   SpriteAtlas(const SpriteAtlas& other) = default;
   SpriteAtlas(SpriteAtlas&& other) noexcept = default;

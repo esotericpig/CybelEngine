@@ -11,12 +11,11 @@
 
 namespace cybel {
 
-InputMan::InputMan(const OnInputEvent& on_input_event,input_id_t max_id)
+InputMan::InputMan(const OnInputEvent& on_input_event)
   : on_input_event_{on_input_event},
-    max_id_{max_id},
-    id_to_state_((max_id > 0) ? (max_id + 1) : 32,false),
+    id_to_state_(32,false),
     touch_input_to_state_(static_cast<std::size_t>(JoypadInput::kMax),false) {
-  if(!on_input_event_) { throw CybelError{"OnInputEvent is null."}; }
+  if(!on_input_event_) { throw CybelError{"`on_input_event` is empty."}; }
 
   init_joypad();
 }
@@ -25,7 +24,7 @@ void InputMan::init_joypad() {
   // SDL_INIT_GAMECONTROLLER also auto-initializes SDL_INIT_JOYSTICK.
   if(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
     // Don't fail, since optional.
-    std::cerr << "[WARN] Failed to init game controllers & joysticks: " << Util::get_sdl_error() << '.'
+    std::cerr << "[WARN] Failed to init Game Controllers & Joysticks: " << Util::get_sdl_error() << '.'
               << std::endl;
     return;
   }
@@ -47,23 +46,6 @@ void InputMan::load_joypads() {
 
     if(!main_joystick_) { main_joystick_.open(i); }
   }
-}
-
-void InputMan::map_input(input_id_t id,const WrapMapInput& wrap) {
-  if(id >= id_to_state_.size()) {
-    // Growable?
-    if(max_id_ == 0) {
-      const auto new_size = std::max<std::size_t>({id,id_to_state_.size(),1}) << 1;
-      id_to_state_.resize(new_size,false);
-    }
-
-    if(id >= id_to_state_.size()) {
-      throw CybelError{"Invalid input ID [",id,"] is >= maximum ID count [",id_to_state_.size(),"]."};
-    }
-  }
-
-  InputMapper mapper{*this,id};
-  wrap(mapper);
 }
 
 void InputMan::use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type) {
@@ -100,6 +82,11 @@ void InputMan::use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type
 
 void InputMan::use_mouse_as_finger() {
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS,"1");
+}
+
+void InputMan::shrink() {
+  id_to_state_.resize(max_id_ + 2); // Give some wiggle room.
+  id_to_state_.shrink_to_fit();
 }
 
 void InputMan::begin_input() {

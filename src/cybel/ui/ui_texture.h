@@ -10,16 +10,16 @@
 
 #include "cybel/common.h"
 
-#include "cybel/asset/texture_ref.h"
+#include "cybel/asset/asset_types.h"
 #include "cybel/ui/ui_box_node.h"
 
 namespace cybel {
 
 class UiTexture : public UiBoxNode {
 public:
-  TextureRef tex_ref;
+  asset_id_t id{};
 
-  explicit UiTexture(const TextureRef& tex_ref) noexcept;
+  explicit UiTexture(asset_id_t id) noexcept;
 
   void draw(Renderer& ren) override;
 };

@@ -10,6 +10,7 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_man_key.h"
 #include "cybel/gfx/font_atlas.h"
 #include "cybel/gfx/sprite.h"
 #include "cybel/gfx/sprite_atlas.h"
@@ -24,53 +25,10 @@
 
 namespace cybel {
 
-/**
- * The begin_/end_*() functions do not preserve the previous states when nesting.
- * This is by design.
- *
- * Alternatively, the wrap_*() functions do preserve the previous states when nesting.
- *
- * Nesting Example with Wrap:
- *   @code
- *   Pos2i pos{100,0};
- *   const Size2i size{100,100};
- *
- *   ren.wrap_color({0.0f,0.0f,1.0f},[&]() {
- *     ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Blue.
- *
- *     ren.wrap_color({0.0f,1.0f,0.0f},[&]() {
- *       ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Green.
- *
- *       ren.wrap_color({1.0f,1.0f,0.0f},[&]() {
- *         ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Yellow.
- *       });
- *
- *       ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Back to Green.
- *     });
- *
- *     ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Back to Blue.
- *   });
- *
- *   ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Back to White (default).
- *   @endcode
- *
- * Nesting Example with Begin/End:
- *   @code
- *   Pos2i pos{100,0};
- *   const Size2i size{100,100};
- *
- *   ren.begin_color({0.0f,0.0f,1.0f});
- *     ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Blue.
- *
- *     ren.begin_color({0.0f,1.0f,0.0f});
- *       ren.draw_quad({pos.x,(++pos.y) * size.h,0},size); // Green.
- *     ren.end_color(); // NOT back to Blue, but White (default).
- *
- *     // NOT Blue or Green, but now White (default).
- *     ren.draw_quad({pos.x,(++pos.y) * size.h,0},size);
- *   ren.end_color();
- *   @endcode
- */
+/// The begin_/end_*() functions do not preserve the previous states when nesting.
+/// This is by design.
+///
+/// Alternatively, the wrap_*() functions do preserve the previous states when nesting.
 class Renderer {
 public:
   class TextureWrapper {
@@ -128,21 +86,19 @@ public:
     FontAtlasWrapper& print(std::string_view str);
     FontAtlasWrapper& print_blanks(int count);
 
-    /**
-     * Prints formatted text:
-     * - Replaces `{}` with the next arg from `args`, if there is one.
-     * - Colors `{<color> text }` with the `color`.
-     *   - NOTE: You must use a space at the end before the curly brace: ` }`.
-     *   - If <color> starts with `0x` (zero) or `0X`, then it's parsed as an RGB or RGBA hex value:
-     *     - `{0x112233 text } and {0x11223344 text }`
-     *   - Else, <color> is fetched from Renderer.font_color(), if it exists:
-     *     - `{green text }`
-     *
-     * Notes:
-     * - Escape `{` with 2 `{{` or `}` with 2 `}`:
-     *   - `This {{is }} escaped: {{}}.`
-     * - Shouldn't fail on invalid text, number of args, colors, etc.
-     */
+    /// Prints formatted text:
+    /// - Replaces `{}` with the next arg from `args`, if there is one.
+    /// - Colors `{<color> text }` with the `color`.
+    ///   - NOTE: You must use a space at the end before the curly brace: ` }`.
+    ///   - If <color> starts with `0x` (zero) or `0X`, then it's parsed as an RGB or RGBA hex value:
+    ///     - `{0x112233 text } and {0x11223344 text }`
+    ///   - Else, <color> is fetched from Renderer.font_color(), if it exists:
+    ///     - `{green text }`
+    ///
+    /// Notes:
+    /// - Escape `{` with 2 `{{` or `}` with 2 `}`:
+    ///   - `This {{is }} escaped: {{}}.`
+    /// - Shouldn't fail on invalid text, number of args, colors, etc.
     FontAtlasWrapper& print_fmt(std::string_view fmt,std::initializer_list<std::string_view> args = {});
 
     FontAtlasWrapper& puts();
@@ -150,9 +106,7 @@ public:
     FontAtlasWrapper& puts(std::string_view str);
     FontAtlasWrapper& puts_blanks(int count);
 
-    /**
-     * See: print_fmt()
-     */
+    /// @copydoc print_fmt(std::string_view,std::initializer_list<std::string_view>)
     FontAtlasWrapper& puts_fmt(std::string_view fmt,std::initializer_list<std::string_view> args = {});
 
     Size2i calc_total_size(const Size2i& str_size) const;
@@ -188,8 +142,9 @@ public:
   Renderer& operator=(const Renderer& other) = delete;
   Renderer& operator=(Renderer&& other) noexcept = delete;
 
-  virtual void on_gpu_context_loss();
-  virtual void on_gpu_context_restore();
+  virtual void on_gpu_context_loss(AssetManKey);
+  virtual void on_gpu_context_restore(AssetManKey);
+
   virtual void resize(const Size2i& size);
   void clear_view();
 
@@ -257,8 +212,7 @@ protected:
   Color4f clear_color_{};
 
   Color4f curr_color_{1.0f};
-  // This would be safer as a shared_ptr, but I think fine,
-  //     as it would require refactoring all of the methods & callers.
+  // NOTE: This is only safe because only use in wrap_tex()-like funcs.
   const Texture* curr_tex_ = nullptr;
 
 private:

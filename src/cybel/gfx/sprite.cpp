@@ -9,62 +9,47 @@
 
 namespace cybel {
 
-Pos4f Sprite::build_src(const Texture& tex,const Pos2i& offset,const Size2i& size,int padding) {
+Pos4f Sprite::build_src(const Texture& texture,const Pos2i& offset,const Size2i& size,int padding) {
+  // Must be at least 1 to prevent divides by 0.
+  const auto tex_w = static_cast<float>(std::max(texture.size().w,1));
+  const auto tex_h = static_cast<float>(std::max(texture.size().h,1));
+
+  const auto src_x = static_cast<float>(offset.x + padding);
+  const auto src_y = static_cast<float>(offset.y + padding);
+
+  // calc_size() subtracts padding & ensures at least 1.
+  const auto src_size = calc_size(texture,offset,size,padding);
+  const auto src_w = static_cast<float>(src_size.w);
+  const auto src_h = static_cast<float>(src_size.h);
+
   Pos4f src{};
 
-  if(tex.size().w <= 0) { // Avoid divides by 0.
-    src.x1 = 0.0f;
-    src.x2 = 0.0f;
-  } else {
-    const auto tex_w = static_cast<float>(tex.size().w);
-    const auto src_x = static_cast<float>(offset.x + padding);
-
-    // Convert to be between [0.0,1.0].
-    src.x1 = std::clamp(src_x / tex_w,0.0f,1.0f);
-    src.x2 = std::clamp((src_x + static_cast<float>(size.w)) / tex_w,0.0f,1.0f);
-  }
-  if(tex.size().h <= 0) { // Avoid divides by 0.
-    src.y1 = 0.0f;
-    src.y2 = 0.0f;
-  } else {
-    const auto tex_h = static_cast<float>(tex.size().h);
-    const auto src_y = static_cast<float>(offset.y + padding);
-
-    // Convert to be between [0.0,1.0].
-    src.y1 = std::clamp(src_y / tex_h,0.0f,1.0f);
-    src.y2 = std::clamp((src_y + static_cast<float>(size.h)) / tex_h,0.0f,1.0f);
-  }
+  // Convert to be between [0.0,1.0].
+  src.x1 = std::clamp(src_x / tex_w,0.0f,1.0f);
+  src.x2 = std::clamp((src_x + src_w) / tex_w,0.0f,1.0f);
+  src.y1 = std::clamp(src_y / tex_h,0.0f,1.0f);
+  src.y2 = std::clamp((src_y + src_h) / tex_h,0.0f,1.0f);
 
   return src;
 }
 
-Sprite::Sprite(Texture&& tex,int padding)
-  : Sprite(std::make_shared<Texture>(std::move(tex)),padding) {}
-
-Sprite::Sprite(Texture&& tex,const Pos2i& offset,const Size2i& size,int padding)
-  : Sprite(std::make_shared<Texture>(std::move(tex)),offset,size,padding) {}
-
-Sprite::Sprite(std::unique_ptr<Texture> tex,int padding)
-  : Sprite(std::shared_ptr{std::move(tex)},padding) {}
-
-Sprite::Sprite(std::unique_ptr<Texture> tex,const Pos2i& offset,const Size2i& size,int padding)
-  : Sprite(std::shared_ptr{std::move(tex)},offset,size,padding) {}
-
-Sprite::Sprite(std::shared_ptr<Texture> tex,int padding)
-  : Sprite(std::move(tex),Pos2i{0,0},Size2i{0,0},padding) {}
-
-Sprite::Sprite(std::shared_ptr<Texture> tex,const Pos2i& offset,const Size2i& size,int padding)
-  : tex_(std::move(tex)) {
+Size2i Sprite::calc_size(const Texture& texture,const Pos2i& offset,const Size2i& size,int padding) {
+  const int w = (size.w > 0) ? size.w : (texture.size().w - offset.x);
+  const int h = (size.h > 0) ? size.h : (texture.size().h - offset.y);
   const int p2 = padding * 2;
 
-  size_.w = (size.w > 0) ? size.w : std::max(tex_->size().w - p2 - offset.x,0);
-  size_.h = (size.h > 0) ? size.h : std::max(tex_->size().h - p2 - offset.y,0);
-  src_ = build_src(*tex_,offset,size_,padding);
+  return Size2i{std::max(w - p2,1),std::max(h - p2,1)};
 }
 
-void Sprite::zombify() { tex_->zombify(); }
+Sprite::Sprite(AssetManKey key,Texture& texture)
+  : Sprite{key,texture,Config{}} {}
 
-const Texture& Sprite::tex() const { return *tex_; }
+Sprite::Sprite(AssetManKey,Texture& texture,const Config& config)
+  : texture_{texture},
+    size_{calc_size(texture,config.offset,config.size,config.padding)},
+    src_{build_src(texture,config.offset,config.size,config.padding)} {}
+
+const Texture& Sprite::texture() const { return texture_; }
 
 const Pos4f& Sprite::src() const { return src_; }
 

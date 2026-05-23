@@ -11,24 +11,19 @@
 #include "cybel/common.h"
 
 #include "cybel/cybel_engine.h"
+#include "cybel/asset/asset_man.h"
 #include "cybel/audio/audio_player.h"
 #include "cybel/scene/scene_man.h"
 #include "cybel/types/view_dimens.h"
 
 namespace cybel {
 
-class SceneContext final {
-public:
+struct SceneContext final {
   CybelEngine& engine;
+  SceneMan& scenes;
+  AssetMan& assets;
   const ViewDimens& dimens;
-  SceneMan& scene_man;
-  AudioPlayer& audio_player;
-
-  explicit SceneContext(CybelEngine& engine)
-    : engine{engine},
-      dimens{engine.renderer().dimens()},
-      scene_man{engine.scene_man()},
-      audio_player{engine.audio_player()} {}
+  AudioPlayer& audio;
 };
 
 } // namespace cybel

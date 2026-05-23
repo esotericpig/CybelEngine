@@ -10,33 +10,37 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_man_key.h"
 #include "cybel/gfx/texture.h"
 #include "cybel/types/pos.h"
 #include "cybel/types/size.h"
+
+#include <functional>
 
 namespace cybel {
 
 class Sprite final {
 public:
-  static Pos4f build_src(const Texture& tex,const Pos2i& offset,const Size2i& size,int padding = 0);
+  struct Config final {
+    Pos2i offset{};
+    Size2i size{};
+    int padding = 0;
+  };
 
-  explicit Sprite(Texture&& tex,int padding = 0);
-  explicit Sprite(Texture&& tex,const Pos2i& offset,const Size2i& size,int padding = 0);
-  explicit Sprite(std::unique_ptr<Texture> tex,int padding = 0);
-  explicit Sprite(std::unique_ptr<Texture> tex,const Pos2i& offset,const Size2i& size,int padding = 0);
-  explicit Sprite(std::shared_ptr<Texture> tex,int padding = 0);
-  explicit Sprite(std::shared_ptr<Texture> tex,const Pos2i& offset,const Size2i& size,int padding = 0);
+  static Pos4f build_src(const Texture& texture,const Pos2i& offset,const Size2i& size,int padding);
+  static Size2i calc_size(const Texture& texture,const Pos2i& offset,const Size2i& size,int padding);
 
-  void zombify();
+  explicit Sprite(AssetManKey,Texture& texture);
+  explicit Sprite(AssetManKey,Texture& texture,const Config& config);
 
-  const Texture& tex() const;
+  const Texture& texture() const;
   const Pos4f& src() const;
   const Size2i& size() const;
 
 protected:
-  std::shared_ptr<Texture> tex_{};
-  Pos4f src_{};
+  std::reference_wrapper<Texture> texture_;
   Size2i size_{};
+  Pos4f src_{};
 };
 
 } // namespace cybel

@@ -20,29 +20,16 @@ SceneMan::SceneMan(BuildScene build_scene,OnSceneChange on_scene_enter,OnSceneCh
   if(!on_scene_exit_) { throw CybelError{"`on_scene_exit` is empty."}; }
 }
 
-bool SceneMan::push_scene(int type) {
-  if(pending_action_ != Action::kNone) {
-    return pending_action_ == Action::kPushScene && pending_scene_bag_.type == type;
-  }
-  if(type == SceneBag::kTypeNone) { return false; }
-
-  pending_scene_bag_ = build_scene_(type);
-  if(!pending_scene_bag_.scene) { return false; }
-
-  pending_action_ = Action::kPushScene;
-  return true;
-}
-
 bool SceneMan::pop_scene() {
   if(pending_action_ != Action::kNone) { return pending_action_ == Action::kPopScene; }
 
   for(std::size_t i = prev_scene_bags_.size(); i-- > 0;) {
     SceneBag& prev_bag = prev_scene_bags_[i];
-    if(prev_bag.type == SceneBag::kTypeNone) { continue; }
+    if(prev_bag.id == SceneBag::kIdNone) { continue; }
 
     // Not persisted? (i.e., need to recreate)
     if(!prev_bag.scene) {
-      SceneBag new_bag = build_scene_(prev_bag.type);
+      SceneBag new_bag = build_scene_(prev_bag.id);
       if(!new_bag.scene) { continue; }
 
       prev_bag = std::move(new_bag);
@@ -66,14 +53,14 @@ bool SceneMan::pop_all_scenes() {
 
 bool SceneMan::restart_scene() {
   if(pending_action_ != Action::kNone) {
-    return pending_action_ == Action::kRestartScene && pending_scene_bag_.type == curr_scene_bag_.type;
+    return pending_action_ == Action::kRestartScene && pending_scene_bag_.id == curr_scene_bag_.id;
   }
 
-  pending_scene_bag_ = build_scene_(curr_scene_bag_.type);
+  pending_scene_bag_ = build_scene_(curr_scene_bag_.id);
 
   if(!pending_scene_bag_.scene) {
     // If we can't restart the scene, then we need to pop this scene off instead.
-    std::cerr << "[ERROR] Failed to restart scene [" << curr_scene_bag_.type
+    std::cerr << "[ERROR] Failed to restart scene [" << curr_scene_bag_.id
               << "]; popping the scene off instead." << std::endl;
     pop_scene();
 
@@ -112,7 +99,7 @@ void SceneMan::commit_push_scene() {
   set_scene(std::move(pending_scene_bag_));
 
   // Don't store Empty scene.
-  if(prev_bag.type != SceneBag::kTypeNone) {
+  if(prev_bag.id != SceneBag::kIdNone) {
     if(!prev_bag.persist) { prev_bag.scene = nullptr; }
     prev_scene_bags_.push_back(std::move(prev_bag));
   }
@@ -126,11 +113,11 @@ void SceneMan::commit_pop_scene() {
     SceneBag prev_bag = std::move(prev_scene_bags_.back());
     prev_scene_bags_.pop_back();
 
-    if(prev_bag.type == SceneBag::kTypeNone) { continue; }
+    if(prev_bag.id == SceneBag::kIdNone) { continue; }
 
     // Not persisted? (i.e., need to recreate)
     if(!prev_bag.scene) {
-      prev_bag = build_scene_(prev_bag.type);
+      prev_bag = build_scene_(prev_bag.id);
       if(!prev_bag.scene) { continue; }
     }
 
@@ -170,7 +157,7 @@ void SceneMan::set_scene(SceneBag scene_bag) {
 
 Scene& SceneMan::curr_scene() const { return *curr_scene_bag_.scene; }
 
-int SceneMan::curr_scene_type() const { return curr_scene_bag_.type; }
+scene_id_t SceneMan::curr_scene_id() const { return curr_scene_bag_.id; }
 
 const std::vector<SceneBag>& SceneMan::prev_scene_bags() const { return prev_scene_bags_; }
 

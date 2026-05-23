@@ -9,14 +9,19 @@
 
 namespace cybel {
 
-UiSprite::UiSprite(const SpriteRef& sprite_ref) noexcept
-  : sprite_ref(sprite_ref) {}
+UiSprite::UiSprite(asset_id_t id) noexcept
+  : id{id} {}
 
 void UiSprite::draw(Renderer& ren) {
-  const auto* sprite = sprite_ref.get();
-  if(sprite == nullptr) { return; }
+  // const auto* sprite = sprite_ref.get();
+  // if(sprite == nullptr) { return; }
+  //
+  // ren.wrap_sprite(*sprite,[&](auto& t) { t.draw_quad(pos_,size_); });
 
-  ren.wrap_sprite(*sprite,[&](auto& t) { t.draw_quad(pos_,size_); });
+  // TODO: Implement UiSprite.
+  ren.begin_color(Color4f::kMagenta);
+  ren.draw_quad(pos_,size_);
+  ren.end_color();
 }
 
 } // namespace cybel

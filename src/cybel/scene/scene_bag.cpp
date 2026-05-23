@@ -7,15 +7,7 @@
 
 #include "scene_bag.h"
 
-#include "cybel/scene/scene.h"
-
 namespace cybel {
-
-const SceneBag SceneBag::kEmpty{
-  .type = kTypeNone,
-  .scene = std::make_shared<Scene>(), // Current scene should never be null.
-  .persist = true,
-};
 
 SceneBag::operator bool() const { return static_cast<bool>(scene); }
 

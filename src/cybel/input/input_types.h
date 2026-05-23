@@ -10,6 +10,8 @@
 
 #include "cybel/common.h"
 
+#include "cybel/types/id_concepts.h"
+
 #include <unordered_set>
 #include <vector>
 
@@ -18,6 +20,9 @@ namespace cybel {
 using input_id_t = std::size_t;
 using InputIds = std::unordered_set<input_id_t>;
 using InputStates = std::vector<std::uint8_t>;
+
+template <typename T>
+concept InputIdLike = IdLike<T,input_id_t>;
 
 } // namespace cybel
 #endif

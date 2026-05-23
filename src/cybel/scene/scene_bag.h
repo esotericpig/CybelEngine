@@ -10,23 +10,30 @@
 
 #include "cybel/common.h"
 
-namespace cybel {
+#include "cybel/scene/scene.h"
+#include "cybel/scene/scene_types.h"
 
-class Scene;
+namespace cybel {
 
 class SceneBag final {
 public:
-  /// Do not use this for your own scene types, else they'll be ignored.
-  static constexpr int kTypeNone = 0;
+  /// Do not use this for your own scenes, else they'll be ignored.
+  static constexpr scene_id_t kIdNone = 0;
   static const SceneBag kEmpty;
 
-  int type = kTypeNone;
+  scene_id_t id = kIdNone;
   std::shared_ptr<Scene> scene{};
   bool persist = false;
 
   explicit operator bool() const;
   Scene* operator->() const;
   Scene& operator*() const;
+};
+
+inline const SceneBag SceneBag::kEmpty{
+  .id = kIdNone,
+  .scene = std::make_shared<Scene>(), // Current scene should never be null.
+  .persist = true,
 };
 
 } // namespace cybel

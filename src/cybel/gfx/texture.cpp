@@ -12,21 +12,23 @@
 
 namespace cybel {
 
-Texture::Texture(Image& img) {
-  const auto bypp = img.bytes_per_pixel();
-  GLenum img_format = GL_RGBA;
+Texture::Texture(AssetManKey,const Image& image)
+  : size_{image.size()} {
+  const auto bypp = image.bytes_per_pixel();
+  GLenum image_fmt = GL_RGBA;
 
   switch(bypp) {
     case 4:
-      img_format = img.is_red_first() ? GL_RGBA : GL_BGRA;
+      image_fmt = image.is_red_first() ? GL_RGBA : GL_BGRA;
       break;
 
     case 3:
-      img_format = img.is_red_first() ? GL_RGB : GL_BGR;
+      image_fmt = image.is_red_first() ? GL_RGB : GL_BGR;
       break;
 
     default:
-      throw CybelError{"Unsupported Bytes Per Pixel [",static_cast<int>(bypp),"] for image [",img.id(),"]."};
+      throw CybelError{"Unsupported Bytes Per Pixel `",static_cast<int>(bypp),
+                       "` for Image `",image.id(),"`."};
   }
 
   glGenTextures(1,&handle_);
@@ -52,50 +54,37 @@ Texture::Texture(Image& img) {
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 
-  img.lock();
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,img.size().w,img.size().h,0,img_format,img.gl_type(),img.pixels());
-  img.unlock();
+  image.lock();
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,size_.w,size_.h,0,image_fmt,image.gl_type(),image.pixels());
+  image.unlock();
 
   glBindTexture(GL_TEXTURE_2D,0); // Unbind texture.
 
   const GLenum error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    // Just eat error, so a blank texture is shown instead of crashing.
-    std::cerr << "[WARN] Failed to gen/bind texture for image [" << img.id()
-              << "]; error [" << error << "]: " << Util::get_gl_error(error) << '.' << std::endl;
+    // Just eat the errors, so a blank texture is shown instead of crashing.
+    std::cerr << "[WARN] Failed to gen/bind Texture for Image `" << image.id()
+              << "`; error `" << error << "`: " << Util::get_gl_error(error) << '.' << std::endl;
     Util::clear_gl_errors();
-
-    // destroy();
-    // throw CybelError{"Failed to gen/bind texture for image [",img.id(),"]; error [",error,"]: ",
-    //                  Util::get_gl_error(error),'.'};
   }
-
-  size_ = img.size();
 }
 
-Texture::Texture(Image&& img)
-  : Texture(img) {}
-
-Texture::Texture(const Color4f& color,bool make_weird) {
-  auto r = color.byte_r();
-  auto g = color.byte_g();
-  auto b = color.byte_b();
-  auto a = color.byte_a();
-
-  if(make_weird) {
-    r = 255 - r;
-    g = 255 - g;
-    b = 255 - b;
-  }
-
+Texture::Texture(AssetManKey,const Color4f& color) {
   constexpr int width = 2;
   constexpr int height = 2;
-  constexpr std::uint8_t bypp = 4;
-  constexpr int size = width * height * bypp;
-  GLubyte pixels[size]{};
+  const auto r = color.byte_r();
+  const auto g = color.byte_g();
+  const auto b = color.byte_b();
+  const auto a = color.byte_a();
 
-  for(auto* p = pixels; p < (pixels + size); p += bypp) {
+  size_ = Size2i{width,height};
+
+  constexpr std::uint8_t bypp = 4;
+  constexpr std::size_t bypp_count = width * height * bypp;
+  GLubyte pixels[bypp_count]{};
+
+  for(auto* p = pixels; p < (pixels + bypp_count); p += bypp) {
     p[0] = r;
     p[1] = g;
     p[2] = b;
@@ -115,29 +104,18 @@ Texture::Texture(const Color4f& color,bool make_weird) {
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
 
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,size_.w,size_.h,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
 
   glBindTexture(GL_TEXTURE_2D,0); // Unbind texture.
 
   const GLenum error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    // Just eat error, so a blank texture is shown instead of crashing.
-    std::cerr << "[WARN] Failed to gen/bind texture for color ("
-              << static_cast<int>(r) << ',' << static_cast<int>(g) << ','
-              << static_cast<int>(b) << ',' << static_cast<int>(a)
-              << "); error [" << error << "]: " << Util::get_gl_error(error) << '.' << std::endl;
+    // Just eat the errors, so a blank texture is shown instead of crashing.
+    std::cerr << "[WARN] Failed to gen/bind Texture for Color " << color.to_byte_str()
+              << "; error `" << error << "`: " << Util::get_gl_error(error) << '.' << std::endl;
     Util::clear_gl_errors();
-
-    // destroy();
-    // throw CybelError{"Failed to gen/bind texture for color (",
-    //                  static_cast<int>(r),',',static_cast<int>(g),',',
-    //                  static_cast<int>(b),',',static_cast<int>(a),
-    //                  "); error [",error,"]: ",Util::get_gl_error(error),'.'};
   }
-
-  size_.w = width;
-  size_.h = height;
 }
 
 Texture::Texture(Texture&& other) noexcept {
@@ -164,11 +142,12 @@ void Texture::destroy() noexcept {
 
 Texture& Texture::operator=(Texture&& other) noexcept {
   if(this != &other) { move_from(std::move(other)); }
-
   return *this;
 }
 
-void Texture::zombify() { handle_ = 0; }
+void Texture::zombify(AssetManKey) noexcept {
+  handle_ = 0;
+}
 
 GLuint Texture::handle() const { return handle_; }
 

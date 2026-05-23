@@ -12,10 +12,10 @@
 
 namespace cybel {
 
-/**
- * Clamped floats to [0,1].
- */
-class Color4f {
+// TODO: This class should probably be constexpr.
+
+/// Clamped floats to [0,1].
+class Color4f final {
 public:
   static const Color4f kNone;
   static const Color4f kBlack;
@@ -25,6 +25,7 @@ public:
   static const Color4f kCyan;
   static const Color4f kGreen;
   static const Color4f kHotPink;
+  static const Color4f kMagenta;
   static const Color4f kPink;
   static const Color4f kPurple;
   static const Color4f kRed;
@@ -71,7 +72,26 @@ public:
   std::uint8_t byte_g() const;
   std::uint8_t byte_b() const;
   std::uint8_t byte_a() const;
+
+  std::string to_str() const;
+  std::string to_hex_str() const;
+  std::string to_byte_str() const;
 };
+
+inline const Color4f Color4f::kNone{0.0f,0.0f};
+inline const Color4f Color4f::kBlack = hex(0x000000);
+inline const Color4f Color4f::kBlue = hex(0x0000ff);
+inline const Color4f Color4f::kBrown = hex(0x964b00);
+inline const Color4f Color4f::kCopper = hex(0xb87333);
+inline const Color4f Color4f::kCyan = hex(0x00ffff);
+inline const Color4f Color4f::kGreen = hex(0x00ff00);
+inline const Color4f Color4f::kHotPink = hex(0xff69b4);
+inline const Color4f Color4f::kMagenta = hex(0xff00ff);
+inline const Color4f Color4f::kPink = hex(0xffc0cb);
+inline const Color4f Color4f::kPurple = hex(0xff00ff);
+inline const Color4f Color4f::kRed = hex(0xff0000);
+inline const Color4f Color4f::kWhite = hex(0xffffff);
+inline const Color4f Color4f::kYellow = hex(0xffff00);
 
 } // namespace cybel
 #endif

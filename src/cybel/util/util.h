@@ -10,6 +10,9 @@
 
 #include "cybel/common.h"
 
+#include <algorithm>
+#include <cassert>
+#include <iterator>
 #include <sstream>
 #include <unordered_set>
 #include <vector>
@@ -23,6 +26,8 @@ namespace Util {
   std::size_t build_hash(const Args&... args);
 
   template <typename T>
+  void grow_for_index(std::vector<T>& vec,std::size_t index);
+  template <typename T>
   std::vector<T> unique(const std::vector<T>& vec);
 
   void clear_gl_errors();
@@ -35,10 +40,10 @@ namespace Util {
   std::string get_emscripten_result(int result);
 }
 
-// See Example at bottom:
-// - https://en.cppreference.com/w/cpp/language/fold
 template <typename... Args>
 std::string Util::build_str(const Args&... args) {
+  // See Example at bottom:
+  // - https://en.cppreference.com/w/cpp/language/fold
   std::ostringstream ss{};
   (ss << ... << args);
 
@@ -54,18 +59,31 @@ std::size_t Util::build_hash(const Args&... args) {
 }
 
 template <typename T>
+void Util::grow_for_index(std::vector<T>& vec,std::size_t index) {
+  if(index < vec.size()) { return; }
+
+  const auto new_size = static_cast<std::size_t>(static_cast<double>(index + 1) * 1.5);
+  vec.resize(new_size);
+
+  assert(index < vec.size());
+}
+
+template <typename T>
 std::vector<T> Util::unique(const std::vector<T>& vec) {
   if(vec.size() <= 1) { return vec; }
 
   std::unordered_set<T> seen{};
   std::vector<T> unique{};
 
-  for(const auto& e : vec) {
-    bool is_unique = seen.insert(e).second; // Was inserted?
+  seen.reserve(vec.size());
+  unique.reserve(vec.size());
 
-    if(is_unique) { unique.push_back(e); }
-  }
+  std::ranges::copy_if(vec,std::back_inserter(unique),[&seen](const auto& e) {
+    // Is unique? (Inserted for the first time?)
+    return seen.insert(e).second;
+  });
 
+  unique.shrink_to_fit();
   return unique;
 }
 

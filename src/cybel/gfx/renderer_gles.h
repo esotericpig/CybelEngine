@@ -28,8 +28,9 @@ class RendererGles final : public Renderer {
 public:
   explicit RendererGles(const Size2i& size,const Size2i& target_size,const Color4f& clear_color);
 
-  void on_gpu_context_loss() override;
-  void on_gpu_context_restore() override;
+  void on_gpu_context_loss(AssetManKey) override;
+  void on_gpu_context_restore(AssetManKey) override;
+
   void resize(const Size2i& size) override;
 
   Renderer& begin_2d_scene() override;

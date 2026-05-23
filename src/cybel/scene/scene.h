@@ -17,7 +17,7 @@
 
 namespace cybel {
 
-class SceneContext;
+struct SceneContext;
 
 class Scene {
 public:
@@ -42,9 +42,7 @@ public:
 
   virtual void on_scene_input_event([[maybe_unused]] input_id_t input_id,
                                     [[maybe_unused]] SceneContext& ctx) {}
-  virtual void handle_scene_input([[maybe_unused]] const InputStates& states,
-                                  [[maybe_unused]] InputMan& input,
-                                  [[maybe_unused]] SceneContext& ctx) {}
+  virtual void handle_scene_input([[maybe_unused]] InputMan& input,[[maybe_unused]] SceneContext& ctx) {}
 
   virtual void update_scene_logic([[maybe_unused]] const FrameStep& step,
                                   [[maybe_unused]] SceneContext& ctx) {}

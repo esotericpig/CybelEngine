@@ -11,6 +11,7 @@
 #include "cybel/common.h"
 
 #include "cybel/scene/scene_bag.h"
+#include "cybel/scene/scene_types.h"
 
 #include <functional>
 #include <vector>
@@ -23,18 +24,19 @@ class Scene;
 /// Only one scene action can occur per frame and first one wins.
 class SceneMan final {
 public:
-  using BuildScene = std::function<SceneBag(int type)>;
+  using BuildScene = std::function<SceneBag(scene_id_t id)>;
   using OnSceneChange = std::function<void(Scene&)>;
 
   explicit SceneMan(BuildScene build_scene,OnSceneChange on_scene_enter,OnSceneChange on_scene_exit);
 
-  bool push_scene(int type);
+  template <SceneIdLike T>
+  bool push_scene(T id_like);
   bool pop_scene();
   bool pop_all_scenes();
   bool restart_scene();
 
   Scene& curr_scene() const;
-  int curr_scene_type() const;
+  scene_id_t curr_scene_id() const;
   const std::vector<SceneBag>& prev_scene_bags() const;
 
   friend class CybelEngine;
@@ -67,6 +69,22 @@ private:
 
   void set_scene(SceneBag scene_bag);
 };
+
+template <SceneIdLike T>
+bool SceneMan::push_scene(T id_like) {
+  const auto id = static_cast<scene_id_t>(id_like);
+
+  if(pending_action_ != Action::kNone) {
+    return pending_action_ == Action::kPushScene && pending_scene_bag_.id == id;
+  }
+  if(id == SceneBag::kIdNone) { return false; }
+
+  pending_scene_bag_ = build_scene_(id);
+  if(!pending_scene_bag_.scene) { return false; }
+
+  pending_action_ = Action::kPushScene;
+  return true;
+}
 
 } // namespace cybel
 #endif

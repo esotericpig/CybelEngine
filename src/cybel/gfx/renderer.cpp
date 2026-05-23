@@ -58,9 +58,13 @@ void Renderer::init_gpu_context() {
   }
 }
 
-void Renderer::on_gpu_context_loss() {}
+void Renderer::on_gpu_context_loss(AssetManKey) {
+  curr_tex_ = nullptr;
+}
 
-void Renderer::on_gpu_context_restore() {
+void Renderer::on_gpu_context_restore(AssetManKey) {
+  curr_tex_ = nullptr;
+
   Util::clear_gl_errors();
   init_gpu_context();
 }
@@ -210,13 +214,13 @@ Renderer& Renderer::wrap_tex(const Texture& tex,const WrapCallback& callback) {
 Renderer& Renderer::wrap_sprite(const Sprite& sprite,const WrapSpriteCallback& callback) {
   SpriteWrapper wrapper{*this,sprite};
 
-  return wrap_tex(sprite.tex(),[&] { callback(wrapper); });
+  return wrap_tex(sprite.texture(),[&] { callback(wrapper); });
 }
 
 Renderer& Renderer::wrap_sprite_atlas(const SpriteAtlas& atlas,const WrapSpriteAtlasCallback& callback) {
   SpriteAtlasWrapper wrapper{*this,atlas};
 
-  return wrap_tex(atlas.tex(),[&] { callback(wrapper); });
+  return wrap_tex(atlas.texture(),[&] { callback(wrapper); });
 }
 
 Renderer& Renderer::wrap_font_atlas(const FontAtlas& font,const Pos3i& pos,
@@ -233,7 +237,7 @@ Renderer& Renderer::wrap_font_atlas(const FontAtlas& font,const Pos3i& pos,const
                                     const Size2i& spacing,const WrapFontAtlasCallback& callback) {
   FontAtlasWrapper wrapper{*this,font,pos,rune_size,spacing};
 
-  return wrap_tex(font.tex(),[&] { callback(wrapper); });
+  return wrap_tex(font.texture(),[&] { callback(wrapper); });
 }
 
 Pos5f Renderer::build_dest_pos5f(const Pos3i& pos,const Size2i& size) const {
@@ -324,7 +328,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::draw_bg(const Color4f& c
   ren.wrap_color(color,[&] {
     ren.draw_quad(Pos3i{pos.x - bg_padding_.w,pos.y - bg_padding_.h,pos.z},calc_total_size(str_size));
   });
-  ren.begin_tex(font.tex()); // Bind back the font texture.
+  ren.begin_tex(font.texture()); // Bind back the font texture.
 
   return *this;
 }

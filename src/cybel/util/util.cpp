@@ -57,7 +57,7 @@ std::string Util::get_gl_error(GLenum error) {
     case 0x0507: return "GL_CONTEXT_LOST";
   }
 
-  return std::string{"unknown error ["} + std::to_string(error) + ']';
+  return std::string{"unknown GL error `"} + std::to_string(error) + '`';
 }
 
 std::string Util::get_glew_error(GLenum error) {

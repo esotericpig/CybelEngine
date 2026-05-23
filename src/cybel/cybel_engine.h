@@ -11,6 +11,7 @@
 #include "cybel/common.h"
 
 #include "cybel/game.h"
+#include "cybel/asset/asset_man.h"
 #include "cybel/audio/audio_player.h"
 #include "cybel/gfx/image.h"
 #include "cybel/gfx/renderer.h"
@@ -22,6 +23,7 @@
 #include "cybel/types/frame_step.h"
 #include "cybel/types/size.h"
 #include "cybel/types/view_dimens.h"
+#include "cybel/util/file_sys.h"
 #include "cybel/util/timer.h"
 
 #include <atomic>
@@ -29,28 +31,8 @@
 namespace cybel {
 
 class CybelEngine final {
-  // NOTE: The variables in this section must be defined first so that their dtors are called last.
-
-  /// This is necessary for RAII, since CybelEngine() ctor can throw an exception.
-  /// I decided to do this over using `unique_ptr`s or individual wrappers.
-  class Platform final {
-  public:
-    SDL_Window* window = nullptr;
-    SDL_GLContext gl_context = nullptr;
-
-    explicit Platform() noexcept = default;
-    Platform(const Platform& other) = delete;
-    Platform(Platform&& other) noexcept = delete;
-    ~Platform() noexcept;
-
-    Platform& operator=(const Platform& other) = delete;
-    Platform& operator=(Platform&& other) noexcept = delete;
-  } plat_{}; // Chris Pratt?
-
-  std::unique_ptr<AudioPlayer> audio_player_{};
-
 public:
-  struct Config {
+  struct Config final {
     std::string title{};
     float scale_factor = 0.0f;
     Size2i size{kFallbackWidth,kFallbackHeight};
@@ -59,8 +41,6 @@ public:
     int fps = kFallbackFps;
     bool vsync = false;
     Color4f clear_color{0.0f,1.0f};
-
-    input_id_t max_input_id = 0;
 
     /// All:
     ///   IMG_INIT_AVIF | IMG_INIT_JPG  | IMG_INIT_JXL | IMG_INIT_PNG |
@@ -118,11 +98,13 @@ public:
   bool is_vsync() const;
   bool is_logic_running() const;
 
-  Renderer& renderer();
-  InputMan& input_man();
-  AudioPlayer& audio_player();
+  FileSys& file_sys();
   Game& game();
-  SceneMan& scene_man();
+  SceneMan& scenes();
+  InputMan& input();
+  AssetMan& assets();
+  Renderer& renderer();
+  AudioPlayer& audio();
 
   const ViewDimens& dimens() const;
   int target_fps() const;
@@ -132,7 +114,27 @@ public:
   float avg_fps() const;
 
 private:
+  /// This is necessary for RAII, since CybelEngine() ctor can throw an exception.
+  /// I decided to do this over using `unique_ptr`s or individual wrappers.
+  class EngineCore final {
+  public:
+    SDL_Window* window = nullptr;
+    SDL_GLContext gl_context = nullptr;
+
+    explicit EngineCore() noexcept = default;
+    EngineCore(const EngineCore& other) = delete;
+    EngineCore(EngineCore&& other) noexcept = delete;
+    ~EngineCore() noexcept;
+
+    EngineCore& operator=(const EngineCore& other) = delete;
+    EngineCore& operator=(EngineCore&& other) noexcept = delete;
+  };
+
   static inline std::atomic<bool> is_init_ = false;
+
+  // NOTE: The variables in this section must be defined first so that their dtors are called last.
+  EngineCore core_{};
+  std::unique_ptr<AudioPlayer> audio_player_{};
 
   std::string title_{};
   int target_fps_ = 0;
@@ -140,15 +142,18 @@ private:
   float avg_fps_{};
   bool is_vsync_ = false;
 
+  std::unique_ptr<FileSys> file_sys_{};
+  std::unique_ptr<AssetMan> asset_man_{};
   std::unique_ptr<Renderer> renderer_{};
   std::unique_ptr<InputMan> input_man_{};
-  std::unique_ptr<SceneContext> scene_ctx_{};
+
   std::unique_ptr<Game> game_{};
   SceneMan scene_man_{
-    [this](int type) { return build_scene(type); },
+    [this](scene_id_t id) { return build_scene(id); },
     [this](Scene& scene) { on_scene_enter(scene); },
     [this](Scene& scene) { on_scene_exit(scene); },
   };
+  std::unique_ptr<SceneContext> scene_ctx_{};
 
   bool is_running_ = false;
   bool is_logic_running_ = true;
@@ -174,7 +179,7 @@ private:
   void on_gpu_context_loss();
   void on_gpu_context_restore();
 
-  SceneBag build_scene(int type);
+  SceneBag build_scene(scene_id_t id);
   void on_scene_enter(Scene& scene);
   void on_scene_exit(Scene& scene);
 
