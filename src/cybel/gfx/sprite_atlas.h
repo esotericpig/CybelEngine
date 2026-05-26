@@ -15,6 +15,7 @@
 #include "cybel/types/pos.h"
 #include "cybel/types/size.h"
 
+#include <concepts>
 #include <functional>
 #include <vector>
 
@@ -30,7 +31,18 @@ public:
   };
 
   explicit SpriteAtlas(AssetManKey,Texture& texture,const Config& config);
+  SpriteAtlas(const SpriteAtlas& other) = delete;
+  SpriteAtlas(SpriteAtlas&& other) noexcept = default;
+  /// Prevents object slicing.
+  template <std::derived_from<SpriteAtlas> T>
+  SpriteAtlas(T&& other) noexcept = delete;
   virtual ~SpriteAtlas() noexcept = default;
+
+  SpriteAtlas& operator=(const SpriteAtlas& other) = delete;
+  SpriteAtlas& operator=(SpriteAtlas&& other) noexcept = default;
+  /// Prevents object slicing.
+  template <std::derived_from<SpriteAtlas> T>
+  SpriteAtlas& operator=(T&& other) noexcept = delete;
 
   const Texture& texture() const;
   const Pos4f* src(std::size_t index) const;
@@ -44,12 +56,6 @@ protected:
   Size2i cell_size_{};
   Size2i grid_size_{};
   std::vector<Pos4f> index_to_src_{};
-
-  SpriteAtlas(const SpriteAtlas& other) = default;
-  SpriteAtlas(SpriteAtlas&& other) noexcept = default;
-
-  SpriteAtlas& operator=(const SpriteAtlas& other) = default;
-  SpriteAtlas& operator=(SpriteAtlas&& other) noexcept = default;
 };
 
 } // namespace cybel
