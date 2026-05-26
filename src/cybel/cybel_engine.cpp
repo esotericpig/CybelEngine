@@ -434,7 +434,7 @@ void CybelEngine::sync_size(bool force) {
 }
 
 void CybelEngine::resize(const Size2i& size,bool force) {
-  if(!force && size.w == renderer_->dimens().size.w && size.h == renderer_->dimens().size.h) {
+  if(!force && size == renderer_->dimens().size) {
     return; // Size didn't change.
   }
 
