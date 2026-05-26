@@ -97,15 +97,15 @@ private:
   class AssetBag {
   public:
     const char* name = "";
+    Assets<T> assets{};
     bool has_assets = false; // Because can't use -1 in `max_id` (unsigned) to indicate this.
     asset_id_t max_id = 0;
-    Assets<T> assets{};
 
     explicit AssetBag(const char* name,std::size_t init_size,bool is_ghost = false);
   };
 
   bool is_audio_alive_ = false;
-  std::shared_ptr<AssetLoader> asset_loader_ = nullptr;
+  std::shared_ptr<AssetLoader> asset_loader_{};
 
   std::tuple<
     AssetBag<Image>,
@@ -137,7 +137,6 @@ private:
 
   Image missing_image_{Size2i{64,64},Color4f::kMagenta};
   Texture missing_texture_{AssetManKey{},missing_image_};
-  // Must use AssetPtrs for SpriteAtlas/FontAtlas, since no move funcs.
   std::tuple<
     AssetPtr<Sprite>,
     AssetPtr<SpriteAtlas>,
@@ -227,7 +226,7 @@ void AssetMan::shrink_ghost_assets(AssetBags& asset_bags) {
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::check_assets(const AssetBags& asset_bags) const {
+void AssetMan::check_assets([[maybe_unused]] const AssetBags& asset_bags) const {
 #if !defined(NDEBUG)
   ([&asset_bags]() {
     auto& asset_bag = std::get<AssetBag<Ts>>(asset_bags);
@@ -235,8 +234,8 @@ void AssetMan::check_assets(const AssetBags& asset_bags) const {
 
     if(!asset_bag.has_assets) { return; }
 
-    for(std::size_t id = 0; id <= asset_bag.max_id && id < assets.size(); ++id) {
-      if(!assets[id]) {
+    for(std::size_t id = 0; id <= asset_bag.max_id; ++id) {
+      if(id >= assets.size() || !assets[id]) {
         std::cerr << "[WARN] " << asset_bag.name << " asset ID `" << id << "` was not loaded." << std::endl;
       }
     }
@@ -291,8 +290,11 @@ T& AssetMan::load_ghost_gfx_asset(Args&&... args) {
   T& asset = *asset_ptr;
   assets.push_back(std::move(asset_ptr));
 
-  asset_bag.has_assets = true;
-  ++asset_bag.max_id;
+  if(asset_bag.has_assets) {
+    ++asset_bag.max_id;
+  } else {
+    asset_bag.has_assets = true;
+  }
 
   return asset;
 }
