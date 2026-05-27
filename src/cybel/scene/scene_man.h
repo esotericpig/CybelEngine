@@ -37,6 +37,7 @@ public:
 
   Scene& curr_scene() const;
   scene_id_t curr_scene_id() const;
+  bool has_prev_scenes() const;
   const std::vector<SceneBag>& prev_scene_bags() const;
 
   friend class CybelEngine;
@@ -67,7 +68,7 @@ private:
   void commit_restart_scene();
   void cancel_pending();
 
-  void set_scene(SceneBag scene_bag);
+  void set_curr_scene(SceneBag new_scene_bag);
 };
 
 template <SceneIdLike T>
@@ -77,10 +78,12 @@ bool SceneMan::push_scene(T id_like) {
   if(pending_action_ != Action::kNone) {
     return pending_action_ == Action::kPushScene && pending_scene_bag_.id == id;
   }
-  if(id == SceneBag::kIdNone) { return false; }
 
   pending_scene_bag_ = build_scene_(id);
-  if(!pending_scene_bag_.scene) { return false; }
+
+  if(!pending_scene_bag_.scene || pending_scene_bag_ == SceneBag::kEmpty) {
+    return false;
+  }
 
   pending_action_ = Action::kPushScene;
   return true;

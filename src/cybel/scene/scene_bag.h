@@ -17,21 +17,19 @@ namespace cybel {
 
 class SceneBag final {
 public:
-  /// Do not use this for your own scenes, else they'll be ignored.
-  static constexpr scene_id_t kIdNone = 0;
   static const SceneBag kEmpty;
 
-  scene_id_t id = kIdNone;
+  scene_id_t id{};
   std::shared_ptr<Scene> scene{};
   bool persist = false;
 
+  auto operator<=>(const SceneBag& other) const = default;
   explicit operator bool() const;
   Scene* operator->() const;
   Scene& operator*() const;
 };
 
 inline const SceneBag SceneBag::kEmpty{
-  .id = kIdNone,
   .scene = std::make_shared<Scene>(), // Current scene should never be null.
   .persist = true,
 };
