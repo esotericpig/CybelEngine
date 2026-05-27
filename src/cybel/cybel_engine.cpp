@@ -236,7 +236,7 @@ void CybelEngine::run(std::unique_ptr<Game> game) {
   game_ = std::move(game);
   is_running_ = true;
 
-  game_->on_game_start(*this);
+  game_->on_game_start(*this,*scene_ctx_);
   game_->on_scene_enter(*scene_ctx_);
 
   // Check the size again, due to SDL_WINDOW_ALLOW_HIGHDPI,

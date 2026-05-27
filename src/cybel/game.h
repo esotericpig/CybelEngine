@@ -20,7 +20,7 @@ class CybelEngine;
 
 class Game : public Scene {
 public:
-  virtual void on_game_start([[maybe_unused]] CybelEngine& engine) {}
+  virtual void on_game_start([[maybe_unused]] CybelEngine& engine,[[maybe_unused]] SceneContext& ctx) {}
 
   virtual SceneBag build_scene([[maybe_unused]] scene_id_t id,[[maybe_unused]] SceneContext& ctx) {
     return SceneBag{};
