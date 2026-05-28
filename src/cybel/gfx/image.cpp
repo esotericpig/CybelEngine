@@ -99,11 +99,11 @@ Image& Image::make_weird() {
 }
 
 Image& Image::colorize(const Color4f& to_color) {
+  // NOTE: Don't change the alpha values of the image.
   edit_pixels([&](Color4f& c) {
     c.r = std::clamp(c.r * (to_color.r / 0.5f),0.0f,1.0f);
     c.g = std::clamp(c.g * (to_color.g / 0.5f),0.0f,1.0f);
     c.b = std::clamp(c.b * (to_color.b / 0.5f),0.0f,1.0f);
-    c.a = to_color.a;
   });
 
   return *this;
