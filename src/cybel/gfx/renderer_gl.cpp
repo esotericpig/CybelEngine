@@ -40,7 +40,7 @@ void RendererGl::init() {
   }
 }
 
-void RendererGl::on_gpu_context_restore(AssetManKey key) {
+void RendererGl::on_gpu_context_restore(GpuContextKey key) {
   Renderer::on_gpu_context_restore(key);
   init();
 }

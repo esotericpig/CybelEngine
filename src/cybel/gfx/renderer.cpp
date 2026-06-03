@@ -58,11 +58,11 @@ void Renderer::init_gpu_context() {
   }
 }
 
-void Renderer::on_gpu_context_loss(AssetManKey) {
+void Renderer::on_gpu_context_loss(GpuContextKey) {
   curr_tex_ = nullptr;
 }
 
-void Renderer::on_gpu_context_restore(AssetManKey) {
+void Renderer::on_gpu_context_restore(GpuContextKey) {
   curr_tex_ = nullptr;
 
   Util::clear_gl_errors();

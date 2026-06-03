@@ -99,12 +99,19 @@ public:
   bool is_logic_running() const;
 
   FileSys& file_sys();
+  const FileSys& file_sys() const;
   Game& game();
+  const Game& game() const;
   SceneMan& scenes();
+  const SceneMan& scenes() const;
   InputMan& input();
+  const InputMan& input() const;
   AssetMan& assets();
+  const AssetMan& assets() const;
   Renderer& renderer();
+  const Renderer& renderer() const;
   AudioPlayer& audio();
+  const AudioPlayer& audio() const;
 
   const ViewDimens& dimens() const;
   int target_fps() const;

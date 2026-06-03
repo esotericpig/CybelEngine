@@ -18,16 +18,20 @@ class CybelError : public std::exception {
 public:
   explicit CybelError() = default;
   explicit CybelError(std::string_view msg);
+  explicit CybelError(const std::string& msg);
 
   template <typename... MsgArgs>
-  explicit CybelError(const MsgArgs&... msg_args)
-    : msg_(Util::build_str(msg_args...)) {}
+  explicit CybelError(const MsgArgs&... msg_args);
 
   const char* what() const noexcept override;
 
 private:
   std::string msg_{};
 };
+
+template <typename... MsgArgs>
+CybelError::CybelError(const MsgArgs&... msg_args)
+  : msg_{Util::build_str(msg_args...)} {}
 
 } // namespace cybel
 #endif

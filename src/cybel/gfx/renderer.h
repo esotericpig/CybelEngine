@@ -10,8 +10,8 @@
 
 #include "cybel/common.h"
 
-#include "cybel/asset/asset_man_key.h"
 #include "cybel/gfx/font_atlas.h"
+#include "cybel/gfx/gpu_context_key.h"
 #include "cybel/gfx/sprite.h"
 #include "cybel/gfx/sprite_atlas.h"
 #include "cybel/gfx/texture.h"
@@ -142,8 +142,8 @@ public:
   Renderer& operator=(const Renderer& other) = delete;
   Renderer& operator=(Renderer&& other) noexcept = delete;
 
-  virtual void on_gpu_context_loss(AssetManKey);
-  virtual void on_gpu_context_restore(AssetManKey);
+  virtual void on_gpu_context_loss(GpuContextKey);
+  virtual void on_gpu_context_restore(GpuContextKey);
 
   virtual void resize(const Size2i& size);
   void clear_view();

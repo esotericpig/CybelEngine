@@ -12,14 +12,14 @@
 
 namespace cybel {
 
-Sound::Sound(const std::filesystem::path& file) {
+Sound::Sound(AssetManKey,const std::filesystem::path& file) {
   const auto file_str = file.u8string();
   const auto* file_cstr = reinterpret_cast<const char*>(file_str.c_str());
 
   handle_ = Mix_LoadWAV(file_cstr);
 
   if(!handle_) {
-    throw CybelError{"Failed to load Sound `",file_cstr,"`: ",Util::get_sdl_mix_error(),'.'};
+    throw CybelError{"Failed to load Sound file `",file_cstr,"`: ",Util::get_sdl_mix_error(),'.'};
   }
 }
 

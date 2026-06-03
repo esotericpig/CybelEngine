@@ -7,6 +7,7 @@
 
 #include "cybel_engine.h"
 
+#include "cybel/gfx/gpu_context_key.h"
 #include "cybel/metrics/metric_man.h"
 #include "cybel/scene/scene_context.h"
 #include "cybel/str/utf8/str_util.h"
@@ -372,25 +373,27 @@ bool CybelEngine::on_webgl_context_change(int event_type,[[maybe_unused]] const 
 #endif // __EMSCRIPTEN__
 
 void CybelEngine::on_gpu_context_loss() {
-  game_->on_scene_exit(*scene_ctx_);
   scene_man_.curr_scene().on_scene_exit(*scene_ctx_);
-
-  game_->on_scene_gpu_context_loss(*scene_ctx_);
-  scene_man_.curr_scene().on_scene_gpu_context_loss(*scene_ctx_);
+  game_->on_scene_exit(*scene_ctx_);
 
   for(auto& bag : scene_man_.prev_scene_bags()) {
     if(bag.scene) { bag.scene->on_scene_gpu_context_loss(*scene_ctx_); }
   }
 
-  asset_man_->on_gpu_context_loss(AssetManKey{});
-  renderer_->on_gpu_context_loss(AssetManKey{});
+  scene_man_.curr_scene().on_scene_gpu_context_loss(*scene_ctx_);
+  game_->on_scene_gpu_context_loss(*scene_ctx_);
+
+  renderer_->on_gpu_context_loss(GpuContextKey{});
+  asset_man_->on_gpu_context_loss(GpuContextKey{});
+
   core_.gl_context = nullptr;
 }
 
 void CybelEngine::on_gpu_context_restore() {
   init_gpu_context();
-  renderer_->on_gpu_context_restore(AssetManKey{});
-  asset_man_->on_gpu_context_restore(AssetManKey{});
+
+  asset_man_->on_gpu_context_restore(GpuContextKey{});
+  renderer_->on_gpu_context_restore(GpuContextKey{});
 
   // NOTE: Must call Game first so that it can reload textures, etc.
   game_->on_scene_gpu_context_restore(*scene_ctx_);
@@ -596,17 +599,31 @@ bool CybelEngine::is_logic_running() const { return is_logic_running_; }
 
 FileSys& CybelEngine::file_sys() { return *file_sys_; }
 
+const FileSys& CybelEngine::file_sys() const { return *file_sys_; }
+
 Game& CybelEngine::game() { return *game_; }
+
+const Game& CybelEngine::game() const { return *game_; }
 
 SceneMan& CybelEngine::scenes() { return scene_man_; }
 
+const SceneMan& CybelEngine::scenes() const { return scene_man_; }
+
 InputMan& CybelEngine::input() { return *input_man_; }
+
+const InputMan& CybelEngine::input() const { return *input_man_; }
 
 AssetMan& CybelEngine::assets() { return *asset_man_; }
 
+const AssetMan& CybelEngine::assets() const { return *asset_man_; }
+
 Renderer& CybelEngine::renderer() { return *renderer_; }
 
+const Renderer& CybelEngine::renderer() const { return *renderer_; }
+
 AudioPlayer& CybelEngine::audio() { return *audio_player_; }
+
+const AudioPlayer& CybelEngine::audio() const { return *audio_player_; }
 
 const ViewDimens& CybelEngine::dimens() const { return renderer_->dimens(); }
 

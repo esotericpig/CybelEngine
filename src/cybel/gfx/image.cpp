@@ -12,7 +12,7 @@
 
 namespace cybel {
 
-Image::Image(const std::filesystem::path& file)
+Image::Image(AssetManKey,const std::filesystem::path& file)
   : id_{file} {
   const auto file_str = file.u8string();
   const auto* file_cstr = reinterpret_cast<const char*>(file_str.c_str());
@@ -27,7 +27,7 @@ Image::Image(const std::filesystem::path& file)
 }
 
 Image::Image(const Size2i& size,const Color4f& color)
-  : id_{"Color://" + color.to_byte_str()},
+  : id_{"Color4f://" + color.to_byte_str()},
     size_{size} {
   handle_ = SDL_CreateRGBSurfaceWithFormat(0,size_.w,size_.h,32,SDL_PIXELFORMAT_RGBA32);
 

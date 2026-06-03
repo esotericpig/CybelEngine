@@ -18,6 +18,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace cybel {
+
 std::string RendererGles::fetch_info_log(GLuint handle,InfoLogType type) {
   GLint len = 0;
 
@@ -145,7 +146,7 @@ void RendererGles::init_prog() {
   }
 }
 
-void RendererGles::on_gpu_context_loss(AssetManKey key) {
+void RendererGles::on_gpu_context_loss(GpuContextKey key) {
   Renderer::on_gpu_context_loss(key);
   prog_.zombify();
   quad_buffer_.zombify();
@@ -155,7 +156,7 @@ void RendererGles::on_gpu_context_loss(AssetManKey key) {
   }
 }
 
-void RendererGles::on_gpu_context_restore(AssetManKey key) {
+void RendererGles::on_gpu_context_restore(GpuContextKey key) {
   Renderer::on_gpu_context_restore(key);
   init();
 }

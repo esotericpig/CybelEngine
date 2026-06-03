@@ -10,6 +10,7 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_man_key.h"
 #include "cybel/types/color.h"
 #include "cybel/types/size.h"
 
@@ -25,7 +26,7 @@ class Image final {
 public:
   using EditPixel = std::function<void(Color4f&)>;
 
-  explicit Image(const std::filesystem::path& file);
+  explicit Image(AssetManKey,const std::filesystem::path& file);
   explicit Image(const Size2i& size,const Color4f& color);
 
   Image(const Image& other) = delete;

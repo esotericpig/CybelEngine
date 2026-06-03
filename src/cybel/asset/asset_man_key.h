@@ -13,13 +13,11 @@
 namespace cybel {
 
 class AssetMan;
-class CybelEngine;
 
-/// Prevents loading certain assets outside of AssetMan/AssetLoader.
+/// Only AssetMan can create/zombify assets.
 class AssetManKey final {
 public:
   friend class AssetMan;
-  friend class CybelEngine; // For AssetMan/Renderer.on_gpu_context_loss/restore().
 
 private:
   explicit constexpr AssetManKey() noexcept = default;

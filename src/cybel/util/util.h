@@ -28,8 +28,11 @@ namespace Util {
   template <typename T>
   void grow_for_index(std::vector<T>& vec,std::size_t index);
   template <typename T>
+  std::string join_with(const std::vector<T>& vec,std::string_view separator);
+  template <typename T>
   std::vector<T> unique(const std::vector<T>& vec);
 
+  void clear_sdl_error();
   void clear_gl_errors();
 
   std::string get_sdl_error();
@@ -66,6 +69,23 @@ void Util::grow_for_index(std::vector<T>& vec,std::size_t index) {
   vec.resize(new_size);
 
   assert(index < vec.size());
+}
+
+template <typename T>
+std::string Util::join_with(const std::vector<T>& vec,std::string_view separator) {
+  if(vec.empty()) { return ""; }
+
+  std::string result{};
+  auto it = vec.cbegin();
+
+  result += *it;
+
+  for(++it; it != vec.cend(); ++it) {
+    result += separator;
+    result += *it;
+  }
+
+  return result;
 }
 
 template <typename T>

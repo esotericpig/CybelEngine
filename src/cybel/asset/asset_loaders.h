@@ -10,6 +10,7 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_loader_key.h"
 #include "cybel/asset/asset_man.h"
 #include "cybel/asset/asset_man_key.h"
 #include "cybel/asset/asset_types.h"
@@ -44,6 +45,10 @@ private:
 class GpuGfxLoader final {
 public:
   explicit GpuGfxLoader(AssetManKey,AssetMan& asset_man) noexcept;
+
+  Image load_image(const std::filesystem::path& file);
+  Image load_image(const Size2i& size,const Color4f& color);
+  Image load_image(const Image& other);
 
   template <AssetIdLike T>
   Texture& load_texture(T id,const Image& image);
@@ -80,57 +85,57 @@ private:
 
 template <AssetIdLike T>
 Image& CpuGfxLoader::load_image(T id,const std::filesystem::path& file) {
-  return asset_man_.load_gfx_asset<Image>(static_cast<asset_id_t>(id),file);
+  return asset_man_.load_gfx_asset<Image>(AssetLoaderKey{},static_cast<asset_id_t>(id),file);
 }
 
 template <AssetIdLike T>
 Image& CpuGfxLoader::load_image(T id,const Size2i& size,const Color4f& color) {
-  return asset_man_.load_gfx_asset<Image>(static_cast<asset_id_t>(id),size,color);
+  return asset_man_.load_gfx_asset<Image>(AssetLoaderKey{},static_cast<asset_id_t>(id),size,color);
 }
 
 template <AssetIdLike T>
 Image& CpuGfxLoader::load_image(T id,const Image& other) {
-  return asset_man_.load_gfx_asset<Image>(static_cast<asset_id_t>(id),other.dup());
+  return asset_man_.load_gfx_asset<Image>(AssetLoaderKey{},static_cast<asset_id_t>(id),other.dup());
 }
 
 template <AssetIdLike T>
 Texture& GpuGfxLoader::load_texture(T id,const Image& image) {
-  return asset_man_.load_gfx_asset<Texture>(static_cast<asset_id_t>(id),image);
+  return asset_man_.load_gfx_asset<Texture>(AssetLoaderKey{},static_cast<asset_id_t>(id),image);
 }
 
 template <AssetIdLike T>
 Texture& GpuGfxLoader::load_texture(T id,const Color4f& color) {
-  return asset_man_.load_gfx_asset<Texture>(static_cast<asset_id_t>(id),color);
+  return asset_man_.load_gfx_asset<Texture>(AssetLoaderKey{},static_cast<asset_id_t>(id),color);
 }
 
 template <AssetIdLike T>
 Sprite& GpuGfxLoader::load_sprite(T id,Texture& texture) {
-  return asset_man_.load_gfx_asset<Sprite>(static_cast<asset_id_t>(id),texture);
+  return asset_man_.load_gfx_asset<Sprite>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture);
 }
 
 template <AssetIdLike T>
 Sprite& GpuGfxLoader::load_sprite(T id,Texture& texture,const Sprite::Config& config) {
-  return asset_man_.load_gfx_asset<Sprite>(static_cast<asset_id_t>(id),texture,config);
+  return asset_man_.load_gfx_asset<Sprite>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture,config);
 }
 
 template <AssetIdLike T>
 SpriteAtlas& GpuGfxLoader::load_sprite_atlas(T id,Texture& texture,const SpriteAtlas::Config& config) {
-  return asset_man_.load_gfx_asset<SpriteAtlas>(static_cast<asset_id_t>(id),texture,config);
+  return asset_man_.load_gfx_asset<SpriteAtlas>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture,config);
 }
 
 template <AssetIdLike T>
 FontAtlas& GpuGfxLoader::load_font_atlas(T id,Texture& texture,const FontAtlas::Config& config) {
-  return asset_man_.load_gfx_asset<FontAtlas>(static_cast<asset_id_t>(id),texture,config);
+  return asset_man_.load_gfx_asset<FontAtlas>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture,config);
 }
 
 template <AssetIdLike T>
 Music* AudioLoader::load_music(T id,const std::filesystem::path& file) {
-  return asset_man_.load_audio_asset<Music>(static_cast<asset_id_t>(id),file);
+  return asset_man_.load_audio_asset<Music>(AssetLoaderKey{},static_cast<asset_id_t>(id),file);
 }
 
 template <AssetIdLike T>
 Sound* AudioLoader::load_sound(T id,const std::filesystem::path& file) {
-  return asset_man_.load_audio_asset<Sound>(static_cast<asset_id_t>(id),file);
+  return asset_man_.load_audio_asset<Sound>(AssetLoaderKey{},static_cast<asset_id_t>(id),file);
 }
 
 } // namespace cybel

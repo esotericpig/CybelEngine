@@ -10,6 +10,8 @@
 
 #include "cybel/common.h"
 
+#include "cybel/asset/asset_man_key.h"
+
 #include <filesystem>
 
 namespace cybel {
@@ -18,7 +20,7 @@ class AudioPlayer;
 
 class Sound final {
 public:
-  explicit Sound(const std::filesystem::path& file);
+  explicit Sound(AssetManKey,const std::filesystem::path& file);
 
   Sound(const Sound& other) = delete;
   Sound(Sound&& other) noexcept;

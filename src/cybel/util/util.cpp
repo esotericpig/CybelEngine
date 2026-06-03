@@ -9,6 +9,10 @@
 
 namespace cybel {
 
+void Util::clear_sdl_error() {
+  SDL_ClearError();
+}
+
 void Util::clear_gl_errors() {
   // Max loop to prevent accidental infinite loop.
   // - https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetError.xhtml
@@ -17,24 +21,11 @@ void Util::clear_gl_errors() {
   }
 }
 
-std::string Util::get_sdl_error() {
-  // This should technically never return null, but Justin Case.
-  const auto* str = SDL_GetError();
+std::string Util::get_sdl_error() { return SDL_GetError(); }
 
-  return (str != NULL) ? str : "";
-}
+std::string Util::get_sdl_img_error() { return IMG_GetError(); }
 
-std::string Util::get_sdl_img_error() {
-  const auto* str = IMG_GetError();
-
-  return (str != NULL) ? str : "";
-}
-
-std::string Util::get_sdl_mix_error() {
-  const auto* str = Mix_GetError();
-
-  return (str != NULL) ? str : "";
-}
+std::string Util::get_sdl_mix_error() { return Mix_GetError(); }
 
 std::string Util::get_gl_error(GLenum error) {
   // - https://www.khronos.org/opengl/wiki/OpenGL_Error
@@ -61,9 +52,7 @@ std::string Util::get_gl_error(GLenum error) {
 }
 
 std::string Util::get_glew_error(GLenum error) {
-  const auto* str = glewGetErrorString(error);
-
-  return (str != NULL) ? reinterpret_cast<const char*>(str) : "";
+  return reinterpret_cast<const char*>(glewGetErrorString(error));
 }
 
 std::string Util::get_emscripten_result([[maybe_unused]] int result) {
