@@ -321,7 +321,7 @@ T* AssetMan::load_audio_asset(AssetLoaderKey,asset_id_t id,const std::filesystem
 
 template <typename T,typename... Args>
 T AssetMan::load_temp_gfx_asset(AssetLoaderKey,const std::filesystem::path& file,Args&&... args) {
-  auto& asset_bag = std::get<AssetBag<T>>(asset_bags_);
+  const auto& asset_bag = std::get<AssetBag<T>>(asset_bags_);
 
   return load_asset_file_in_dirs(asset_bag.name,file,[&](const auto& asset_file) {
     return make_asset<T>(asset_file,std::forward<Args>(args)...);
