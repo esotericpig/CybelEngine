@@ -19,12 +19,28 @@
 
 namespace cybel {
 
-class CybelEngine;
-class Texture;
-
 class Image final {
 public:
-  using EditPixel = std::function<void(Color4f&)>;
+  class PixelsGuard final {
+  public:
+    PixelsGuard(const PixelsGuard& other) = default;
+    PixelsGuard(PixelsGuard&& other) noexcept = default;
+    ~PixelsGuard() noexcept;
+
+    PixelsGuard& operator=(const PixelsGuard& other) = default;
+    PixelsGuard& operator=(PixelsGuard&& other) noexcept = default;
+
+    const void* pixels() const;
+
+    friend class Image;
+
+  private:
+    std::reference_wrapper<const Image> image_;
+
+    explicit PixelsGuard(const Image& image);
+  };
+
+  using EditPixel = std::function<void(Color4f& color)>;
 
   explicit Image(AssetManKey,const std::filesystem::path& file);
   explicit Image(const Size2i& size,const Color4f& color);
@@ -42,16 +58,13 @@ public:
   Image& colorize(const Color4f& to_color);
   Image& edit_pixels(const EditPixel& edit_pixel);
 
-  void lock() const;
-  void unlock() const noexcept;
-
   const std::string& id() const;
   const Size2i& size() const;
   std::uint8_t bytes_per_pixel() const;
   bool is_red_first() const;
 
-  friend class CybelEngine; // For `handle_` in set_icon().
-  friend class Texture; // For pixels() & gl_type() in load().
+  PixelsGuard lock_pixels() const;
+  SDL_Surface* handle() const;
 
 private:
   std::string id_{};
@@ -64,8 +77,10 @@ private:
   void move_from(Image&& other) noexcept;
   void destroy() noexcept;
 
+  void lock() const;
+  void unlock() const noexcept;
+
   const void* pixels() const;
-  GLenum gl_type() const;
 };
 
 } // namespace cybel

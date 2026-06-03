@@ -16,8 +16,6 @@
 
 namespace cybel {
 
-class AudioPlayer;
-
 class Sound final {
 public:
   explicit Sound(AssetManKey,const std::filesystem::path& file);
@@ -29,7 +27,7 @@ public:
   Sound& operator=(const Sound& other) = delete;
   Sound& operator=(Sound&& other) noexcept;
 
-  friend class AudioPlayer;
+  Mix_Chunk* handle() const;
 
 private:
   Mix_Chunk* handle_ = nullptr;

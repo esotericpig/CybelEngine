@@ -50,4 +50,6 @@ Sound& Sound::operator=(Sound&& other) noexcept {
   return *this;
 }
 
+Mix_Chunk* Sound::handle() const { return handle_; }
+
 } // namespace cybel

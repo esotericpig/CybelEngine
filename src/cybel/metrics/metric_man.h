@@ -52,7 +52,6 @@ class MetricMan final {
 public:
   class ScopeProfiler final {
   public:
-    explicit ScopeProfiler(MetricMan& metric_man,std::size_t id);
     ScopeProfiler(const ScopeProfiler& other) = default;
     ScopeProfiler(ScopeProfiler&& other) noexcept = default;
     ~ScopeProfiler() noexcept;
@@ -60,7 +59,11 @@ public:
     ScopeProfiler& operator=(const ScopeProfiler& other) = default;
     ScopeProfiler& operator=(ScopeProfiler&& other) noexcept = default;
 
+    friend class MetricMan;
+
   private:
+    explicit ScopeProfiler(MetricMan& metric_man,std::size_t id);
+
     std::reference_wrapper<MetricMan> metric_man_;
     std::size_t id_{};
   };

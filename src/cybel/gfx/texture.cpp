@@ -16,6 +16,7 @@ Texture::Texture(AssetManKey,const Image& image)
   : size_{image.size()} {
   const auto bypp = image.bytes_per_pixel();
   GLenum image_fmt = GL_RGBA;
+  constexpr GLenum image_type = GL_UNSIGNED_BYTE;
 
   switch(bypp) {
     case 4:
@@ -54,9 +55,11 @@ Texture::Texture(AssetManKey,const Image& image)
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 
-  image.lock();
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,size_.w,size_.h,0,image_fmt,image.gl_type(),image.pixels());
-  image.unlock();
+  {
+    const auto pixels_guard = image.lock_pixels();
+
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,size_.w,size_.h,0,image_fmt,image_type,pixels_guard.pixels());
+  }
 
   glBindTexture(GL_TEXTURE_2D,0); // Unbind texture.
 
@@ -149,8 +152,8 @@ void Texture::zombify(AssetManKey) noexcept {
   handle_ = 0;
 }
 
-GLuint Texture::handle() const { return handle_; }
-
 const Size2i& Texture::size() const { return size_; }
+
+GLuint Texture::handle() const { return handle_; }
 
 } // namespace cybel

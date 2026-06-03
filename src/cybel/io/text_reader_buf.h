@@ -41,6 +41,8 @@ public:
   /// This can return false, yet there is still data in the buffer to read.
   bool is_open() const;
 
+  SDL_RWops* handle() const;
+
 protected:
   int_type underflow() override;
 

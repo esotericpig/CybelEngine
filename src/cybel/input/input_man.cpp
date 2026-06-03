@@ -75,7 +75,7 @@ void InputMan::use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type
     std::cout << "[INFO] Using fake joystick." << std::endl;
 
     if(fake_joypad_input_type_ == FakeJoypadInputType::kDpad) {
-      std::cerr << "[WARN] Fake joystick input type is set to dpad, which won't work." << std::endl;
+      std::cerr << "[WARN] Fake joystick input type is set to D-pad, which won't work." << std::endl;
     }
   }
 }
@@ -397,7 +397,7 @@ bool InputMan::emit_fake_joypad_events(const SDL_Event& event) {
   switch(fake_joypad_input_type_) {
     case FakeJoypadInputType::kAxis:
       if(axis != -1) {
-        std::cout << "[INFO] Faking joypad axis event: " << axis << ',' << axis_value << '.' << std::endl;
+        std::cout << "[INFO] Faking joypad axis event: " << axis << ',' << axis_value << ".\n";
         SDL_JoystickSetVirtualAxis(joystick,axis,axis_value);
         SDL_JoystickUpdate();
         return true;
@@ -408,7 +408,7 @@ bool InputMan::emit_fake_joypad_events(const SDL_Event& event) {
       if(hat_value != 0) {
         hat_value = is_pressed ? (old_hat_value | hat_value) : (old_hat_value & ~hat_value);
 
-        std::cout << "[INFO] Faking joypad hat event: " << static_cast<int>(hat_value) << '.' << std::endl;
+        std::cout << "[INFO] Faking joypad hat event: " << static_cast<int>(hat_value) << ".\n";
         SDL_JoystickSetVirtualHat(joystick,0,hat_value);
         SDL_JoystickUpdate();
         return true;
@@ -417,8 +417,8 @@ bool InputMan::emit_fake_joypad_events(const SDL_Event& event) {
 
     case FakeJoypadInputType::kDpad:
       if(dpad != -1) {
-        std::cout << "[INFO] Faking joypad dpad event: " << dpad << ',' << static_cast<int>(button_value)
-                  << '.' << std::endl;
+        std::cout << "[INFO] Faking joypad D-pad event: " << dpad << ',' << static_cast<int>(button_value)
+                  << ".\n";
         SDL_JoystickSetVirtualButton(joystick,dpad,button_value);
         SDL_JoystickUpdate();
         return true;
@@ -426,10 +426,10 @@ bool InputMan::emit_fake_joypad_events(const SDL_Event& event) {
       break;
   }
 
-  // NOTE: Must process dpad before button, else button will eat dpad events.
+  // NOTE: Must process D-pad before button, else button will eat D-pad events.
   if(button != -1) {
     std::cout << "[INFO] Faking joypad button event: " << button << ',' << static_cast<int>(button_value)
-              << '.' << std::endl;
+              << ".\n";
     SDL_JoystickSetVirtualButton(joystick,button,button_value);
     SDL_JoystickUpdate();
     return true;

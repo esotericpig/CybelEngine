@@ -543,7 +543,7 @@ void CybelEngine::show_error(const std::string& title,const std::string& error,S
   }
 }
 
-void CybelEngine::set_icon(const Image& img) { SDL_SetWindowIcon(core_.window,img.handle_); }
+void CybelEngine::set_icon(const Image& img) { SDL_SetWindowIcon(core_.window,img.handle()); }
 
 void CybelEngine::set_title(const std::string& title) { SDL_SetWindowTitle(core_.window,title.c_str()); }
 

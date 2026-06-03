@@ -16,8 +16,6 @@
 
 namespace cybel {
 
-class AudioPlayer;
-
 class Music final {
 public:
   explicit Music(AssetManKey,const std::filesystem::path& file);
@@ -31,7 +29,7 @@ public:
 
   const std::string& id() const;
 
-  friend class AudioPlayer;
+  Mix_Music* handle() const;
 
 private:
   std::string id_{};

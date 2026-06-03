@@ -29,6 +29,7 @@ public:
 
   bool matches(int id) const;
   int id() const;
+
   SDL_GameController* handle() const;
 
 private:

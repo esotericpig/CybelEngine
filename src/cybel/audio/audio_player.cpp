@@ -64,7 +64,7 @@ void AudioPlayer::play_music(const Music* music) {
   curr_music_id_.clear();
 
   // -1 to play indefinitely.
-  if(Mix_PlayMusic(music->handle_,-1) != 0) {
+  if(Mix_PlayMusic(music->handle(),-1) != 0) {
     std::cerr << "[WARN] Failed to play Music `" << music->id() << "`: "
               << Util::get_sdl_mix_error() << '.' << std::endl;
     // Don't fail, since music is optional.
@@ -105,7 +105,7 @@ void AudioPlayer::play_sound(const Sound* sound) {
   if(!is_alive_ || !sound) { return; }
 
   // -1 to play on the first free track ("channel").
-  Mix_PlayChannel(-1,sound->handle_,0);
+  Mix_PlayChannel(-1,sound->handle(),0);
 }
 
 void AudioPlayer::set_music_pos(const Duration& pos) {
@@ -117,7 +117,7 @@ void AudioPlayer::set_music_pos(const Duration& pos) {
 Duration AudioPlayer::fetch_duration(const Music* music,const Duration& fallback) const {
   if(!is_alive_ || !music) { return fallback; }
 
-  const double secs = Mix_MusicDuration(music->handle_);
+  const double secs = Mix_MusicDuration(music->handle());
 
   return (secs <= 0.0) ? fallback : Duration::from_secs(secs);
 }

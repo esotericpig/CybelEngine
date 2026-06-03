@@ -105,4 +105,6 @@ TextReaderBuf::int_type TextReaderBuf::overflow(int_type) { return traits_type::
 
 bool TextReaderBuf::is_open() const { return handle_; }
 
+SDL_RWops* TextReaderBuf::handle() const { return handle_; }
+
 } // namespace cybel

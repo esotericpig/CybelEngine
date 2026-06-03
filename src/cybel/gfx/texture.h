@@ -33,8 +33,9 @@ public:
   /// For WebGL context lost/restored so that it won't try to delete the now invalid OpenGL handle.
   void zombify(AssetManKey) noexcept;
 
-  GLuint handle() const;
   const Size2i& size() const;
+
+  GLuint handle() const;
 
 private:
   GLuint handle_ = 0;

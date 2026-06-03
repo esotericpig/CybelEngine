@@ -182,8 +182,21 @@ std::uint8_t Image::bytes_per_pixel() const { return handle_->format->BytesPerPi
 
 bool Image::is_red_first() const { return handle_->format->Rmask == 0x000000ff; }
 
+Image::PixelsGuard Image::lock_pixels() const { return PixelsGuard{*this}; }
+
 const void* Image::pixels() const { return handle_->pixels; }
 
-GLenum Image::gl_type() const { return GL_UNSIGNED_BYTE; }
+SDL_Surface* Image::handle() const { return handle_; }
+
+Image::PixelsGuard::PixelsGuard(const Image& image)
+  : image_{image} {
+  image_.get().lock();
+}
+
+Image::PixelsGuard::~PixelsGuard() noexcept {
+  image_.get().unlock();
+}
+
+const void* Image::PixelsGuard::pixels() const { return image_.get().pixels(); }
 
 } // namespace cybel

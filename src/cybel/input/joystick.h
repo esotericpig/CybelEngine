@@ -29,6 +29,7 @@ public:
 
   bool matches(int id) const;
   int id() const;
+
   SDL_Joystick* handle() const;
 
 private:
