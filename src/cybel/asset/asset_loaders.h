@@ -31,12 +31,12 @@ class CpuGfxLoader final {
 public:
   explicit CpuGfxLoader(AssetManKey,AssetMan& asset_man) noexcept;
 
-  template <AssetIdLike T>
-  Image& load_image(T id,const std::filesystem::path& file);
-  template <AssetIdLike T>
-  Image& load_image(T id,const Size2i& size,const Color4f& color);
-  template <AssetIdLike T>
-  Image& load_image(T id,const Image& other);
+  template <AssetIdLike Id>
+  Image& load_image(Id id,const std::filesystem::path& file);
+  template <AssetIdLike Id>
+  Image& load_image(Id id,const Size2i& size,const Color4f& color);
+  template <AssetIdLike Id>
+  Image& load_image(Id id,const Image& other);
 
 private:
   AssetMan& asset_man_;
@@ -50,21 +50,21 @@ public:
   Image load_image(const Size2i& size,const Color4f& color);
   Image load_image(const Image& other);
 
-  template <AssetIdLike T>
-  Texture& load_texture(T id,const Image& image);
-  template <AssetIdLike T>
-  Texture& load_texture(T id,const Color4f& color);
+  template <AssetIdLike Id>
+  Texture& load_texture(Id id,const Image& image);
+  template <AssetIdLike Id>
+  Texture& load_texture(Id id,const Color4f& color);
   Texture& load_texture(const Image& image);
   Texture& load_texture(const Color4f& color);
 
-  template <AssetIdLike T>
-  Sprite& load_sprite(T id,Texture& texture);
-  template <AssetIdLike T>
-  Sprite& load_sprite(T id,Texture& texture,const Sprite::Config& config);
-  template <AssetIdLike T>
-  SpriteAtlas& load_sprite_atlas(T id,Texture& texture,const SpriteAtlas::Config& config);
-  template <AssetIdLike T>
-  FontAtlas& load_font_atlas(T id,Texture& texture,const FontAtlas::Config& config);
+  template <AssetIdLike Id>
+  Sprite& load_sprite(Id id,Texture& texture);
+  template <AssetIdLike Id>
+  Sprite& load_sprite(Id id,Texture& texture,const Sprite::Config& config);
+  template <AssetIdLike Id>
+  SpriteAtlas& load_sprite_atlas(Id id,Texture& texture,const SpriteAtlas::Config& config);
+  template <AssetIdLike Id>
+  FontAtlas& load_font_atlas(Id id,Texture& texture,const FontAtlas::Config& config);
 
 private:
   AssetMan& asset_man_;
@@ -74,68 +74,68 @@ class AudioLoader final {
 public:
   explicit AudioLoader(AssetManKey,AssetMan& asset_man) noexcept;
 
-  template <AssetIdLike T>
-  Music* load_music(T id,const std::filesystem::path& file);
-  template <AssetIdLike T>
-  Sound* load_sound(T id,const std::filesystem::path& file);
+  template <AssetIdLike Id>
+  Music* load_music(Id id,const std::filesystem::path& file);
+  template <AssetIdLike Id>
+  Sound* load_sound(Id id,const std::filesystem::path& file);
 
 private:
   AssetMan& asset_man_;
 };
 
-template <AssetIdLike T>
-Image& CpuGfxLoader::load_image(T id,const std::filesystem::path& file) {
-  return asset_man_.load_gfx_asset<Image>(AssetLoaderKey{},static_cast<asset_id_t>(id),file);
+template <AssetIdLike Id>
+Image& CpuGfxLoader::load_image(Id id,const std::filesystem::path& file) {
+  return asset_man_.load_gfx_asset<Image,Id>(AssetLoaderKey{},id,file);
 }
 
-template <AssetIdLike T>
-Image& CpuGfxLoader::load_image(T id,const Size2i& size,const Color4f& color) {
-  return asset_man_.load_gfx_asset<Image>(AssetLoaderKey{},static_cast<asset_id_t>(id),size,color);
+template <AssetIdLike Id>
+Image& CpuGfxLoader::load_image(Id id,const Size2i& size,const Color4f& color) {
+  return asset_man_.load_gfx_asset<Image,Id>(AssetLoaderKey{},id,size,color);
 }
 
-template <AssetIdLike T>
-Image& CpuGfxLoader::load_image(T id,const Image& other) {
-  return asset_man_.load_gfx_asset<Image>(AssetLoaderKey{},static_cast<asset_id_t>(id),other.dup());
+template <AssetIdLike Id>
+Image& CpuGfxLoader::load_image(Id id,const Image& other) {
+  return asset_man_.load_gfx_asset<Image,Id>(AssetLoaderKey{},id,other.dup());
 }
 
-template <AssetIdLike T>
-Texture& GpuGfxLoader::load_texture(T id,const Image& image) {
-  return asset_man_.load_gfx_asset<Texture>(AssetLoaderKey{},static_cast<asset_id_t>(id),image);
+template <AssetIdLike Id>
+Texture& GpuGfxLoader::load_texture(Id id,const Image& image) {
+  return asset_man_.load_gfx_asset<Texture,Id>(AssetLoaderKey{},id,image);
 }
 
-template <AssetIdLike T>
-Texture& GpuGfxLoader::load_texture(T id,const Color4f& color) {
-  return asset_man_.load_gfx_asset<Texture>(AssetLoaderKey{},static_cast<asset_id_t>(id),color);
+template <AssetIdLike Id>
+Texture& GpuGfxLoader::load_texture(Id id,const Color4f& color) {
+  return asset_man_.load_gfx_asset<Texture,Id>(AssetLoaderKey{},id,color);
 }
 
-template <AssetIdLike T>
-Sprite& GpuGfxLoader::load_sprite(T id,Texture& texture) {
-  return asset_man_.load_gfx_asset<Sprite>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture);
+template <AssetIdLike Id>
+Sprite& GpuGfxLoader::load_sprite(Id id,Texture& texture) {
+  return asset_man_.load_gfx_asset<Sprite,Id>(AssetLoaderKey{},id,texture);
 }
 
-template <AssetIdLike T>
-Sprite& GpuGfxLoader::load_sprite(T id,Texture& texture,const Sprite::Config& config) {
-  return asset_man_.load_gfx_asset<Sprite>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture,config);
+template <AssetIdLike Id>
+Sprite& GpuGfxLoader::load_sprite(Id id,Texture& texture,const Sprite::Config& config) {
+  return asset_man_.load_gfx_asset<Sprite,Id>(AssetLoaderKey{},id,texture,config);
 }
 
-template <AssetIdLike T>
-SpriteAtlas& GpuGfxLoader::load_sprite_atlas(T id,Texture& texture,const SpriteAtlas::Config& config) {
-  return asset_man_.load_gfx_asset<SpriteAtlas>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture,config);
+template <AssetIdLike Id>
+SpriteAtlas& GpuGfxLoader::load_sprite_atlas(Id id,Texture& texture,const SpriteAtlas::Config& config) {
+  return asset_man_.load_gfx_asset<SpriteAtlas,Id>(AssetLoaderKey{},id,texture,config);
 }
 
-template <AssetIdLike T>
-FontAtlas& GpuGfxLoader::load_font_atlas(T id,Texture& texture,const FontAtlas::Config& config) {
-  return asset_man_.load_gfx_asset<FontAtlas>(AssetLoaderKey{},static_cast<asset_id_t>(id),texture,config);
+template <AssetIdLike Id>
+FontAtlas& GpuGfxLoader::load_font_atlas(Id id,Texture& texture,const FontAtlas::Config& config) {
+  return asset_man_.load_gfx_asset<FontAtlas,Id>(AssetLoaderKey{},id,texture,config);
 }
 
-template <AssetIdLike T>
-Music* AudioLoader::load_music(T id,const std::filesystem::path& file) {
-  return asset_man_.load_audio_asset<Music>(AssetLoaderKey{},static_cast<asset_id_t>(id),file);
+template <AssetIdLike Id>
+Music* AudioLoader::load_music(Id id,const std::filesystem::path& file) {
+  return asset_man_.load_audio_asset<Music,Id>(AssetLoaderKey{},id,file);
 }
 
-template <AssetIdLike T>
-Sound* AudioLoader::load_sound(T id,const std::filesystem::path& file) {
-  return asset_man_.load_audio_asset<Sound>(AssetLoaderKey{},static_cast<asset_id_t>(id),file);
+template <AssetIdLike Id>
+Sound* AudioLoader::load_sound(Id id,const std::filesystem::path& file) {
+  return asset_man_.load_audio_asset<Sound,Id>(AssetLoaderKey{},id,file);
 }
 
 } // namespace cybel

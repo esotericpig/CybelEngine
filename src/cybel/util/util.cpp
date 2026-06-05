@@ -27,6 +27,8 @@ std::string Util::get_sdl_img_error() { return IMG_GetError(); }
 
 std::string Util::get_sdl_mix_error() { return Mix_GetError(); }
 
+std::string Util::get_gl_error() { return get_gl_error(glGetError()); }
+
 std::string Util::get_gl_error(GLenum error) {
   // - https://www.khronos.org/opengl/wiki/OpenGL_Error
   switch(error) {
@@ -48,7 +50,7 @@ std::string Util::get_gl_error(GLenum error) {
     case 0x0507: return "GL_CONTEXT_LOST";
   }
 
-  return std::string{"unknown GL error `"} + std::to_string(error) + '`';
+  return std::string{"unknown GL error ["} + std::to_string(error) + ']';
 }
 
 std::string Util::get_glew_error(GLenum error) {

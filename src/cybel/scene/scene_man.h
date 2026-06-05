@@ -29,8 +29,8 @@ public:
 
   explicit SceneMan(BuildScene build_scene,OnSceneChange on_scene_enter,OnSceneChange on_scene_exit);
 
-  template <SceneIdLike T>
-  bool push_scene(T id_like);
+  template <SceneIdLike Id>
+  bool push_scene(Id id_like);
   bool pop_scene();
   bool pop_all_scenes();
   bool restart_scene();
@@ -71,8 +71,8 @@ private:
   void set_curr_scene(SceneBag new_scene_bag);
 };
 
-template <SceneIdLike T>
-bool SceneMan::push_scene(T id_like) {
+template <SceneIdLike Id>
+bool SceneMan::push_scene(Id id_like) {
   const auto id = static_cast<scene_id_t>(id_like);
 
   if(pending_action_ != Action::kNone) {

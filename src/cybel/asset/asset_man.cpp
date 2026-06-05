@@ -20,7 +20,12 @@ void AssetMan::add_asset_dir(const std::filesystem::path& dir) {
   // NOTE: Don't use canonical() in case the dir is created later during refresh.
   const auto abs_dir = absolute(dir,ec).lexically_normal();
 
-  if(ec != std::error_code{}) { return; }
+  if(ec != std::error_code{}) {
+    std::cerr << "[WARN] Invalid Asset folder `" << dir << "` with error ["
+              << ec << "]: " << ec.message() << '.' << std::endl;
+    return;
+  }
+
   // Already added? (Slow, but fine, as we want insertion order.)
   if(std::ranges::find(asset_dirs_,abs_dir) != asset_dirs_.cend()) { return; }
 
@@ -52,48 +57,58 @@ void AssetMan::reload_gfx() {
 }
 
 void AssetMan::reload_cpu_gfx() {
-  if(!asset_loader_) { return; }
+  if(!asset_loader_) {
+    shrink_assets<Image>(asset_bags_);
+    return;
+  }
 
-  reset_assets<Image>();
+  reset_assets<Image>(asset_bags_);
 
   CpuGfxLoader loader{AssetManKey{},*this};
   asset_loader_->load_cpu_gfx(*this,loader);
 
-  shrink_assets<Image>();
-  check_assets<Image>();
+  shrink_assets<Image>(asset_bags_);
+  check_assets<Image>(asset_bags_);
 }
 
 void AssetMan::reload_gpu_gfx() {
-  if(!asset_loader_) { return; }
+  if(!asset_loader_) {
+    shrink_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
+    shrink_assets<Texture>(ghost_asset_bags_);
+    return;
+  }
 
-  reset_assets<Texture,Sprite,SpriteAtlas,FontAtlas>();
-  reset_ghost_assets<Texture>();
+  reset_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
+  reset_assets<Texture>(ghost_asset_bags_);
 
   GpuGfxLoader loader{AssetManKey{},*this};
   asset_loader_->load_gpu_gfx(*this,loader);
 
-  shrink_assets<Texture,Sprite,SpriteAtlas,FontAtlas>();
-  shrink_ghost_assets<Texture>();
+  shrink_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
+  shrink_assets<Texture>(ghost_asset_bags_);
 
-  check_assets<Texture,Sprite,SpriteAtlas,FontAtlas>();
-  check_ghost_assets<Texture>();
+  check_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
+  check_assets<Texture>(ghost_asset_bags_);
 }
 
 void AssetMan::reload_audio() {
-  if(!asset_loader_ || !is_audio_alive_) { return; }
+  if(!asset_loader_ || !is_audio_alive_) {
+    shrink_assets<Music,Sound>(asset_bags_);
+    return;
+  }
 
-  reset_assets<Music,Sound>();
+  reset_assets<Music,Sound>(asset_bags_);
 
   AudioLoader loader{AssetManKey{},*this};
   asset_loader_->load_audio(*this,loader);
 
-  shrink_assets<Music,Sound>();
-  check_assets<Music,Sound>();
+  shrink_assets<Music,Sound>(asset_bags_);
+  check_assets<Music,Sound>(asset_bags_);
 }
 
 void AssetMan::on_gpu_context_loss(GpuContextKey) {
-  zombify_ghost_assets<Texture>();
-  zombify_assets<Texture>();
+  zombify_assets<Texture>(ghost_asset_bags_);
+  zombify_assets<Texture>(asset_bags_);
 
   missing_texture_.zombify(AssetManKey{});
 }

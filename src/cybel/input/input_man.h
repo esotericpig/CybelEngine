@@ -53,10 +53,10 @@ public:
 
   explicit InputMan(const OnInputEvent& on_input_event);
 
-  template <InputIdLike T>
-  void map_input(T id_like,const WrapMapInput& wrap);
-  template <InputIdLike T>
-  bool operator[](T id_like) const;
+  template <InputIdLike Id>
+  void map_input(Id id_like,const WrapMapInput& wrap);
+  template <InputIdLike Id>
+  bool operator[](Id id_like) const;
 
   /// TEST: Only use for testing purposes.
   void use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type);
@@ -120,8 +120,8 @@ private:
   void reset_touch_states();
 };
 
-template <InputIdLike T>
-void InputMan::map_input(T id_like,const WrapMapInput& wrap) {
+template <InputIdLike Id>
+void InputMan::map_input(Id id_like,const WrapMapInput& wrap) {
   const auto id = static_cast<input_id_t>(id_like);
 
   Util::grow_for_index(id_to_state_,id);
@@ -131,8 +131,8 @@ void InputMan::map_input(T id_like,const WrapMapInput& wrap) {
   wrap(mapper);
 }
 
-template <InputIdLike T>
-bool InputMan::operator[](T id_like) const {
+template <InputIdLike Id>
+bool InputMan::operator[](Id id_like) const {
   const auto id = static_cast<input_id_t>(id_like);
   assert(id < id_to_state_.size());
 

@@ -55,13 +55,13 @@ public:
 
   void reload_audio();
 
-  template <typename T,typename... Args>
-  T& load_gfx_asset(AssetLoaderKey,asset_id_t id,const std::filesystem::path& file,Args&&... args);
-  template <typename T,typename... Args>
-  T& load_gfx_asset(AssetLoaderKey,asset_id_t id,Args&&... args);
+  template <typename T,AssetIdLike Id,typename... Args>
+  T& load_gfx_asset(AssetLoaderKey,Id id,const std::filesystem::path& file,Args&&... args);
+  template <typename T,AssetIdLike Id,typename... Args>
+  T& load_gfx_asset(AssetLoaderKey,Id id,Args&&... args);
 
-  template <typename T,typename... Args>
-  T* load_audio_asset(AssetLoaderKey,asset_id_t id,const std::filesystem::path& file,Args&&... args);
+  template <typename T,AssetIdLike Id,typename... Args>
+  T* load_audio_asset(AssetLoaderKey,Id id,const std::filesystem::path& file,Args&&... args);
 
   template <typename T,typename... Args>
   T load_temp_gfx_asset(AssetLoaderKey,const std::filesystem::path& file,Args&&... args);
@@ -72,41 +72,41 @@ public:
   void on_gpu_context_loss(GpuContextKey);
   void on_gpu_context_restore(GpuContextKey);
 
-  template <AssetIdLike T>
-  void swap_image(T id1,T id2);
-  template <AssetIdLike T>
-  void swap_texture(T id1,T id2);
-  template <AssetIdLike T>
-  void swap_sprite(T id1,T id2);
-  template <AssetIdLike T>
-  void swap_sprite_atlas(T id1,T id2);
-  template <AssetIdLike T>
-  void swap_font_atlas(T id1,T id2);
+  template <AssetIdLike Id>
+  void swap_image(Id id1,Id id2);
+  template <AssetIdLike Id>
+  void swap_texture(Id id1,Id id2);
+  template <AssetIdLike Id>
+  void swap_sprite(Id id1,Id id2);
+  template <AssetIdLike Id>
+  void swap_sprite_atlas(Id id1,Id id2);
+  template <AssetIdLike Id>
+  void swap_font_atlas(Id id1,Id id2);
 
-  template <AssetIdLike T>
-  void swap_music(T id1,T id2);
-  template <AssetIdLike T>
-  void swap_sound(T id1,T id2);
+  template <AssetIdLike Id>
+  void swap_music(Id id1,Id id2);
+  template <AssetIdLike Id>
+  void swap_sound(Id id1,Id id2);
 
   void set_fail_on_audio_error(bool fail);
 
   const std::vector<std::filesystem::path>& asset_dirs() const;
 
-  template <AssetIdLike T>
-  Image& image(T id);
-  template <AssetIdLike T>
-  Texture& texture(T id);
-  template <AssetIdLike T>
-  Sprite& sprite(T id);
-  template <AssetIdLike T>
-  SpriteAtlas& sprite_atlas(T id);
-  template <AssetIdLike T>
-  FontAtlas& font_atlas(T id);
+  template <AssetIdLike Id>
+  Image& image(Id id);
+  template <AssetIdLike Id>
+  Texture& texture(Id id);
+  template <AssetIdLike Id>
+  Sprite& sprite(Id id);
+  template <AssetIdLike Id>
+  SpriteAtlas& sprite_atlas(Id id);
+  template <AssetIdLike Id>
+  FontAtlas& font_atlas(Id id);
 
-  template <AssetIdLike T>
-  Music* music(T id);
-  template <AssetIdLike T>
-  Sound* sound(T id);
+  template <AssetIdLike Id>
+  Music* music(Id id);
+  template <AssetIdLike Id>
+  Sound* sound(Id id);
 
 private:
   template <typename T>
@@ -130,7 +130,8 @@ private:
     void zombify();
 
     /// For Ghost assets, `id` is unused, but this is safer than creating an overload.
-    T* add(asset_id_t id,AssetPtr<T> asset_ptr);
+    template <AssetIdLike Id>
+    T* add(Id id_like,AssetPtr<T> asset_ptr);
   };
 
   std::shared_ptr<AssetLoader> asset_loader_{};
@@ -178,36 +179,19 @@ private:
     make_asset_ptr<FontAtlas>(missing_texture_,FontAtlas::Config{}),
   };
 
-  template <typename... Ts>
-  void reset_assets();
-  template <typename... Ts>
-  void reset_ghost_assets();
-  template <typename... Ts>
-  void shrink_assets();
-  template <typename... Ts>
-  void shrink_ghost_assets();
-  template <typename... Ts>
-  void check_assets() const;
-  template <typename... Ts>
-  void check_ghost_assets() const;
-  template <typename... Ts>
-  void zombify_assets();
-  template <typename... Ts>
-  void zombify_ghost_assets();
+  template <typename... Ts,typename AssetBags>
+  void reset_assets(AssetBags& asset_bags);
+  template <typename... Ts,typename AssetBags>
+  void shrink_assets(AssetBags& asset_bags);
+  template <typename... Ts,typename AssetBags>
+  void check_assets(const AssetBags& asset_bags) const;
+  template <typename... Ts,typename AssetBags>
+  void zombify_assets(AssetBags& asset_bags);
 
-  template <typename... Ts,typename AssetBags>
-  void reset_assets_in(AssetBags& asset_bags);
-  template <typename... Ts,typename AssetBags>
-  void shrink_assets_in(AssetBags& asset_bags);
-  template <typename... Ts,typename AssetBags>
-  void check_assets_in(const AssetBags& asset_bags) const;
-  template <typename... Ts,typename AssetBags>
-  void zombify_assets_in(AssetBags& asset_bags);
-
-  template <typename T,typename AssetBags,typename... Args>
-  T* load_asset_file_in(AssetBags& asset_bags,asset_id_t id,const std::filesystem::path& file,Args&&... args);
-  template <typename T,typename AssetBags,typename... Args>
-  T* load_asset_in(AssetBags& asset_bags,asset_id_t id,Args&&... args);
+  template <typename T,AssetIdLike Id,typename AssetBags,typename... Args>
+  T* load_asset_file(AssetBags& asset_bags,Id id,const std::filesystem::path& file,Args&&... args);
+  template <typename T,AssetIdLike Id,typename AssetBags,typename... Args>
+  T* load_asset(AssetBags& asset_bags,Id id,Args&&... args);
 
   template <std::invocable<const std::filesystem::path&> OnAssetFile>
   decltype(auto) load_asset_file_in_dirs(std::string_view name,const std::filesystem::path& file,
@@ -217,99 +201,59 @@ private:
   template <typename T,typename... Args>
   T make_asset(Args&&... args);
 
-  template <typename T>
-  void swap_gfx_asset(asset_id_t id1,asset_id_t id2);
-  template <typename T>
-  void swap_audio_asset(asset_id_t id1,asset_id_t id2);
+  template <typename T,AssetIdLike Id>
+  void swap_gfx_asset(Id id_like1,Id id_like2);
+  template <typename T,AssetIdLike Id>
+  void swap_audio_asset(Id id_like1,Id id_like2);
 
-  template <typename T>
-  T& gfx_asset(asset_id_t id);
-  template <typename T>
-  T* audio_asset(asset_id_t id);
+  template <typename T,AssetIdLike Id>
+  T& gfx_asset(Id id_like);
+  template <typename T,AssetIdLike Id>
+  T* audio_asset(Id id_like);
 };
 
 // Better than KeyedAsset, which would require passing in the AssetManKey.
 template <typename T,typename... Args>
 concept UnkeyedAsset = std::constructible_from<T,Args...>;
 
-template <typename... Ts>
-void AssetMan::reset_assets() {
-  reset_assets_in<Ts...>(asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::reset_ghost_assets() {
-  reset_assets_in<Ts...>(ghost_asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::shrink_assets() {
-  shrink_assets_in<Ts...>(asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::shrink_ghost_assets() {
-  shrink_assets_in<Ts...>(ghost_asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::check_assets() const {
-  check_assets_in<Ts...>(asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::check_ghost_assets() const {
-  check_assets_in<Ts...>(ghost_asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::zombify_assets() {
-  zombify_assets_in<Ts...>(asset_bags_);
-}
-
-template <typename... Ts>
-void AssetMan::zombify_ghost_assets() {
-  zombify_assets_in<Ts...>(ghost_asset_bags_);
-}
-
 template <typename... Ts,typename AssetBags>
-void AssetMan::reset_assets_in(AssetBags& asset_bags) {
+void AssetMan::reset_assets(AssetBags& asset_bags) {
   (std::get<AssetBag<Ts>>(asset_bags).reset(),...);
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::shrink_assets_in(AssetBags& asset_bags) {
+void AssetMan::shrink_assets(AssetBags& asset_bags) {
   (std::get<AssetBag<Ts>>(asset_bags).shrink(),...);
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::check_assets_in([[maybe_unused]] const AssetBags& asset_bags) const {
+void AssetMan::check_assets([[maybe_unused]] const AssetBags& asset_bags) const {
 #if !defined(NDEBUG)
   (std::get<AssetBag<Ts>>(asset_bags).check(),...);
 #endif
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::zombify_assets_in(AssetBags& asset_bags) {
+void AssetMan::zombify_assets(AssetBags& asset_bags) {
   (std::get<AssetBag<Ts>>(asset_bags).zombify(),...);
 }
 
-template <typename T,typename... Args>
-T& AssetMan::load_gfx_asset(AssetLoaderKey,asset_id_t id,const std::filesystem::path& file,Args&&... args) {
-  return *load_asset_file_in<T>(asset_bags_,id,file,std::forward<Args>(args)...);
+template <typename T,AssetIdLike Id,typename... Args>
+T& AssetMan::load_gfx_asset(AssetLoaderKey,Id id,const std::filesystem::path& file,Args&&... args) {
+  return *load_asset_file<T,Id>(asset_bags_,id,file,std::forward<Args>(args)...);
 }
 
-template <typename T,typename... Args>
-T& AssetMan::load_gfx_asset(AssetLoaderKey,asset_id_t id,Args&&... args) {
-  return *load_asset_in<T>(asset_bags_,id,std::forward<Args>(args)...);
+template <typename T,AssetIdLike Id,typename... Args>
+T& AssetMan::load_gfx_asset(AssetLoaderKey,Id id,Args&&... args) {
+  return *load_asset<T,Id>(asset_bags_,id,std::forward<Args>(args)...);
 }
 
-template <typename T,typename... Args>
-T* AssetMan::load_audio_asset(AssetLoaderKey,asset_id_t id,const std::filesystem::path& file,Args&&... args) {
+template <typename T,AssetIdLike Id,typename... Args>
+T* AssetMan::load_audio_asset(AssetLoaderKey,Id id,const std::filesystem::path& file,Args&&... args) {
   if(!is_audio_alive_) { return nullptr; }
 
   try {
-    return load_asset_file_in<T>(asset_bags_,id,file,std::forward<Args>(args)...);
+    return load_asset_file<T,Id>(asset_bags_,id,file,std::forward<Args>(args)...);
   } catch(const CybelError& e) {
     if(fail_on_audio_error_) { throw; }
 
@@ -330,32 +274,31 @@ T AssetMan::load_temp_gfx_asset(AssetLoaderKey,const std::filesystem::path& file
 
 template <typename T,typename... Args>
 T& AssetMan::load_ghost_gfx_asset(AssetLoaderKey,Args&&... args) {
-  static_assert(!((std::same_as<std::remove_cvref_t<Args>,std::filesystem::path> || ...)),
-                "No Ghost assets currently load files.");
+  constexpr bool has_file_arg = ((std::same_as<std::remove_cvref_t<Args>,std::filesystem::path> || ...));
+  static_assert(!has_file_arg,"No Ghost assets currently load files.");
 
   auto& asset_bag = std::get<AssetBag<T>>(ghost_asset_bags_);
 
   return *asset_bag.add(0,make_asset_ptr<T>(std::forward<Args>(args)...));
 }
 
-template <typename T,typename AssetBags,typename... Args>
-T* AssetMan::load_asset_file_in(AssetBags& asset_bags,asset_id_t id,const std::filesystem::path& file,
-                                Args&&... args) {
+template <typename T,AssetIdLike Id,typename AssetBags,typename... Args>
+T* AssetMan::load_asset_file(AssetBags& asset_bags,Id id,const std::filesystem::path& file,Args&&... args) {
   auto& asset_bag = std::get<AssetBag<T>>(asset_bags);
 
   return load_asset_file_in_dirs(asset_bag.name,file,[&](const auto& asset_file) {
-    return asset_bag.add(id,make_asset_ptr<T>(asset_file,std::forward<Args>(args)...));
+    return asset_bag.template add<Id>(id,make_asset_ptr<T>(asset_file,std::forward<Args>(args)...));
   });
 }
 
-template <typename T,typename AssetBags,typename... Args>
-T* AssetMan::load_asset_in(AssetBags& asset_bags,asset_id_t id,Args&&... args) {
-  static_assert(!((std::same_as<std::remove_cvref_t<Args>,std::filesystem::path> || ...)),
-                "Use load_asset_file_in() instead.");
+template <typename T,AssetIdLike Id,typename AssetBags,typename... Args>
+T* AssetMan::load_asset(AssetBags& asset_bags,Id id,Args&&... args) {
+  constexpr bool has_file_arg = ((std::same_as<std::remove_cvref_t<Args>,std::filesystem::path> || ...));
+  static_assert(!has_file_arg,"Use load_asset_file() instead.");
 
   auto& asset_bag = std::get<AssetBag<T>>(asset_bags);
 
-  return asset_bag.add(id,make_asset_ptr<T>(std::forward<Args>(args)...));
+  return asset_bag.template add<Id>(id,make_asset_ptr<T>(std::forward<Args>(args)...));
 }
 
 template <std::invocable<const std::filesystem::path&> OnAssetFile>
@@ -379,7 +322,7 @@ decltype(auto) AssetMan::load_asset_file_in_dirs(std::string_view name,const std
     } catch(const CybelError& e) {
       std::cerr << "[WARN] " << e.what() << '\n';
 
-      const auto sdl_error = Util::get_sdl_error(); // Covers gfx & audio.
+      const auto sdl_error = Util::get_sdl_error(); // Covers all gfx & audio.
 
       if(!sdl_error.empty()) {
         sdl_errors += "\n- ";
@@ -419,43 +362,46 @@ T AssetMan::make_asset(Args&&... args) {
   }
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_image(T id1,T id2) {
-  swap_gfx_asset<Image>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_image(Id id1,Id id2) {
+  swap_gfx_asset<Image,Id>(id1,id2);
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_texture(T id1,T id2) {
-  swap_gfx_asset<Texture>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_texture(Id id1,Id id2) {
+  swap_gfx_asset<Texture,Id>(id1,id2);
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_sprite(T id1,T id2) {
-  swap_gfx_asset<Sprite>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_sprite(Id id1,Id id2) {
+  swap_gfx_asset<Sprite,Id>(id1,id2);
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_sprite_atlas(T id1,T id2) {
-  swap_gfx_asset<SpriteAtlas>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_sprite_atlas(Id id1,Id id2) {
+  swap_gfx_asset<SpriteAtlas,Id>(id1,id2);
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_font_atlas(T id1,T id2) {
-  swap_gfx_asset<FontAtlas>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_font_atlas(Id id1,Id id2) {
+  swap_gfx_asset<FontAtlas,Id>(id1,id2);
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_music(T id1,T id2) {
-  swap_audio_asset<Music>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_music(Id id1,Id id2) {
+  swap_audio_asset<Music,Id>(id1,id2);
 }
 
-template <AssetIdLike T>
-void AssetMan::swap_sound(T id1,T id2) {
-  swap_audio_asset<Sound>(static_cast<asset_id_t>(id1),static_cast<asset_id_t>(id2));
+template <AssetIdLike Id>
+void AssetMan::swap_sound(Id id1,Id id2) {
+  swap_audio_asset<Sound,Id>(id1,id2);
 }
 
-template <typename T>
-void AssetMan::swap_gfx_asset(asset_id_t id1,asset_id_t id2) {
+template <typename T,AssetIdLike Id>
+void AssetMan::swap_gfx_asset(Id id_like1,Id id_like2) {
+  const auto id1 = static_cast<asset_id_t>(id_like1);
+  const auto id2 = static_cast<asset_id_t>(id_like2);
+
   auto& asset_bag = std::get<AssetBag<T>>(asset_bags_);
   auto& assets = asset_bag.assets;
 
@@ -473,9 +419,12 @@ void AssetMan::swap_gfx_asset(asset_id_t id1,asset_id_t id2) {
   std::ranges::swap(assets[id1],assets[id2]);
 }
 
-template <typename T>
-void AssetMan::swap_audio_asset(asset_id_t id1,asset_id_t id2) {
+template <typename T,AssetIdLike Id>
+void AssetMan::swap_audio_asset(Id id_like1,Id id_like2) {
   if(!is_audio_alive_) { return; }
+
+  const auto id1 = static_cast<asset_id_t>(id_like1);
+  const auto id2 = static_cast<asset_id_t>(id_like2);
 
   auto& asset_bag = std::get<AssetBag<T>>(asset_bags_);
   auto& assets = asset_bag.assets;
@@ -494,29 +443,31 @@ void AssetMan::swap_audio_asset(asset_id_t id1,asset_id_t id2) {
   std::ranges::swap(assets[id1],assets[id2]);
 }
 
-template <AssetIdLike T>
-Image& AssetMan::image(T id) { return gfx_asset<Image>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+Image& AssetMan::image(Id id) { return gfx_asset<Image,Id>(id); }
 
-template <AssetIdLike T>
-Texture& AssetMan::texture(T id) { return gfx_asset<Texture>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+Texture& AssetMan::texture(Id id) { return gfx_asset<Texture,Id>(id); }
 
-template <AssetIdLike T>
-Sprite& AssetMan::sprite(T id) { return gfx_asset<Sprite>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+Sprite& AssetMan::sprite(Id id) { return gfx_asset<Sprite,Id>(id); }
 
-template <AssetIdLike T>
-SpriteAtlas& AssetMan::sprite_atlas(T id) { return gfx_asset<SpriteAtlas>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+SpriteAtlas& AssetMan::sprite_atlas(Id id) { return gfx_asset<SpriteAtlas,Id>(id); }
 
-template <AssetIdLike T>
-FontAtlas& AssetMan::font_atlas(T id) { return gfx_asset<FontAtlas>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+FontAtlas& AssetMan::font_atlas(Id id) { return gfx_asset<FontAtlas,Id>(id); }
 
-template <AssetIdLike T>
-Music* AssetMan::music(T id) { return audio_asset<Music>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+Music* AssetMan::music(Id id) { return audio_asset<Music,Id>(id); }
 
-template <AssetIdLike T>
-Sound* AssetMan::sound(T id) { return audio_asset<Sound>(static_cast<asset_id_t>(id)); }
+template <AssetIdLike Id>
+Sound* AssetMan::sound(Id id) { return audio_asset<Sound,Id>(id); }
 
-template <typename T>
-T& AssetMan::gfx_asset(asset_id_t id) {
+template <typename T,AssetIdLike Id>
+T& AssetMan::gfx_asset(Id id_like) {
+  const auto id = static_cast<asset_id_t>(id_like);
+
   auto& asset_bag = std::get<AssetBag<T>>(asset_bags_);
   auto& assets = asset_bag.assets;
 
@@ -539,9 +490,11 @@ T& AssetMan::gfx_asset(asset_id_t id) {
   return *assets[id];
 }
 
-template <typename T>
-T* AssetMan::audio_asset(asset_id_t id) {
+template <typename T,AssetIdLike Id>
+T* AssetMan::audio_asset(Id id_like) {
   if(!is_audio_alive_) [[unlikely]] { return nullptr; }
+
+  const auto id = static_cast<asset_id_t>(id_like);
 
   auto& asset_bag = std::get<AssetBag<T>>(asset_bags_);
   auto& assets = asset_bag.assets;
@@ -598,7 +551,10 @@ void AssetMan::AssetBag<T>::check() const {
 }
 
 template <typename T>
-T* AssetMan::AssetBag<T>::add(asset_id_t id,AssetPtr<T> asset_ptr) {
+template <AssetIdLike Id>
+T* AssetMan::AssetBag<T>::add(Id id_like,AssetPtr<T> asset_ptr) {
+  const auto id = static_cast<asset_id_t>(id_like);
+
   T* asset = asset_ptr.get(); // Store before move.
 
   if(is_ghost) {
