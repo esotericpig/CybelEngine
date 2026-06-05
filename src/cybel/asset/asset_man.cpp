@@ -40,10 +40,12 @@ void AssetMan::add_asset_dirs(std::initializer_list<std::filesystem::path> dirs)
 
 void AssetMan::load_assets(std::shared_ptr<AssetLoader> asset_loader) {
   if(asset_loader_) { throw CybelError{"Multiple Asset Loaders are not currently supported."}; }
-  if(!asset_loader) { return; }
 
-  asset_loader_ = std::move(asset_loader);
-  reload_assets();
+  if(asset_loader) {
+    asset_loader_ = std::move(asset_loader);
+  }
+
+  reload_assets(); // Still shrink assets if no AssetLoader.
 }
 
 void AssetMan::reload_assets() {
