@@ -68,8 +68,7 @@ public:
   void play_sound(const Sound* sound);
 
   void set_music_pos(const Duration& pos);
-
-  Duration fetch_duration(const Music* music,const Duration& fallback = Duration::kZero) const;
+  void set_music_pos_to_rand(const Duration& fallback = Duration::kZero);
 
   bool is_alive() const;
   bool is_music_playing() const;

@@ -7,6 +7,7 @@
 
 #include "audio_player.h"
 
+#include "cybel/util/rando.h"
 #include "cybel/util/util.h"
 
 namespace cybel {
@@ -114,12 +115,15 @@ void AudioPlayer::set_music_pos(const Duration& pos) {
   Mix_SetMusicPosition(pos.secs());
 }
 
-Duration AudioPlayer::fetch_duration(const Music* music,const Duration& fallback) const {
-  if(!is_alive_ || !music) { return fallback; }
+void AudioPlayer::set_music_pos_to_rand(const Duration& fallback) {
+  if(!is_alive_ || curr_music_id_.empty()) { return; }
 
-  const double secs = Mix_MusicDuration(music->handle());
+  double secs = Mix_MusicDuration(nullptr); // Null returns currently playing music.
+  if(secs <= 0.0) { secs = fallback.secs(); }
 
-  return (secs <= 0.0) ? fallback : Duration::from_secs(secs);
+  if(secs > 1.0) {
+    set_music_pos(Duration::from_secs(Rando::it().rand_double(0.0,secs - 1.0)));
+  }
 }
 
 bool AudioPlayer::is_alive() const { return is_alive_; }

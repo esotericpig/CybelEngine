@@ -54,6 +54,13 @@ Music& Music::operator=(Music&& other) noexcept {
 
 const std::string& Music::id() const { return id_; }
 
+Duration Music::fetch_duration(const Duration& fallback) const {
+  const double secs = Mix_MusicDuration(handle_);
+  if(secs <= 0.0) { return fallback; }
+
+  return Duration::from_secs(secs);
+}
+
 Mix_Music* Music::handle() const { return handle_; }
 
 } // namespace cybel

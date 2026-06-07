@@ -11,6 +11,7 @@
 #include "cybel/common.h"
 
 #include "cybel/asset/asset_man_key.h"
+#include "cybel/types/duration.h"
 
 #include <filesystem>
 
@@ -28,6 +29,7 @@ public:
   Music& operator=(Music&& other) noexcept;
 
   const std::string& id() const;
+  Duration fetch_duration(const Duration& fallback = Duration::kZero) const;
 
   Mix_Music* handle() const;
 
