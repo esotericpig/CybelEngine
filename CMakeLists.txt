@@ -157,7 +157,7 @@ elseif(APPLE)
   list(APPEND cybel_compile_defs CYBEL_PLATFORM_MACOS)
 elseif(WIN32)
   list(APPEND cybel_compile_defs CYBEL_PLATFORM_WINDOWS)
-else() # Linux.
+else() # Linux
   list(APPEND cybel_compile_defs CYBEL_PLATFORM_LINUX)
 endif()
 
@@ -314,19 +314,6 @@ if(PROJECT_IS_TOP_LEVEL)
 
   cybel_add_cppcheck_target(
       CXX_V "${CYBEL_CXX_V}"
-      ARGS
-        --suppress=checkersReport
-        --suppress=functionConst
-        --suppress=functionStatic
-        --suppress=missingInclude
-        --suppress=missingIncludeSystem
-#        "--suppress=noExplicitConstructor:src/cybel/types/"
-        --suppress=shadowFunction
-        --suppress=unknownMacro # For Emscripten: EM_ASM(), etc.
-        --suppress=unmatchedSuppression
-        --suppress=unusedFunction
-#        --suppress=unusedPrivateFunction
-#        --suppress=useStlAlgorithm
-#        --suppress=variableScope
+      ADD_CYBEL_DEFAULTS
   )
 endif()

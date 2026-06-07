@@ -1,6 +1,6 @@
 ###
 # Functions:
-#   cybel_add_cppcheck_target(CXX_V,ARGS)
+#   cybel_add_cppcheck_target(CXX_V : int?,ADD_CYBEL_DEFAULTS : bool?,ARGS : string[]?)
 #
 # @author Bradley Whited
 ###
@@ -10,13 +10,17 @@ include_guard(GLOBAL)
 # Must enable `CMAKE_EXPORT_COMPILE_COMMANDS`.
 # Defaults to `cppcheck` or to `CMAKE_CXX_CPPCHECK` if set.
 #
-# @arg (optional) CXX_V "20"
-#      - Defaults to `CMAKE_CXX_STANDARD` if set.
-# @arg (optional) ARGS --suppress=checkersReport --suppress=functionConst
+# @arg CXX_V : int? - C++ version to use.
+#      - Example: CXX_V 20
+#      - Default: `CMAKE_CXX_STANDARD` if set.
+# @arg ADD_CYBEL_DEFAULTS : bool? - Add Cybel Engine's default suppressions.
+#      - Useful if using Cybel Engine as a non-system library.
+# @arg ARGS : string[]? - Args to pass to Cppcheck.
+#      - Example: ARGS --suppress=checkersReport --suppress=functionConst
 function(cybel_add_cppcheck_target)
   cmake_parse_arguments(PARSE_ARGV 0 arg
       # Flags.
-      ""
+      "ADD_CYBEL_DEFAULTS"
       # One-value opts.
       "CXX_V"
       # Multi-value opts.
@@ -52,7 +56,27 @@ function(cybel_add_cppcheck_target)
       "--relative-paths=${CMAKE_CURRENT_SOURCE_DIR}"
       "--checkers-report=${cppcheck_dir}/checkers_report.txt"
       "--cppcheck-build-dir=${cppcheck_dir}/build"
+  )
 
+  if(arg_ADD_CYBEL_DEFAULTS)
+    list(APPEND cppcheck_args
+        --suppress=checkersReport
+        --suppress=functionConst
+        --suppress=functionStatic
+        --suppress=missingInclude
+        --suppress=missingIncludeSystem
+#        "--suppress=noExplicitConstructor:src/cybel/types/"
+        --suppress=shadowFunction
+        --suppress=unknownMacro # For Emscripten: EM_ASM(), etc.
+        --suppress=unmatchedSuppression
+        --suppress=unusedFunction
+#        --suppress=unusedPrivateFunction
+#        --suppress=useStlAlgorithm
+#        --suppress=variableScope
+    )
+  endif()
+
+  list(APPEND cppcheck_args
       ${arg_ARGS}
 
 #      "-I=${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include"
