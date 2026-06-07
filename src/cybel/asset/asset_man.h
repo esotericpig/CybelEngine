@@ -44,10 +44,14 @@ public:
   explicit AssetMan(bool is_audio_alive);
 
   void add_asset_dir(const std::filesystem::path& dir);
-  void add_asset_dirs(std::initializer_list<std::filesystem::path> dirs);
+  void add_asset_dirs(std::initializer_list<std::filesystem::path> dirs,
+                      const std::filesystem::path& sub_dir = "");
 
+  /// If your Game doesn't use assets, pass in null to shrink assets,
+  /// or call shrink_assets() directly.
   void load_assets(std::shared_ptr<AssetLoader> asset_loader);
   void reload_assets();
+  void shrink_assets();
 
   void reload_gfx();
   void reload_cpu_gfx();

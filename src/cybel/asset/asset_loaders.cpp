@@ -37,6 +37,10 @@ Texture& GpuGfxLoader::load_texture(const Color4f& color) {
   return asset_man_.load_ghost_gfx_asset<Texture>(AssetLoaderKey{},color);
 }
 
+Texture& GpuGfxLoader::load_texture(const Size2i& size,const Color4f& color) {
+  return asset_man_.load_ghost_gfx_asset<Texture>(AssetLoaderKey{},size,color);
+}
+
 AudioLoader::AudioLoader(AssetManKey,AssetMan& asset_man) noexcept
   : asset_man_{asset_man} {}
 

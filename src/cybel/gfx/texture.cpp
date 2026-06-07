@@ -10,6 +10,8 @@
 #include "cybel/types/cybel_error.h"
 #include "cybel/util/util.h"
 
+#include <algorithm>
+
 namespace cybel {
 
 Texture::Texture(AssetManKey,const Image& image)
@@ -73,21 +75,22 @@ Texture::Texture(AssetManKey,const Image& image)
   }
 }
 
-Texture::Texture(AssetManKey,const Color4f& color) {
-  constexpr int width = 2;
-  constexpr int height = 2;
+Texture::Texture(AssetManKey key,const Color4f& color)
+  : Texture{key,Size2i{2,2},color} {}
+
+Texture::Texture(AssetManKey,const Size2i& size,const Color4f& color)
+  : size_{std::max(size.w,1),std::max(size.h,1)} {
   const auto r = color.byte_r();
   const auto g = color.byte_g();
   const auto b = color.byte_b();
   const auto a = color.byte_a();
 
-  size_ = Size2i{width,height};
-
   constexpr std::uint8_t bypp = 4;
-  constexpr std::size_t bypp_count = width * height * bypp;
-  GLubyte pixels[bypp_count]{};
+  const auto pixel_count = static_cast<std::size_t>(size_.area()) * bypp;
+  const auto pixels = std::make_unique<GLubyte[]>(pixel_count);
+  const auto* pixels_end = pixels.get() + pixel_count;
 
-  for(auto* p = pixels; p < (pixels + bypp_count); p += bypp) {
+  for(auto* p = pixels.get(); p < pixels_end; p += bypp) {
     p[0] = r;
     p[1] = g;
     p[2] = b;
@@ -107,7 +110,7 @@ Texture::Texture(AssetManKey,const Color4f& color) {
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
 
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,size_.w,size_.h,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,size_.w,size_.h,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels.get());
 
   glBindTexture(GL_TEXTURE_2D,0); // Unbind texture.
 

@@ -25,7 +25,7 @@ namespace cybel {
 CybelEngine& CybelEngine::init(const Config& config) {
   static CybelEngine engine{config};
 
-  // Not initialized?
+  // First time initializing?
   if(!is_init_.exchange(true)) {
 #if defined(__EMSCRIPTEN__)
     emscripten_set_webglcontextlost_callback("#canvas",&engine,false,on_webgl_context_change);

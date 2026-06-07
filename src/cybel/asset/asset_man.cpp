@@ -18,11 +18,12 @@ AssetMan::AssetMan(bool is_audio_alive)
 void AssetMan::add_asset_dir(const std::filesystem::path& dir) {
   std::error_code ec{};
   // NOTE: Don't use canonical() in case the dir is created later during refresh.
-  const auto abs_dir = absolute(dir,ec).lexically_normal();
+  //       Also, using `/ ""` to add a trailing slash so that dirs equal.
+  const auto abs_dir = absolute(dir / "",ec).lexically_normal();
 
   if(ec != std::error_code{}) {
-    std::cerr << "[WARN] Invalid Asset folder `" << dir << "` with error ["
-              << ec << "]: " << ec.message() << '.' << std::endl;
+    std::cerr << "[WARN] Invalid Asset folder `" << dir << "` => `" << abs_dir << '`'
+              << "; error [" << ec << "]: " << ec.message() << '.' << std::endl;
     return;
   }
 
@@ -32,25 +33,44 @@ void AssetMan::add_asset_dir(const std::filesystem::path& dir) {
   asset_dirs_.push_back(abs_dir);
 }
 
-void AssetMan::add_asset_dirs(std::initializer_list<std::filesystem::path> dirs) {
-  for(const auto& dir : dirs) {
-    add_asset_dir(dir);
+void AssetMan::add_asset_dirs(std::initializer_list<std::filesystem::path> dirs,
+                              const std::filesystem::path& sub_dir) {
+  for(const auto& dir: dirs) {
+    add_asset_dir(dir / sub_dir);
   }
 }
 
 void AssetMan::load_assets(std::shared_ptr<AssetLoader> asset_loader) {
   if(asset_loader_) { throw CybelError{"Multiple Asset Loaders are not currently supported."}; }
 
-  if(asset_loader) {
-    asset_loader_ = std::move(asset_loader);
+  if(!asset_loader) {
+    // This Game doesn't use assets.
+    shrink_assets();
+    return;
   }
 
-  reload_assets(); // Still shrink assets if no AssetLoader.
+  asset_loader_ = std::move(asset_loader);
+  reload_assets();
 }
 
 void AssetMan::reload_assets() {
   reload_gfx();
   reload_audio();
+}
+
+void AssetMan::shrink_assets() {
+  std::apply(
+    [](auto&... asset_bag) {
+      (asset_bag.shrink(),...);
+    },
+    asset_bags_
+  );
+  std::apply(
+    [](auto&... asset_bag) {
+      (asset_bag.shrink(),...);
+    },
+    ghost_asset_bags_
+  );
 }
 
 void AssetMan::reload_gfx() {

@@ -22,6 +22,7 @@ class Texture final {
 public:
   explicit Texture(AssetManKey,const Image& image);
   explicit Texture(AssetManKey,const Color4f& color);
+  explicit Texture(AssetManKey,const Size2i& size,const Color4f& color);
 
   Texture(const Texture& other) = delete;
   Texture(Texture&& other) noexcept;

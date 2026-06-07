@@ -54,8 +54,12 @@ public:
   Texture& load_texture(Id id,const Image& image);
   template <AssetIdLike Id>
   Texture& load_texture(Id id,const Color4f& color);
+  template <AssetIdLike Id>
+  Texture& load_texture(Id id,const Size2i& size,const Color4f& color);
+
   Texture& load_texture(const Image& image);
   Texture& load_texture(const Color4f& color);
+  Texture& load_texture(const Size2i& size,const Color4f& color);
 
   template <AssetIdLike Id>
   Sprite& load_sprite(Id id,Texture& texture);
@@ -106,6 +110,11 @@ Texture& GpuGfxLoader::load_texture(Id id,const Image& image) {
 template <AssetIdLike Id>
 Texture& GpuGfxLoader::load_texture(Id id,const Color4f& color) {
   return asset_man_.load_gfx_asset<Texture,Id>(AssetLoaderKey{},id,color);
+}
+
+template <AssetIdLike Id>
+Texture& GpuGfxLoader::load_texture(Id id,const Size2i& size,const Color4f& color) {
+  return asset_man_.load_gfx_asset<Texture,Id>(AssetLoaderKey{},id,size,color);
 }
 
 template <AssetIdLike Id>
