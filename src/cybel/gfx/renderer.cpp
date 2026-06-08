@@ -7,7 +7,7 @@
 
 #include "renderer.h"
 
-#include "cybel/str/utf8/rune_range.h"
+#include "cybel/text/rune_view.h"
 #include "cybel/types/cybel_error.h"
 #include "cybel/util/util.h"
 
@@ -346,7 +346,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print(char32_t rune) {
 Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print(std::string_view str) {
   if(str.empty()) { return *this; }
 
-  for(const auto rune : utf8::RuneRange{str}) {
+  for(const auto rune : RuneView{str}) {
     if(rune == '\n') {
       puts();
     } else {
@@ -368,11 +368,11 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
 ) {
   if(fmt.empty()) { return *this; }
 
-  const auto it_end = utf8::RuneIterator::end(fmt);
+  const auto it_end = RuneIterator::end(fmt);
   auto args_it = args.begin();
   std::stack<Color4f> color_stack{};
 
-  for(auto it = utf8::RuneIterator::begin(fmt); it != it_end; ++it) {
+  for(auto it = RuneIterator::begin(fmt); it != it_end; ++it) {
     const auto rune = *it;
 
     // Handles: `{{`, `{}`, `{<color> `.

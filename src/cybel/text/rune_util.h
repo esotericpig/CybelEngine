@@ -5,23 +5,21 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#ifndef CYBEL_STR_UTF8_RUNE_UTIL_H_
-#define CYBEL_STR_UTF8_RUNE_UTIL_H_
+#ifndef CYBEL_TEXT_RUNE_UTIL_H_
+#define CYBEL_TEXT_RUNE_UTIL_H_
 
 #include "cybel/common.h"
 
-namespace cybel::utf8 {
+namespace cybel {
 
 using octet_t = unsigned char;
 
-/**
- * UTF-8 links:
- * - https://datatracker.ietf.org/doc/html/rfc3629#autoid-3
- * - https://datatracker.ietf.org/doc/html/rfc3629#autoid-4
- * - https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-3/#G31703
- * - https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-3/#G48534
- * - https://www.unicode.org/Public/16.0.0/ucd/PropList.txt
- */
+/// UTF-8 links:
+/// - https://datatracker.ietf.org/doc/html/rfc3629#autoid-3
+/// - https://datatracker.ietf.org/doc/html/rfc3629#autoid-4
+/// - https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-3/#G31703
+/// - https://www.unicode.org/versions/Unicode16.0.0/core-spec/chapter-3/#G48534
+/// - https://www.unicode.org/Public/16.0.0/ucd/PropList.txt
 namespace RuneUtil {
   inline const char32_t kInvalidRune = U'�'; // \uFFFD.
   inline const std::string kInvalidPackedRune = "�"; // \xEF\xBF\xBD.
@@ -46,5 +44,5 @@ namespace RuneUtil {
   char32_t _unpack_seq4(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1);
 }
 
-} // namespace cybel::utf8
+} // namespace cybel
 #endif

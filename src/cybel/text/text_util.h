@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#ifndef CYBEL_STR_UTF8_STR_UTIL_H_
-#define CYBEL_STR_UTF8_STR_UTIL_H_
+#ifndef CYBEL_TEXT_TEXT_UTIL_H_
+#define CYBEL_TEXT_TEXT_UTIL_H_
 
 #include "cybel/common.h"
 
-namespace cybel::utf8 {
+namespace cybel {
 
-namespace StrUtil {
+namespace TextUtil {
   int casecmp_ascii(std::string_view str1,std::string_view str2);
   std::size_t count_runes(std::string_view str);
   std::string ellipsize(std::string_view str,std::size_t max_len);
@@ -21,5 +21,5 @@ namespace StrUtil {
   std::string wrap_words(std::string_view str,std::size_t max_len);
 }
 
-} // namespace cybel::utf8
+} // namespace cybel
 #endif

@@ -5,16 +5,16 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#include "str_util.h"
+#include "text_util.h"
 
-#include "cybel/str/utf8/rune_iterator.h"
-#include "cybel/str/utf8/rune_util.h"
+#include "cybel/text/rune_iterator.h"
+#include "cybel/text/rune_util.h"
 
 #include <sstream>
 
-namespace cybel::utf8 {
+namespace cybel {
 
-int StrUtil::casecmp_ascii(std::string_view str1,std::string_view str2) {
+int TextUtil::casecmp_ascii(std::string_view str1,std::string_view str2) {
   const std::size_t len1 = str1.size();
   const std::size_t len2 = str2.size();
   const std::size_t min_len = std::min(len1,len2);
@@ -36,7 +36,7 @@ int StrUtil::casecmp_ascii(std::string_view str1,std::string_view str2) {
   return 0;
 }
 
-std::size_t StrUtil::count_runes(std::string_view str) {
+std::size_t TextUtil::count_runes(std::string_view str) {
   if(str.empty()) { return 0; }
 
   std::size_t rune_count = 0;
@@ -49,7 +49,7 @@ std::size_t StrUtil::count_runes(std::string_view str) {
   return rune_count;
 }
 
-std::string StrUtil::ellipsize(std::string_view str,std::size_t max_len) {
+std::string TextUtil::ellipsize(std::string_view str,std::size_t max_len) {
   if(max_len == 0 || str.empty()) { return ""; }
   if(str.size() <= max_len) { return std::string{str}; }
 
@@ -76,7 +76,7 @@ std::string StrUtil::ellipsize(std::string_view str,std::size_t max_len) {
   return std::string{str.substr(0,last_index + 1)} + "…";
 }
 
-std::string StrUtil::ljust(std::string_view str,std::size_t new_len) {
+std::string TextUtil::ljust(std::string_view str,std::size_t new_len) {
   if(new_len == 0 || (new_len == 1 && !str.empty())) { return std::string{str}; }
 
   const auto len = count_runes(str);
@@ -86,7 +86,7 @@ std::string StrUtil::ljust(std::string_view str,std::size_t new_len) {
   return std::string{str} + std::string(new_len - len,' ');
 }
 
-std::string StrUtil::strip(std::string_view str) {
+std::string TextUtil::strip(std::string_view str) {
   if(str.empty()) { return std::string{str}; }
 
   // lstrip().
@@ -124,7 +124,7 @@ std::string StrUtil::strip(std::string_view str) {
   return std::string{str.substr(first_index,last_pos - first_index)};
 }
 
-std::string StrUtil::wrap_words(std::string_view str,std::size_t max_len) {
+std::string TextUtil::wrap_words(std::string_view str,std::size_t max_len) {
   if(max_len == 0) { max_len = 1; }
   if(str.size() <= max_len) { return std::string{str}; }
 
@@ -214,4 +214,4 @@ std::string StrUtil::wrap_words(std::string_view str,std::size_t max_len) {
   return result.str();
 }
 
-} // namespace cybel::utf8
+} // namespace cybel

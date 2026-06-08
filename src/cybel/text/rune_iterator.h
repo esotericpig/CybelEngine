@@ -5,16 +5,16 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#ifndef CYBEL_STR_UTF8_RUNE_ITERATOR_H_
-#define CYBEL_STR_UTF8_RUNE_ITERATOR_H_
+#ifndef CYBEL_TEXT_RUNE_ITERATOR_H_
+#define CYBEL_TEXT_RUNE_ITERATOR_H_
 
 #include "cybel/common.h"
 
-#include "cybel/str/utf8/rune_util.h"
+#include "cybel/text/rune_util.h"
 
 #include <iterator>
 
-namespace cybel::utf8 {
+namespace cybel {
 
 class RuneIterator {
 public:
@@ -31,7 +31,6 @@ public:
   static reverse_iterator rbegin(std::string_view str,std::size_t prev_rune_count = 0);
   static reverse_iterator rend(std::string_view str,std::size_t next_rune_count = 0);
 
-  // NOTE: Necessary for std::views::reverse().
   explicit RuneIterator() = default;
 
   bool operator!=(const RuneIterator& other) const;
@@ -71,5 +70,5 @@ private:
   void prev_rune();
 };
 
-} // namespace cybel::utf8
+} // namespace cybel
 #endif

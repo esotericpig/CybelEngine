@@ -7,7 +7,7 @@
 
 #include "rune_util.h"
 
-namespace cybel::utf8 {
+namespace cybel {
 
 char32_t RuneUtil::next_rune(std::string_view str,std::size_t index,std::uint8_t& byte_count) {
   // Always set to 1 to avoid infinite loops.
@@ -231,4 +231,4 @@ bool RuneUtil::is_whitespace(char32_t rune) {
          (rune >= 0x2000 && rune <= 0x200A);   // EN QUAD..HAIR SPACE
 }
 
-} // namespace cybel::utf8
+} // namespace cybel

@@ -10,7 +10,7 @@
 #include "cybel/gfx/gpu_context_key.h"
 #include "cybel/metrics/metric_man.h"
 #include "cybel/scene/scene_context.h"
-#include "cybel/str/utf8/str_util.h"
+#include "cybel/text/text_util.h"
 #include "cybel/types/cybel_error.h"
 #include "cybel/util/util.h"
 
@@ -530,14 +530,15 @@ void CybelEngine::show_error_no_window(const std::string& title,const std::strin
 void CybelEngine::show_error(const std::string& title,const std::string& error,SDL_Window* window) {
   std::cerr << "[ERROR] " << error << std::endl;
 
+  // SDL_ShowSimpleMessageBox() can be called before/after SDL_Init()/SDL_Quit().
+
   constexpr std::size_t max_len = 80;
 
   // Avoid copy if possible.
   if(error.length() <= max_len) {
-    // SDL_ShowSimpleMessageBox() can be called before/after SDL_Init()/SDL_Quit().
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,title.c_str(),error.c_str(),window);
   } else {
-    const auto wrapped_error = utf8::StrUtil::wrap_words(error,max_len);
+    const auto wrapped_error = TextUtil::wrap_words(error,max_len);
 
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,title.c_str(),wrapped_error.c_str(),window);
   }

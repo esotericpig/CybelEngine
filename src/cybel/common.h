@@ -75,7 +75,6 @@
 #include <utility>
 
 namespace cybel {
-  namespace utf8 {}
 }
 
 #endif

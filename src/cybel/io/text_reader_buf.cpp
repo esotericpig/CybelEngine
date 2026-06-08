@@ -74,7 +74,7 @@ TextReaderBuf::int_type TextReaderBuf::underflow() {
   // Because of this, we have to rely on the last value in `buffer_` that is not 0.
   //     Terrible design.
   std::ranges::fill(buffer_,0);
-  SDL_ClearError();
+  Util::clear_sdl_error();
 
   if(SDL_RWread(handle_,buffer_.data(),sizeof(char_type) * read_count,1) == 0) {
     close();

@@ -7,7 +7,7 @@
 
 #include "rune_iterator.h"
 
-namespace cybel::utf8 {
+namespace cybel {
 
 RuneIterator RuneIterator::begin(std::string_view str,std::size_t next_rune_count) {
   auto it = RuneIterator{str,true};
@@ -172,4 +172,4 @@ std::string RuneIterator::pack_rune() const { return RuneUtil::pack(rune_); }
 
 char RuneIterator::byte() const { return str_[index_]; }
 
-} // namespace cybel::utf8
+} // namespace cybel

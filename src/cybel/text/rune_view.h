@@ -5,25 +5,24 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#ifndef CYBEL_STR_UTF8_RUNE_RANGE_H_
-#define CYBEL_STR_UTF8_RUNE_RANGE_H_
+#ifndef CYBEL_TEXT_RUNE_VIEW_H_
+#define CYBEL_TEXT_RUNE_VIEW_H_
 
 #include "cybel/common.h"
 
-#include "cybel/str/utf8/rune_iterator.h"
+#include "cybel/text/rune_iterator.h"
 
 #include <ranges>
 
-namespace cybel::utf8 {
+namespace cybel {
 
-class RuneRange final : public std::ranges::view_interface<RuneRange> {
+class RuneView final : public std::ranges::view_interface<RuneView> {
 public:
   using const_iterator = RuneIterator;
   using const_reverse_iterator = RuneIterator::reverse_iterator;
 
-  // NOTE: Necessary for std::views::reverse().
-  explicit RuneRange() = default;
-  explicit RuneRange(std::string_view str,std::size_t begin_rune_count = 0,std::size_t end_rune_count = 0);
+  explicit RuneView() = default;
+  explicit RuneView(std::string_view str,std::size_t begin_rune_count = 0,std::size_t end_rune_count = 0);
 
   RuneIterator begin() const;
   RuneIterator end() const;
@@ -41,5 +40,5 @@ private:
   std::size_t end_rune_count_ = 0;
 };
 
-} // namespace cybel::utf8
+} // namespace cybel
 #endif
