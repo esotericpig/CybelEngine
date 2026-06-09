@@ -126,7 +126,6 @@ std::string TextUtil::wrap_words(std::string_view str,std::size_t max_len) {
 
   std::string result{};
   const auto it_end = RuneIterator::end(str);
-  char32_t rune = 0;
 
   bool is_line_start = true;
   std::size_t line_len = 0;
@@ -138,10 +137,8 @@ std::string TextUtil::wrap_words(std::string_view str,std::size_t max_len) {
   for(auto it = RuneIterator::begin(str); it != it_end;) {
     // First, read/eat all spaces.
     do {
-      rune = it->rune;
-
-      if(rune == '\n' || rune == '\r') { goto handle_newlines; }
-      if(!RuneUtil::is_whitespace(rune)) { break; }
+      if(it->rune == '\n' || it->rune == '\r') { goto handle_newlines; }
+      if(!RuneUtil::is_whitespace(it->rune)) { break; }
 
       if(is_line_start) {
         result += it->view;
@@ -156,10 +153,8 @@ std::string TextUtil::wrap_words(std::string_view str,std::size_t max_len) {
     word_len = 1;
 
     for(++it; it != it_end; ++it) {
-      rune = it->rune;
-
-      if(rune == '\n' || rune == '\r') { break; } // Append word.
-      if(RuneUtil::is_whitespace(rune)) { break; }
+      if(it->rune == '\n' || it->rune == '\r') { break; } // Append word.
+      if(RuneUtil::is_whitespace(it->rune)) { break; }
 
       ++word_len;
     }
@@ -188,9 +183,9 @@ std::string TextUtil::wrap_words(std::string_view str,std::size_t max_len) {
 
     // Fourth, check for newlines.
   handle_newlines:
-    while(rune == '\n' || rune == '\r') {
+    while(it->rune == '\n' || it->rune == '\r') {
       // Check for CRLF.
-      if(rune == '\r') {
+      if(it->rune == '\r') {
         const auto peek_it = it + 1;
 
         if(peek_it != it_end && peek_it->rune == '\n') {
@@ -203,7 +198,6 @@ std::string TextUtil::wrap_words(std::string_view str,std::size_t max_len) {
       line_len = 0;
 
       if((++it) == it_end) { break; }
-      rune = it->rune;
     }
   }
 

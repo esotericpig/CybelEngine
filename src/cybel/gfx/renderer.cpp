@@ -368,129 +368,139 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
 ) {
   if(fmt.empty()) { return *this; }
 
-  const auto it_end = RuneIterator::end(fmt);
+  const auto fmt_it_end = RuneIterator::end(fmt);
+  const auto args_it_end = args.end();
+
   auto args_it = args.begin();
   std::stack<Color4f> color_stack{};
 
-  for(auto it = RuneIterator::begin(fmt); it != it_end; ++it) {
-    const auto rune = it->rune;
+  for(auto fmt_it = RuneIterator::begin(fmt); fmt_it != fmt_it_end; ++fmt_it) {
+    const auto rune1 = fmt_it->rune;
 
-    // Handles: `{{`, `{}`, `{<color> `.
-    if(rune == '{') {
-      if((++it) == it_end) {
-        print(rune);
-        break;
-      }
+    switch(rune1) {
+      // Handles: `{{`, `{}`, `{<color> `
+      case '{': {
+        if((++fmt_it) == fmt_it_end) {
+          print(rune1);
+          goto break_main_loop;
+        }
 
-      const auto rune2 = it->rune;
+        const auto rune2 = fmt_it->rune;
 
-      // Escaped: `{{`.
-      if(rune2 == '{') {
-        print(rune);
-        continue;
-      }
-      // Arg: `{}`.
-      // - Note that this doesn't account for erroneously "escaped" `{}}`, which should be `{{}}`.
-      if(rune2 == '}') {
-        if(args_it != args.end()) {
-          // Instead, this could call print_fmt() or use its own stack.
-          print(*args_it);
-          ++args_it;
-        } else {
-          // Just print `{}`.
-          print(rune);
+        switch(rune2) {
+          // Escaped: `{{`
+          case '{':
+            print(rune1);
+            break;
+
+          // Arg: `{}`
+          // - Note that this doesn't account for erroneously "escaped" `{}}`, which should be `{{}}`.
+          case '}': {
+            if(args_it != args_it_end) {
+              // Instead, this could call print_fmt() or use its own stack.
+              print(*args_it);
+              ++args_it;
+            } else {
+              // Just print `{}`.
+              print(rune1);
+              print(rune2);
+            }
+          } break;
+
+          // Styled text: `{<color> `
+          default: {
+            const std::size_t first_i = fmt_it->index;
+
+            do {
+              if(fmt_it->rune == ' ') { break; }
+            } while((++fmt_it) != fmt_it_end);
+
+            // No more runes to print with color.
+            if(fmt_it == fmt_it_end) {
+              goto break_main_loop;
+            }
+
+            const auto color_str = fmt.substr(first_i,fmt_it->index - first_i);
+            Color4f color = Color4f::kWhite; // Fallback color.
+
+            // RGB `0x112233` or RGBA `0x11223344`.
+            if(color_str.length() >= 8 && color_str[0] == '0' &&
+               (color_str[1] == 'x' || color_str[1] == 'X')) {
+              color = Color4f::hex(color_str,color);
+            } else {
+              const auto* color_ptr = ren.font_color(std::string{color_str});
+              if(color_ptr) { color = *color_ptr; }
+            }
+
+            color_stack.push(color);
+            ren.begin_color(color);
+          } break;
+        }
+      } break;
+
+      // Handles: ` `, ` }}`, color ` }`
+      case ' ': {
+        const auto peek_fmt_it2 = fmt_it + 1;
+
+        if(peek_fmt_it2 == fmt_it_end) {
+          print(rune1);
+          goto break_main_loop;
+        }
+
+        const auto rune2 = peek_fmt_it2->rune;
+
+        // Just a normal space.
+        if(rune2 != '}') {
+          print(rune1);
+          break; // Process 2nd rune on next iteration.
+        }
+
+        const auto peek_fmt_it3 = peek_fmt_it2 + 1;
+        const auto rune3 = (peek_fmt_it3 != fmt_it_end) ? peek_fmt_it3->rune : 0;
+
+        // Escaped: ` }}`
+        if(rune3 == '}') {
+          print(rune1);
           print(rune2);
+
+          fmt_it = peek_fmt_it3;
+        }
+        // Styled text: ` }`
+        else if(!color_stack.empty()) {
+          color_stack.pop();
+          ren.begin_color(!color_stack.empty() ? color_stack.top() : ren.curr_color_);
+
+          fmt_it = peek_fmt_it2;
+        }
+      } break;
+
+      // Handles: non-color `}`, `}}`
+      case '}': {
+        print(rune1);
+
+        const auto peek_fmt_it2 = fmt_it + 1;
+
+        if(peek_fmt_it2 == fmt_it_end) {
+          goto break_main_loop;
         }
 
-        continue;
-      }
-
-      // Styled text: `{<color> `.
-      const std::size_t first_i = it->index;
-      std::size_t last_i = it->index;
-
-      do {
-        if(it->rune == ' ') {
-          last_i = it->index;
-          break;
+        // Escaped: `}}`.
+        if(peek_fmt_it2->rune == '}') {
+          fmt_it = peek_fmt_it2;
         }
-      } while((++it) != it_end);
+      } break;
 
-      const auto color_str = fmt.substr(first_i,last_i - first_i);
-      Color4f color = Color4f::kWhite; // Fallback color.
-
-      // RGB `0x112233` or RGBA `0x11223344`.
-      if(color_str.length() >= 8 && color_str[0] == '0' && (color_str[1] == 'x' || color_str[1] == 'X')) {
-        color = Color4f::hex(color_str,color);
-      } else {
-        const auto* color_ptr = ren.font_color(std::string{color_str});
-
-        if(color_ptr != nullptr) { color = *color_ptr; }
-      }
-
-      color_stack.push(color);
-      ren.begin_color(color);
-    }
-    // Handles: ` `, ` }}`, ` }`.
-    else if(rune == ' ') {
-      const auto peek_it2 = it + 1;
-
-      if(peek_it2 == it_end) {
-        print(rune);
+      case '\n':
+        puts();
         break;
-      }
 
-      const auto rune2 = peek_it2->rune;
-
-      // Just a normal space.
-      if(rune2 != '}') {
-        // Process 2nd rune on next iteration.
-        print(rune);
-        continue;
-      }
-
-      const auto peek_it3 = peek_it2 + 1;
-      const auto rune3 = (peek_it3 == it_end) ? 0 : peek_it3->rune;
-
-      // Escaped: ` }}`.
-      if(rune3 == '}') {
-        print(rune);
-        print(rune2);
-
-        it = peek_it3;
-        continue;
-      }
-
-      // Styled text: ` }`.
-      if(!color_stack.empty()) {
-        color_stack.pop();
-
-        if(!color_stack.empty()) {
-          ren.begin_color(color_stack.top());
-        } else {
-          ren.begin_color(ren.curr_color_);
-        }
-      }
-
-      it = peek_it2;
-    } else if(rune == '}') {
-      print(rune);
-
-      const auto peek_it2 = it + 1;
-
-      if(peek_it2 == it_end) { break; }
-
-      const auto rune2 = peek_it2->rune;
-
-      // Escaped: `}}`.
-      if(rune2 == '}') { it = peek_it2; }
-    } else if(rune == '\n') {
-      puts();
-    } else {
-      print(rune);
+      default:
+        print(rune1);
+        break;
     }
   }
 
+break_main_loop:
   ren.begin_color(ren.curr_color_);
 
   return *this;

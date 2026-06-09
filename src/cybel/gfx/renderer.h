@@ -96,7 +96,7 @@ public:
     ///     - `{green text }`
     ///
     /// Notes:
-    /// - Escape `{` with 2 `{{` or `}` with 2 `}`:
+    /// - Escape `{` with 2 `{{` or `}` with 2 `}}`:
     ///   - `This {{is }} escaped: {{}}.`
     /// - Shouldn't fail on invalid text, number of args, colors, etc.
     FontAtlasWrapper& print_fmt(std::string_view fmt,std::initializer_list<std::string_view> args = {});
