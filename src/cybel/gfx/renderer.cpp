@@ -346,11 +346,11 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print(char32_t rune) {
 Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print(std::string_view str) {
   if(str.empty()) { return *this; }
 
-  for(const auto rune : RuneView{str}) {
-    if(rune == '\n') {
+  for(const auto& r : RuneView{str}) {
+    if(r.rune == '\n') {
       puts();
     } else {
-      print(rune);
+      print(r.rune);
     }
   }
 
@@ -373,7 +373,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
   std::stack<Color4f> color_stack{};
 
   for(auto it = RuneIterator::begin(fmt); it != it_end; ++it) {
-    const auto rune = *it;
+    const auto rune = it->rune;
 
     // Handles: `{{`, `{}`, `{<color> `.
     if(rune == '{') {
@@ -382,7 +382,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
         break;
       }
 
-      const auto rune2 = *it;
+      const auto rune2 = it->rune;
 
       // Escaped: `{{`.
       if(rune2 == '{') {
@@ -406,12 +406,12 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
       }
 
       // Styled text: `{<color> `.
-      const std::size_t first_i = it.index();
-      std::size_t last_i = it.index();
+      const std::size_t first_i = it->index;
+      std::size_t last_i = it->index;
 
       do {
-        if(*it == ' ') {
-          last_i = it.index();
+        if(it->rune == ' ') {
+          last_i = it->index;
           break;
         }
       } while((++it) != it_end);
@@ -440,7 +440,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
         break;
       }
 
-      const auto rune2 = *peek_it2;
+      const auto rune2 = peek_it2->rune;
 
       // Just a normal space.
       if(rune2 != '}') {
@@ -450,7 +450,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
       }
 
       const auto peek_it3 = peek_it2 + 1;
-      const auto rune3 = (peek_it3 == it_end) ? 0 : *peek_it3;
+      const auto rune3 = (peek_it3 == it_end) ? 0 : peek_it3->rune;
 
       // Escaped: ` }}`.
       if(rune3 == '}') {
@@ -480,7 +480,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::print_fmt(
 
       if(peek_it2 == it_end) { break; }
 
-      const auto rune2 = *peek_it2;
+      const auto rune2 = peek_it2->rune;
 
       // Escaped: `}}`.
       if(rune2 == '}') { it = peek_it2; }
