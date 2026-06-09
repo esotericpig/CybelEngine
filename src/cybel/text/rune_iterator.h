@@ -10,65 +10,60 @@
 
 #include "cybel/common.h"
 
-#include "cybel/text/rune_util.h"
+#include "cybel/text/rune_token.h"
 
+#include <cstddef>
 #include <iterator>
+#include <string_view>
 
 namespace cybel {
 
-class RuneIterator {
+class RuneIterator final {
 public:
+  using iterator_concept = std::bidirectional_iterator_tag;
   using iterator_category = std::bidirectional_iterator_tag;
-  using value_type = char32_t;
+
+  using value_type = RuneToken;
   using difference_type = std::ptrdiff_t;
-  using pointer = void;
-  using reference = char32_t;
-  using reverse_iterator = std::reverse_iterator<RuneIterator>;
+  using pointer = const RuneToken*;
+  using reference = const RuneToken&;
 
-  static RuneIterator begin(std::string_view str,std::size_t next_rune_count = 0);
-  static RuneIterator end(std::string_view str,std::size_t prev_rune_count = 0);
-
-  static reverse_iterator rbegin(std::string_view str,std::size_t prev_rune_count = 0);
-  static reverse_iterator rend(std::string_view str,std::size_t next_rune_count = 0);
+  static RuneIterator begin(std::string_view str);
+  static RuneIterator begin(std::string_view str,difference_type rune_offset);
+  static RuneIterator end(std::string_view str);
+  /// For `rune_offset`, use a negative number to start from the end, just like begin().
+  static RuneIterator end(std::string_view str,difference_type rune_offset);
 
   explicit RuneIterator() = default;
 
-  bool operator!=(const RuneIterator& other) const;
   bool operator==(const RuneIterator& other) const;
   std::strong_ordering operator<=>(const RuneIterator& other) const;
 
-  char32_t operator*() const;
+  pointer operator->() const;
+  reference operator*() const;
 
   RuneIterator& operator++();
   RuneIterator operator++(int);
-  RuneIterator operator+(std::size_t count) const;
-  RuneIterator& operator+=(std::size_t count);
+  RuneIterator operator+(difference_type rune_count) const;
+  RuneIterator& operator+=(difference_type rune_count);
   RuneIterator& operator--();
   RuneIterator operator--(int);
-  RuneIterator operator-(std::size_t count) const;
-  RuneIterator& operator-=(std::size_t count);
+  RuneIterator operator-(difference_type rune_count) const;
+  RuneIterator& operator-=(difference_type rune_count);
 
   std::string_view str() const;
-  std::size_t index() const;
-  std::uint8_t byte_count() const;
-  char32_t rune() const;
-
-  std::string substr() const;
-  std::string_view substr_view() const;
-  std::string pack_rune() const;
-  char byte() const;
 
 private:
   std::string_view str_{};
-  std::size_t index_ = 0;
-  std::uint8_t byte_count_ = 0;
-  char32_t rune_ = RuneUtil::kInvalidRune;
+  value_type token_{};
 
-  explicit RuneIterator(std::string_view str,bool is_begin);
+  explicit RuneIterator(std::string_view str);
 
   void next_rune();
   void prev_rune();
 };
+
+static_assert(std::bidirectional_iterator<RuneIterator>);
 
 } // namespace cybel
 #endif

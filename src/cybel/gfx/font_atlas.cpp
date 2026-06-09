@@ -108,8 +108,8 @@ FontAtlas::Config& FontAtlas::Config::default_rune(char32_t rune) {
 FontAtlas::Config& FontAtlas::Config::index_to_rune(std::string_view str) {
   std::size_t index = 0;
 
-  for(const auto rune : RuneView{str}) {
-    rune_to_index_[rune] = index;
+  for(const auto& r : RuneView{str}) {
+    rune_to_index_[r.rune] = index;
     ++index;
   }
 
@@ -123,8 +123,8 @@ FontAtlas::Config& FontAtlas::Config::index_to_rune(std::initializer_list<std::s
   for(const auto& line : lines) {
     int len = 0;
 
-    for(const auto rune : RuneView{line}) {
-      rune_to_index_[rune] = index;
+    for(const auto& r : RuneView{line}) {
+      rune_to_index_[r.rune] = index;
       ++index;
       ++len;
     }

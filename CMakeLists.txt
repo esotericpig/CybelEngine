@@ -241,6 +241,7 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/scene/scene_man.cpp"
     "src/cybel/stubs/glew_stub.cpp"
     "src/cybel/text/rune_iterator.cpp"
+    "src/cybel/text/rune_token.cpp"
     "src/cybel/text/rune_util.cpp"
     "src/cybel/text/rune_view.cpp"
     "src/cybel/text/text_util.cpp"

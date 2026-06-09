@@ -7,64 +7,67 @@
 
 #include "rune_iterator.h"
 
+#include "cybel/text/rune_util.h"
+
 namespace cybel {
 
-RuneIterator RuneIterator::begin(std::string_view str,std::size_t next_rune_count) {
-  auto it = RuneIterator{str,true};
-
-  for(; next_rune_count > 0; --next_rune_count) {
-    it.next_rune();
-  }
+RuneIterator RuneIterator::begin(std::string_view str) {
+  RuneIterator it{str};
+  it.next_rune();
 
   return it;
 }
 
-RuneIterator RuneIterator::end(std::string_view str,std::size_t prev_rune_count) {
-  auto it = RuneIterator{str,false};
-
-  for(; prev_rune_count > 0; --prev_rune_count) {
-    it.prev_rune();
-  }
+RuneIterator RuneIterator::begin(std::string_view str,difference_type rune_offset) {
+  RuneIterator it = (rune_offset >= 0) ? begin(str) : end(str);
+  it += rune_offset;
 
   return it;
 }
 
-RuneIterator::reverse_iterator RuneIterator::rbegin(std::string_view str,std::size_t prev_rune_count) {
-  return reverse_iterator(end(str,prev_rune_count));
+RuneIterator RuneIterator::end(std::string_view str) {
+  RuneIterator it{str};
+  it.token_.index = it.str_.size();
+  it.token_.view = it.str_.substr(it.token_.index,0);
+
+  return it;
 }
 
-RuneIterator::reverse_iterator RuneIterator::rend(std::string_view str,std::size_t next_rune_count) {
-  return reverse_iterator(begin(str,next_rune_count));
+RuneIterator RuneIterator::end(std::string_view str,difference_type rune_offset) {
+  RuneIterator it = (rune_offset <= 0) ? end(str) : begin(str);
+  it += rune_offset; // Same as begin(), on purpose.
+
+  return it;
 }
 
-RuneIterator::RuneIterator(std::string_view str,bool is_begin)
-  : str_(str),index_(is_begin ? 0 : str_.size()) {
-  if(is_begin) {
-    rune_ = RuneUtil::next_rune(str_,index_,byte_count_);
-  }
-}
-
-bool RuneIterator::operator!=(const RuneIterator& other) const {
-  return !(*this == other);
-}
+RuneIterator::RuneIterator(std::string_view str)
+  : str_{str} {}
 
 bool RuneIterator::operator==(const RuneIterator& other) const {
   return str_.data() == other.str_.data() &&
          str_.size() == other.str_.size() &&
-         index_ == other.index_;
+         token_.index == other.token_.index;
 }
 
 std::strong_ordering RuneIterator::operator<=>(const RuneIterator& other) const {
-  auto order = str_.data() <=> other.str_.data();
-  if(order != std::strong_ordering::equal) { return order; }
+  using order_t = std::strong_ordering;
 
-  order = str_.size() <=> other.str_.size();
-  if(order != std::strong_ordering::equal) { return order; }
+  order_t order = (str_.data() <=> other.str_.data());
+  if(order != order_t::equal) { return order; }
 
-  return index_ <=> other.index_;
+  order = (str_.size() <=> other.str_.size());
+  if(order != order_t::equal) { return order; }
+
+  return token_.index <=> other.token_.index;
 }
 
-char32_t RuneIterator::operator*() const { return rune_; }
+RuneIterator::pointer RuneIterator::operator->() const {
+  return &token_;
+}
+
+RuneIterator::reference RuneIterator::operator*() const {
+  return token_;
+}
 
 RuneIterator& RuneIterator::operator++() {
   next_rune();
@@ -73,26 +76,29 @@ RuneIterator& RuneIterator::operator++() {
 }
 
 RuneIterator RuneIterator::operator++(int) {
-  const auto orig_it = *this;
+  const auto old_it = *this;
   next_rune();
 
-  return orig_it;
+  return old_it;
 }
 
-RuneIterator RuneIterator::operator+(std::size_t count) const {
+RuneIterator RuneIterator::operator+(difference_type rune_count) const {
   auto it = *this;
-
-  for(; count > 0; --count) {
-    it.next_rune();
-  }
+  it += rune_count;
 
   return it;
 }
 
-RuneIterator& RuneIterator::operator+=(std::size_t count) {
-  for(; count > 0; --count) {
+RuneIterator& RuneIterator::operator+=(difference_type rune_count) {
+  // Positive count.
+  for(; rune_count > 0 && token_.index < str_.size(); --rune_count) {
     next_rune();
   }
+  // Negative count.
+  for(; rune_count < 0 && token_.index > 0; ++rune_count) {
+    prev_rune();
+  }
+  // Zero count.
 
   return *this;
 }
@@ -104,72 +110,65 @@ RuneIterator& RuneIterator::operator--() {
 }
 
 RuneIterator RuneIterator::operator--(int) {
-  const auto orig_it = *this;
+  const auto old_it = *this;
   prev_rune();
 
-  return orig_it;
+  return old_it;
 }
 
-RuneIterator RuneIterator::operator-(std::size_t count) const {
+RuneIterator RuneIterator::operator-(difference_type rune_count) const {
   auto it = *this;
-
-  for(; count > 0; --count) {
-    it.prev_rune();
-  }
+  it -= rune_count;
 
   return it;
 }
 
-RuneIterator& RuneIterator::operator-=(std::size_t count) {
-  for(; count > 0; --count) {
+RuneIterator& RuneIterator::operator-=(difference_type rune_count) {
+  // Positive count.
+  for(; rune_count > 0 && token_.index > 0; --rune_count) {
     prev_rune();
   }
+  // Negative count.
+  for(; rune_count < 0 && token_.index < str_.size(); ++rune_count) {
+    next_rune();
+  }
+  // Zero count.
 
   return *this;
 }
 
 void RuneIterator::next_rune() {
-  index_ += byte_count_;
+  token_.index += token_.byte_count;
 
-  if(index_ < str_.size()) {
-    rune_ = RuneUtil::next_rune(str_,index_,byte_count_);
-  } else {
-    index_ = str_.size();
-    rune_ = RuneUtil::kInvalidRune;
+  if(token_.index < str_.size()) [[likely]] {
+    token_.rune = RuneUtil::next_rune(str_,token_.index,token_.byte_count);
+    token_.view = str_.substr(token_.index,token_.byte_count);
+  } else [[unlikely]] {
+    token_.index = str_.size();
+    token_.rune = RuneUtil::kInvalidRune;
+    token_.view = str_.substr(token_.index,0);
   }
 }
 
 void RuneIterator::prev_rune() {
-  if(index_ > 0) {
-    --index_; // RuneUtil::prev_rune(...) will search backwards for us.
-  } else {
-    rune_ = RuneUtil::kInvalidRune;
+  if(token_.index == 0) [[unlikely]] {
+    token_.rune = RuneUtil::kInvalidRune;
+    token_.view = str_.substr(token_.index,0);
     return;
   }
 
-  rune_ = RuneUtil::prev_rune(str_,index_,byte_count_);
+  --token_.index;
+  token_.rune = RuneUtil::prev_rune(str_,token_.index,token_.byte_count);
+  token_.view = str_.substr(token_.index,token_.byte_count);
 
-  if(byte_count_ <= index_) {
-    index_ = index_ - byte_count_ + 1; // next_rune() & prev_rune() need to use the same index.
-  } else {
-    index_ = 0;
+  if(token_.byte_count <= token_.index) [[likely]] {
+    // +1 since we decrement the index before calling RuneUtil::prev_rune().
+    token_.index = token_.index - token_.byte_count + 1;
+  } else [[unlikely]] {
+    token_.index = 0;
   }
 }
 
 std::string_view RuneIterator::str() const { return str_; }
-
-std::size_t RuneIterator::index() const { return index_; }
-
-std::uint8_t RuneIterator::byte_count() const { return byte_count_; }
-
-char32_t RuneIterator::rune() const { return rune_; }
-
-std::string RuneIterator::substr() const { return std::string{substr_view()}; }
-
-std::string_view RuneIterator::substr_view() const { return str_.substr(index_,byte_count_); }
-
-std::string RuneIterator::pack_rune() const { return RuneUtil::pack(rune_); }
-
-char RuneIterator::byte() const { return str_[index_]; }
 
 } // namespace cybel

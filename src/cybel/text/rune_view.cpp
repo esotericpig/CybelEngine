@@ -9,39 +9,27 @@
 
 namespace cybel {
 
-RuneView::RuneView(std::string_view str,std::size_t begin_rune_count,std::size_t end_rune_count)
-  : str_(str),begin_rune_count_(begin_rune_count),end_rune_count_(end_rune_count) {}
+RuneView::RuneView(std::string_view str,difference_type begin_rune_range,difference_type end_rune_range)
+  : str_{str},
+    begin_rune_range_{begin_rune_range},
+    end_rune_range_{end_rune_range} {}
 
-RuneIterator RuneView::begin() const {
-  return RuneIterator::begin(str_,begin_rune_count_);
+RuneView::iterator RuneView::begin() const {
+  return iterator::begin(str_,begin_rune_range_);
 }
 
-RuneIterator RuneView::end() const {
-  return RuneIterator::end(str_,end_rune_count_);
+RuneView::iterator RuneView::end() const {
+  return iterator::end(str_,end_rune_range_);
 }
 
-RuneIterator RuneView::cbegin() const {
+RuneView::const_iterator RuneView::cbegin() const {
   return begin();
 }
 
-RuneIterator RuneView::cend() const {
+RuneView::const_iterator RuneView::cend() const {
   return end();
 }
 
-RuneIterator::reverse_iterator RuneView::rbegin() const {
-  return RuneIterator::rbegin(str_,begin_rune_count_);
-}
-
-RuneIterator::reverse_iterator RuneView::rend() const {
-  return RuneIterator::rend(str_,end_rune_count_);
-}
-
-RuneIterator::reverse_iterator RuneView::crbegin() const {
-  return rbegin();
-}
-
-RuneIterator::reverse_iterator RuneView::crend() const {
-  return rend();
-}
+bool RuneView::empty() const { return str_.empty(); }
 
 } // namespace cybel

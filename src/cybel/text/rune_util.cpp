@@ -9,6 +9,15 @@
 
 namespace cybel {
 
+namespace {
+  std::uint8_t count_seq(octet_t octet1);
+  char32_t unpack_seq(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1,
+                      std::uint8_t octet_count);
+  char32_t unpack_seq2(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1);
+  char32_t unpack_seq3(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1);
+  char32_t unpack_seq4(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1);
+}
+
 char32_t RuneUtil::next_rune(std::string_view str,std::size_t index,std::uint8_t& byte_count) {
   // Always set to 1 to avoid infinite loops.
   byte_count = 1;
@@ -22,7 +31,7 @@ char32_t RuneUtil::next_rune(std::string_view str,std::size_t index,std::uint8_t
 
   if((++index) >= str.size()) { return kInvalidRune; }
 
-  return _unpack_seq(str,index,byte_count,octet1,_count_seq(octet1));
+  return unpack_seq(str,index,byte_count,octet1,count_seq(octet1));
 }
 
 char32_t RuneUtil::prev_rune(std::string_view str,std::size_t index,std::uint8_t& byte_count) {
@@ -42,10 +51,10 @@ char32_t RuneUtil::prev_rune(std::string_view str,std::size_t index,std::uint8_t
 
     // Head/Lead octet?
     if(type == 0b1100'0000) {
-      // Double check sequence count.
-      if(_count_seq(octet) != octet_count) { break; }
+      // Double-check expected sequence count.
+      if(count_seq(octet) != octet_count) { break; }
 
-      return _unpack_seq(str,index,byte_count,octet,octet_count);
+      return unpack_seq(str,index,byte_count,octet,octet_count);
     }
 
     // Not a continuation octet? (0b1000'0000)
@@ -55,7 +64,9 @@ char32_t RuneUtil::prev_rune(std::string_view str,std::size_t index,std::uint8_t
   return kInvalidRune;
 }
 
-std::uint8_t RuneUtil::_count_seq(octet_t octet1) {
+namespace {
+
+std::uint8_t count_seq(octet_t octet1) {
   // UTF8-2 = 0b110xxxxx.
   if((octet1 & 0b1110'0000) == 0b1100'0000) { return 2; }
 
@@ -68,45 +79,43 @@ std::uint8_t RuneUtil::_count_seq(octet_t octet1) {
   return 0;
 }
 
-char32_t RuneUtil::_unpack_seq(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1,
-                               std::uint8_t octet_count) {
-  // The _unpack_seq*() funcs update `byte_count` instead of us updating it here to `octet_count` if the
-  //     resulting rune is valid, because a trickster could use the literal `kInvalidRune` in the text,
-  //     in which case the `byte_count` should be 3, not 1.
+char32_t unpack_seq(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1,
+                    std::uint8_t octet_count) {
+  // The unpack_seq*() funcs update `byte_count` instead of us updating it here to `octet_count` if the
+  // resulting rune is valid, because a trickster could use the literal `kInvalidRune` in the text,
+  // in which case the `byte_count` should be 3, not 1.
   switch(octet_count) {
-    case 2: return _unpack_seq2(str,index,byte_count,octet1);
-    case 3: return _unpack_seq3(str,index,byte_count,octet1);
-    case 4: return _unpack_seq4(str,index,byte_count,octet1);
+    case 2: return unpack_seq2(str,index,byte_count,octet1);
+    case 3: return unpack_seq3(str,index,byte_count,octet1);
+    case 4: return unpack_seq4(str,index,byte_count,octet1);
   }
 
-  return kInvalidRune;
+  return RuneUtil::kInvalidRune;
 }
 
-char32_t RuneUtil::_unpack_seq2(std::string_view str,std::size_t index,std::uint8_t& byte_count,
-                                octet_t octet1) {
-  if(index >= str.size()) { return kInvalidRune; }
+char32_t unpack_seq2(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1) {
+  if(index >= str.size()) { return RuneUtil::kInvalidRune; }
 
   // UTF8-2 = 0xC2-DF UTF8-tail.
-  if(octet1 < 0xC2 || octet1 > 0xDF) { return kInvalidRune; }
+  if(octet1 < 0xC2 || octet1 > 0xDF) { return RuneUtil::kInvalidRune; }
 
   const auto octet2 = static_cast<octet_t>(str[index]);
 
-  if(octet2 < kMinTailOctet || octet2 > kMaxTailOctet) {
-    return kInvalidRune;
+  if(octet2 < RuneUtil::kMinTailOctet || octet2 > RuneUtil::kMaxTailOctet) {
+    return RuneUtil::kInvalidRune;
   }
 
   // UTF8-2 = 0b110xxxxx.
   auto rune = static_cast<char32_t>(octet1 & 0b0001'1111);
 
-  rune = (rune << 6) | (octet2 & kTailOctetMask);
+  rune = (rune << 6) | (octet2 & RuneUtil::kTailOctetMask);
   byte_count = 2;
 
   return rune;
 }
 
-char32_t RuneUtil::_unpack_seq3(std::string_view str,std::size_t index,std::uint8_t& byte_count,
-                                octet_t octet1) {
-  if((index + 1) >= str.size()) { return kInvalidRune; }
+char32_t unpack_seq3(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1) {
+  if((index + 1) >= str.size()) { return RuneUtil::kInvalidRune; }
 
   const auto octet2 = static_cast<octet_t>(str[index]);
   const auto octet3 = static_cast<octet_t>(str[++index]);
@@ -116,33 +125,34 @@ char32_t RuneUtil::_unpack_seq3(std::string_view str,std::size_t index,std::uint
   // UTF8-3 = 0xED    0x80-9F   UTF8-tail.
   // UTF8-3 = 0xEE-EF UTF8-tail UTF8-tail.
   if(octet1 == 0xE0) {
-    if(octet2 < 0xA0 || octet2 > 0xBF) { return kInvalidRune; }
+    if(octet2 < 0xA0 || octet2 > 0xBF) { return RuneUtil::kInvalidRune; }
   } else if((octet1 >= 0xE1 && octet1 <= 0xEC) ||
             (octet1 >= 0xEE && octet1 <= 0xEF)) {
-    if(octet2 < kMinTailOctet || octet2 > kMaxTailOctet) { return kInvalidRune; }
+    if(octet2 < RuneUtil::kMinTailOctet || octet2 > RuneUtil::kMaxTailOctet) {
+      return RuneUtil::kInvalidRune;
+    }
   } else if(octet1 == 0xED) {
-    if(octet2 < 0x80 || octet2 > 0x9F) { return kInvalidRune; }
+    if(octet2 < 0x80 || octet2 > 0x9F) { return RuneUtil::kInvalidRune; }
   } else {
-    return kInvalidRune;
+    return RuneUtil::kInvalidRune;
   }
 
-  if(octet3 < kMinTailOctet || octet3 > kMaxTailOctet) {
-    return kInvalidRune;
+  if(octet3 < RuneUtil::kMinTailOctet || octet3 > RuneUtil::kMaxTailOctet) {
+    return RuneUtil::kInvalidRune;
   }
 
   // UTF8-3 = 0b1110xxxx.
   auto rune = static_cast<char32_t>(octet1 & 0b0000'1111);
 
-  rune = (rune << 6) | (octet2 & kTailOctetMask);
-  rune = (rune << 6) | (octet3 & kTailOctetMask);
+  rune = (rune << 6) | (octet2 & RuneUtil::kTailOctetMask);
+  rune = (rune << 6) | (octet3 & RuneUtil::kTailOctetMask);
   byte_count = 3;
 
   return rune;
 }
 
-char32_t RuneUtil::_unpack_seq4(std::string_view str,std::size_t index,std::uint8_t& byte_count,
-                                octet_t octet1) {
-  if((index + 2) >= str.size()) { return kInvalidRune; }
+char32_t unpack_seq4(std::string_view str,std::size_t index,std::uint8_t& byte_count,octet_t octet1) {
+  if((index + 2) >= str.size()) { return RuneUtil::kInvalidRune; }
 
   const auto octet2 = static_cast<octet_t>(str[index]);
   const auto octet3 = static_cast<octet_t>(str[++index]);
@@ -152,30 +162,34 @@ char32_t RuneUtil::_unpack_seq4(std::string_view str,std::size_t index,std::uint
   // UTF8-4 = 0xF1-F3 UTF8-tail UTF8-tail UTF8-tail.
   // UTF8-4 = 0xF4    0x80-8F   UTF8-tail UTF8-tail.
   if(octet1 == 0xF0) {
-    if(octet2 < 0x90 || octet2 > 0xBF) { return kInvalidRune; }
+    if(octet2 < 0x90 || octet2 > 0xBF) { return RuneUtil::kInvalidRune; }
   } else if(octet1 >= 0xF1 && octet1 <= 0xF3) {
-    if(octet2 < kMinTailOctet || octet2 > kMaxTailOctet) { return kInvalidRune; }
+    if(octet2 < RuneUtil::kMinTailOctet || octet2 > RuneUtil::kMaxTailOctet) {
+      return RuneUtil::kInvalidRune;
+    }
   } else if(octet1 == 0xF4) {
-    if(octet2 < 0x80 || octet2 > 0x8F) { return kInvalidRune; }
+    if(octet2 < 0x80 || octet2 > 0x8F) { return RuneUtil::kInvalidRune; }
   } else {
-    return kInvalidRune;
+    return RuneUtil::kInvalidRune;
   }
 
-  if((octet3 < kMinTailOctet || octet3 > kMaxTailOctet) ||
-     (octet4 < kMinTailOctet || octet4 > kMaxTailOctet)) {
-    return kInvalidRune;
+  if((octet3 < RuneUtil::kMinTailOctet || octet3 > RuneUtil::kMaxTailOctet) ||
+     (octet4 < RuneUtil::kMinTailOctet || octet4 > RuneUtil::kMaxTailOctet)) {
+    return RuneUtil::kInvalidRune;
   }
 
   // UTF8-4 = 0b11110xxx.
   auto rune = static_cast<char32_t>(octet1 & 0b0000'0111);
 
-  rune = (rune << 6) | (octet2 & kTailOctetMask);
-  rune = (rune << 6) | (octet3 & kTailOctetMask);
-  rune = (rune << 6) | (octet4 & kTailOctetMask);
+  rune = (rune << 6) | (octet2 & RuneUtil::kTailOctetMask);
+  rune = (rune << 6) | (octet3 & RuneUtil::kTailOctetMask);
+  rune = (rune << 6) | (octet4 & RuneUtil::kTailOctetMask);
   byte_count = 4;
 
   return rune;
 }
+
+} // anonymous namespace
 
 std::string RuneUtil::pack(char32_t rune) {
   std::string result{};
@@ -212,8 +226,9 @@ std::string RuneUtil::pack(char32_t rune) {
   return result;
 }
 
-// See: https://www.unicode.org/Public/16.0.0/ucd/PropList.txt
 bool RuneUtil::is_whitespace(char32_t rune) {
+  // See: https://www.unicode.org/Public/latest/ucd/PropList.txt
+
   switch(rune) {
     case 0x0020: // SPACE
     case 0x0085: // <control-0085>
