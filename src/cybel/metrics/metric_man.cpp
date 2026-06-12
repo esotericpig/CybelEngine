@@ -68,7 +68,7 @@ MetricMan::ScopeProfiler MetricMan::profile_scope(std::size_t id) {
 void MetricMan::begin_profile(std::size_t id) {
   assert(id < profilers_.size());
 
-  profilers_[id].timer.restart();
+  profilers_[id].timer.start();
 }
 
 void MetricMan::end_profile(std::size_t id) {
@@ -109,7 +109,7 @@ void MetricMan::end_frame() {
   }
 
   if(print_and_reset_timer_.peek() >= kPrintAndResetInterval) {
-    print_and_reset_timer_.restart();
+    print_and_reset_timer_.start();
 
     std::cout << "[METRICS]\n";
     std::cout << std::format(

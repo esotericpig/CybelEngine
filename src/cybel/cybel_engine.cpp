@@ -447,7 +447,7 @@ void CybelEngine::resize(const Size2i& size,bool force) {
 }
 
 void CybelEngine::start_frame_timer() {
-  frame_timer_.restart();
+  frame_timer_.start();
 }
 
 void CybelEngine::stop_frame_timer() {

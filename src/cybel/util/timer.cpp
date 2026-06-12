@@ -16,33 +16,38 @@ Timer::time_stamp_t Timer::now() {
 }
 
 Timer::Timer(bool start) {
-  if(start) { restart(); }
+  if(start) { this->start(); }
 }
 
-Timer& Timer::restart() {
-  duration_.set_to_zero();
+void Timer::start() {
   is_ticking_ = true;
+  duration_.set_to_zero();
   start_time_ = now();
-
-  return *this;
 }
 
-const Duration& Timer::pause() {
-  if(is_ticking_) {
-    duration_.value_ += (now() - start_time_); // Add to duration for resuming.
-    is_ticking_ = false;
-  }
+Duration Timer::stop() {
+  pause();
 
-  return duration_;
+  Duration duration = duration_;
+  duration_.set_to_zero();
+
+  return duration;
 }
 
-Timer& Timer::resume() {
+void Timer::resume() {
   if(!is_ticking_) {
     is_ticking_ = true;
     start_time_ = now();
   }
+}
 
-  return *this;
+const Duration& Timer::pause() {
+  if(is_ticking_) {
+    duration_.value_ += (now() - start_time_);
+    is_ticking_ = false;
+  }
+
+  return duration_;
 }
 
 void Timer::sleep_for_fps(const Duration& target_fps) {
@@ -54,7 +59,7 @@ void Timer::sleep_for_fps(const Duration& target_fps) {
 Duration Timer::peek() const {
   if(!is_ticking_) { return duration_; }
 
-  return duration_ + Duration{now() - start_time_}; // Add to duration for resuming.
+  return duration_ + Duration{now() - start_time_};
 }
 
 const Duration& Timer::duration() const { return duration_; }

@@ -20,7 +20,7 @@ CMakeUserPresets.json
 *.so
 
 # Build files.
-/build/
+build/
 
 *.d
 *.dwo
@@ -36,6 +36,8 @@ CMakeUserPresets.json
 *.smod
 
 # Executable files.
+bin/
+
 *.app
 *.AppImage
 *.exe

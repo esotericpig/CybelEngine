@@ -20,9 +20,11 @@ class Timer final {
 public:
   explicit Timer(bool start = false);
 
-  Timer& restart();
+  void start();
+  Duration stop();
+
+  void resume();
   const Duration& pause();
-  Timer& resume();
 
   void sleep_for_fps(const Duration& target_fps);
 
@@ -33,8 +35,8 @@ private:
   using clock_t = std::chrono::steady_clock;
   using time_stamp_t = clock_t::time_point;
 
-  time_stamp_t start_time_{};
   bool is_ticking_ = false;
+  time_stamp_t start_time_{};
   Duration duration_{};
 
   static time_stamp_t now();
