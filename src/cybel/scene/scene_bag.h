@@ -10,15 +10,14 @@
 
 #include "cybel/common.h"
 
-#include "cybel/scene/scene.h"
 #include "cybel/scene/scene_types.h"
 
 namespace cybel {
 
+class Scene;
+
 class SceneBag final {
 public:
-  static const SceneBag kEmpty;
-
   scene_id_t id{};
   std::shared_ptr<Scene> scene{};
   bool persist = false;
@@ -27,11 +26,6 @@ public:
   explicit operator bool() const;
   Scene* operator->() const;
   Scene& operator*() const;
-};
-
-inline const SceneBag SceneBag::kEmpty{
-  .scene = std::make_shared<Scene>(), // Current scene should never be null.
-  .persist = true,
 };
 
 } // namespace cybel

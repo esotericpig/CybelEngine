@@ -51,11 +51,14 @@ private:
     kRestartScene,
   };
 
+  static SceneBag make_empty_scene_bag();
+  static inline const SceneBag kEmptySceneBag = make_empty_scene_bag();
+
   BuildScene build_scene_{};
   OnSceneChange on_scene_enter_{};
   OnSceneChange on_scene_exit_{};
 
-  SceneBag curr_scene_bag_ = SceneBag::kEmpty;
+  SceneBag curr_scene_bag_ = kEmptySceneBag;
   std::vector<SceneBag> prev_scene_bags_{};
 
   Action pending_action_ = Action::kNone;
@@ -81,7 +84,7 @@ bool SceneMan::push_scene(Id id_like) {
 
   pending_scene_bag_ = build_scene_(id);
 
-  if(!pending_scene_bag_.scene || pending_scene_bag_ == SceneBag::kEmpty) {
+  if(!pending_scene_bag_.scene || pending_scene_bag_ == kEmptySceneBag) {
     return false;
   }
 
