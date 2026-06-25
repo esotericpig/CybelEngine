@@ -195,10 +195,6 @@ Renderer& RendererGles::begin_color(const Color4f& color) {
   return *this;
 }
 
-Renderer& RendererGles::begin_tex(const Texture& tex) {
-  return begin_tex(tex.handle());
-}
-
 Renderer& RendererGles::begin_tex(GLuint handle) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D,handle);
@@ -306,8 +302,8 @@ void RendererGles::draw_quad_buffer(GLuint id,int index) {
     begin_tex(buffer->tex_handle());
     buffer->draw();
 
-    if(curr_tex_ != nullptr) {
-      begin_tex(*curr_tex_);
+    if(curr_tex_handle_ != 0) {
+      begin_tex(curr_tex_handle_);
     } else {
       end_tex();
     }
@@ -525,7 +521,7 @@ void RendererGles::QuadBuffer::zombify() {
 }
 
 void RendererGles::QuadBuffer::draw() {
-  CYBEL_METRICS_COUNT("Draw Quad",1);
+  CYBEL_METRICS_COUNT("Flush Draw",1);
 
   glBindVertexArray(vao_);
   glDrawElements(GL_TRIANGLES,kIndices.size(),GL_UNSIGNED_INT,0);

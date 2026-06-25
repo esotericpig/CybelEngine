@@ -38,7 +38,6 @@ public:
 
   Renderer& begin_color(const Color4f& color) override;
 
-  Renderer& begin_tex(const Texture& tex) override;
   Renderer& end_tex() override;
 
   Renderer& draw_quad(const Pos3i& pos,const Size2i& size) override;
@@ -54,6 +53,9 @@ public:
   void delete_quad_buffers(GLuint id,int count) override;
   void compile_quad_buffer(GLuint id,int index,const QuadBufferData& data) override;
   void draw_quad_buffer(GLuint id,int index) override;
+
+protected:
+  Renderer& begin_tex(GLuint handle) override;
 
 private:
   enum class InfoLogType { kShader,kProgram };
@@ -131,9 +133,9 @@ private:
     };
 
     GLuint tex_handle_ = 0;
-    GLuint vao_ = 0;
-    GLuint vbo_ = 0;
-    GLuint ebo_ = 0;
+    GLuint vao_ = 0; /// Vertex Array Object.
+    GLuint vbo_ = 0; /// Vertex Buffer Object.
+    GLuint ebo_ = 0; /// Element Buffer Object.
 
     std::array<GLfloat,kVertexDataCount> vertex_data_ = {
       // Vertex.       TexCoord.
@@ -188,8 +190,6 @@ private:
 
   void init();
   void init_prog();
-
-  Renderer& begin_tex(GLuint handle);
 
   QuadBufferBag* quad_buffer_bag(GLuint id);
   QuadBuffer* quad_buffer(GLuint id,int index);

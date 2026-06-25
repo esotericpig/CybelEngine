@@ -51,7 +51,7 @@ public:
     std::unordered_map<char32_t,std::size_t> rune_to_index_{};
   };
 
-  explicit FontAtlas(AssetManKey,Texture& texture,const Config& config);
+  explicit FontAtlas(AssetManKey,const Texture& texture,const Config& config);
 
   const Size2i& spacing() const;
   std::size_t rune_index(char32_t rune) const;

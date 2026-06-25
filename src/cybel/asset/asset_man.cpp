@@ -18,7 +18,7 @@ AssetMan::AssetMan(bool is_audio_alive)
 void AssetMan::add_asset_dir(const std::filesystem::path& dir) {
   std::error_code ec{};
   // NOTE: Don't use canonical() in case the dir is created later during refresh.
-  //       Also, using `/ ""` to add a trailing slash so that dirs equal.
+  //       Also, add a trailing slash so that dirs equal.
   const auto abs_dir = absolute(dir / "",ec).lexically_normal();
 
   if(ec != std::error_code{}) {
@@ -79,58 +79,65 @@ void AssetMan::reload_gfx() {
 }
 
 void AssetMan::reload_cpu_gfx() {
+  constexpr auto cpu = CpuAssetTypes{};
+
   if(!asset_loader_) {
-    shrink_assets<Image>(asset_bags_);
+    shrink_assets(cpu,asset_bags_);
     return;
   }
 
-  reset_assets<Image>(asset_bags_);
+  reset_assets(cpu,asset_bags_);
 
   CpuGfxLoader loader{AssetManKey{},*this};
   asset_loader_->load_cpu_gfx(*this,loader);
 
-  shrink_assets<Image>(asset_bags_);
-  check_assets<Image>(asset_bags_);
+  shrink_assets(cpu,asset_bags_);
+  check_assets(cpu,asset_bags_);
 }
 
 void AssetMan::reload_gpu_gfx() {
+  constexpr auto gpu = GpuAssetTypes{};
+  constexpr auto ghost_gpu = GhostGpuAssetTypes{};
+
   if(!asset_loader_) {
-    shrink_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
-    shrink_assets<Texture>(ghost_asset_bags_);
+    shrink_assets(gpu,asset_bags_);
+    shrink_assets(ghost_gpu,ghost_asset_bags_);
     return;
   }
 
-  reset_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
-  reset_assets<Texture>(ghost_asset_bags_);
+  reset_assets(gpu,asset_bags_);
+  reset_assets(ghost_gpu,ghost_asset_bags_);
 
   GpuGfxLoader loader{AssetManKey{},*this};
   asset_loader_->load_gpu_gfx(*this,loader);
 
-  shrink_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
-  shrink_assets<Texture>(ghost_asset_bags_);
+  shrink_assets(gpu,asset_bags_);
+  shrink_assets(ghost_gpu,ghost_asset_bags_);
 
-  check_assets<Texture,Sprite,SpriteAtlas,FontAtlas>(asset_bags_);
-  check_assets<Texture>(ghost_asset_bags_);
+  check_assets(gpu,asset_bags_);
+  check_assets(ghost_gpu,ghost_asset_bags_);
 }
 
 void AssetMan::reload_audio() {
+  constexpr auto audio = AudioAssetTypes{};
+
   if(!asset_loader_ || !is_audio_alive_) {
-    shrink_assets<Music,Sound>(asset_bags_);
+    shrink_assets(audio,asset_bags_);
     return;
   }
 
-  reset_assets<Music,Sound>(asset_bags_);
+  reset_assets(audio,asset_bags_);
 
   AudioLoader loader{AssetManKey{},*this};
   asset_loader_->load_audio(*this,loader);
 
-  shrink_assets<Music,Sound>(asset_bags_);
-  check_assets<Music,Sound>(asset_bags_);
+  shrink_assets(audio,asset_bags_);
+  check_assets(audio,asset_bags_);
 }
 
 void AssetMan::on_gpu_context_loss(GpuContextKey) {
-  zombify_assets<Texture>(ghost_asset_bags_);
-  zombify_assets<Texture>(asset_bags_);
+  zombify_assets(ZombieGpuAssetTypes{},ghost_asset_bags_);
+  zombify_assets(ZombieGpuAssetTypes{},asset_bags_);
 
   missing_texture_.zombify(AssetManKey{});
 }

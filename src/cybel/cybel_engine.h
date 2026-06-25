@@ -39,8 +39,8 @@ public:
     Size2i target_size{0,0};
 
     int fps = kFallbackFps;
-    bool vsync = false;
-    Color4f clear_color{0.0f,1.0f};
+    bool vsync = true;
+    Color4f clear_color = Color4f::kBlack;
 
     /// All:
     ///   IMG_INIT_AVIF | IMG_INIT_JPG  | IMG_INIT_JXL | IMG_INIT_PNG |
@@ -147,7 +147,7 @@ private:
   int target_fps_ = 0;
   Duration target_dpf_{};
   float avg_fps_{};
-  bool is_vsync_ = false;
+  bool is_vsync_{};
 
   std::unique_ptr<FileSys> file_sys_{};
   std::unique_ptr<AssetMan> asset_man_{};

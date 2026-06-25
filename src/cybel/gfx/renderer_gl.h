@@ -27,7 +27,6 @@ public:
 
   Renderer& begin_color(const Color4f& color) override;
 
-  Renderer& begin_tex(const Texture& tex) override;
   Renderer& end_tex() override;
 
   Renderer& draw_quad(const Pos3i& pos,const Size2i& size) override;
@@ -43,6 +42,9 @@ public:
   void delete_quad_buffers(GLuint id,int count) override;
   void compile_quad_buffer(GLuint id,int index,const QuadBufferData& data) override;
   void draw_quad_buffer(GLuint id,int index) override;
+
+protected:
+  Renderer& begin_tex(GLuint handle) override;
 
 private:
   void init();

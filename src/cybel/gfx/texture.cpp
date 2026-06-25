@@ -16,6 +16,8 @@ namespace cybel {
 
 Texture::Texture(AssetManKey,const Image& image)
   : size_{image.size()} {
+  Util::clear_gl_errors();
+
   const auto bypp = image.bytes_per_pixel();
   GLenum image_fmt = GL_RGBA;
   constexpr GLenum image_type = GL_UNSIGNED_BYTE;
@@ -80,6 +82,8 @@ Texture::Texture(AssetManKey key,const Color4f& color)
 
 Texture::Texture(AssetManKey,const Size2i& size,const Color4f& color)
   : size_{std::max(size.w,1),std::max(size.h,1)} {
+  Util::clear_gl_errors();
+
   const auto r = color.byte_r();
   const auto g = color.byte_g();
   const auto b = color.byte_b();

@@ -17,9 +17,9 @@
 
 namespace cybel {
 
-/// Only supports images with pixel formats: RGB, RGBA, BGR, or BGRA.
 class Texture final {
 public:
+  /// Only supports images with pixel formats: RGB, RGBA, BGR, or BGRA.
   explicit Texture(AssetManKey,const Image& image);
   explicit Texture(AssetManKey,const Color4f& color);
   explicit Texture(AssetManKey,const Size2i& size,const Color4f& color);

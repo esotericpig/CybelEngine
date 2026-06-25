@@ -292,7 +292,7 @@ bool CybelEngine::run_frame() {
     }
 
     {
-      CYBEL_METRICS_PROFILE_SCOPE("Render");
+      CYBEL_METRICS_PROFILE_SCOPE("Render Frame");
 
       renderer_->clear_view();
       game_->draw_scene(*renderer_,*scene_ctx_);

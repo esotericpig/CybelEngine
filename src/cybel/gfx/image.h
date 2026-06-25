@@ -63,7 +63,7 @@ public:
   std::uint8_t bytes_per_pixel() const;
   bool is_red_first() const;
 
-  PixelsGuard lock_pixels() const;
+  [[nodiscard]] PixelsGuard lock_pixels() const;
   SDL_Surface* handle() const;
 
 private:

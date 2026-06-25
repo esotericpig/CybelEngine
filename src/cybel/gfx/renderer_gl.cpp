@@ -76,9 +76,9 @@ Renderer& RendererGl::begin_color(const Color4f& color) {
   return *this;
 }
 
-Renderer& RendererGl::begin_tex(const Texture& tex) {
+Renderer& RendererGl::begin_tex(GLuint handle) {
   glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D,tex.handle());
+  glBindTexture(GL_TEXTURE_2D,handle);
 
   return *this;
 }
@@ -91,7 +91,7 @@ Renderer& RendererGl::end_tex() {
 }
 
 Renderer& RendererGl::draw_quad(const Pos3i& pos,const Size2i& size) {
-  CYBEL_METRICS_COUNT("Draw Quad",1);
+  CYBEL_METRICS_COUNT("Flush Draw",1);
 
   const auto [x1,y1,x2,y2,z] = build_dest_pos5f(pos,size);
 
@@ -106,7 +106,7 @@ Renderer& RendererGl::draw_quad(const Pos3i& pos,const Size2i& size) {
 }
 
 Renderer& RendererGl::draw_quad(const Pos4f& src,const Pos3i& pos,const Size2i& size) {
-  CYBEL_METRICS_COUNT("Draw Quad",1);
+  CYBEL_METRICS_COUNT("Flush Draw",1);
 
   const auto [x1,y1,x2,y2,z] = build_dest_pos5f(pos,size);
 
@@ -166,7 +166,7 @@ void RendererGl::compile_quad_buffer(GLuint id,int index,const QuadBufferData& d
 }
 
 void RendererGl::draw_quad_buffer(GLuint id,int index) {
-  CYBEL_METRICS_COUNT("Draw Quad",1);
+  CYBEL_METRICS_COUNT("Flush Draw",1);
 
   glCallList(id + static_cast<GLuint>(index));
 }

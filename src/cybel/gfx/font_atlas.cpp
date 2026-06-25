@@ -11,7 +11,7 @@
 
 namespace cybel {
 
-FontAtlas::FontAtlas(AssetManKey key,Texture& texture,const Config& config)
+FontAtlas::FontAtlas(AssetManKey key,const Texture& texture,const Config& config)
   : SpriteAtlas{key,texture,config.sprite_atlas_},
     spacing_{config.spacing_},
     rune_to_index_{config.rune_to_index_} {

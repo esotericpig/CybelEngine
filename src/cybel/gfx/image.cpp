@@ -10,6 +10,8 @@
 #include "cybel/types/cybel_error.h"
 #include "cybel/util/util.h"
 
+#include <algorithm>
+
 namespace cybel {
 
 Image::Image(AssetManKey,const std::filesystem::path& file)
@@ -28,7 +30,7 @@ Image::Image(AssetManKey,const std::filesystem::path& file)
 
 Image::Image(const Size2i& size,const Color4f& color)
   : id_{"Color4f://" + color.to_byte_str()},
-    size_{size} {
+    size_{std::max(size.w,0),std::max(size.h,0)} {
   handle_ = SDL_CreateRGBSurfaceWithFormat(0,size_.w,size_.h,32,SDL_PIXELFORMAT_RGBA32);
 
   if(!handle_) {

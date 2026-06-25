@@ -16,7 +16,6 @@
 #include "cybel/types/size.h"
 
 #include <concepts>
-#include <functional>
 #include <vector>
 
 namespace cybel {
@@ -30,7 +29,8 @@ public:
     Size2i grid_size{};
   };
 
-  explicit SpriteAtlas(AssetManKey,Texture& texture,const Config& config);
+  explicit SpriteAtlas(AssetManKey,const Texture& texture,const Config& config);
+
   SpriteAtlas(const SpriteAtlas& other) = delete;
   SpriteAtlas(SpriteAtlas&& other) noexcept = default;
   /// Prevents object slicing.
@@ -44,15 +44,16 @@ public:
   template <std::derived_from<SpriteAtlas> T>
   SpriteAtlas& operator=(T&& other) noexcept = delete;
 
-  const Texture& texture() const;
-  const Pos4f* src(std::size_t index) const;
-  const Pos4f* src(const Pos2i& cell) const;
   const Size2i& cell_size() const;
   const Size2i& grid_size() const;
   std::size_t cell_count() const;
 
+  const Pos4f* src(std::size_t index) const;
+  const Pos4f* src(const Pos2i& cell) const;
+  GLuint handle() const;
+
 protected:
-  std::reference_wrapper<Texture> texture_;
+  GLuint handle_ = 0;
   Size2i cell_size_{};
   Size2i grid_size_{};
   std::vector<Pos4f> index_to_src_{};

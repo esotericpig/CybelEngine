@@ -59,11 +59,11 @@ void Renderer::init_gpu_context() {
 }
 
 void Renderer::on_gpu_context_loss(GpuContextKey) {
-  curr_tex_ = nullptr;
+  curr_tex_handle_ = 0;
 }
 
 void Renderer::on_gpu_context_restore(GpuContextKey) {
-  curr_tex_ = nullptr;
+  curr_tex_handle_ = 0;
 
   Util::clear_gl_errors();
   init_gpu_context();
@@ -133,9 +133,17 @@ Renderer& Renderer::begin_blend(const BlendMode& mode) {
   return *this;
 }
 
-Renderer& Renderer::begin_add_blend() { return begin_blend(kAddBlendMode); }
+Renderer& Renderer::begin_add_blend() {
+  return begin_blend(kAddBlendMode);
+}
 
-Renderer& Renderer::end_blend() { return begin_blend(kDefaultBlendMode); }
+Renderer& Renderer::end_blend() {
+  return begin_blend(kDefaultBlendMode);
+}
+
+Renderer& Renderer::begin_tex(const Texture& tex) {
+  return begin_tex(tex.handle());
+}
 
 Renderer& Renderer::wrap_color(const Color4f& color,const WrapCallback& callback) {
   const auto prev_color = curr_color_;
@@ -190,23 +198,23 @@ Renderer& Renderer::wrap_tex(const Texture& tex,const WrapTextureCallback& callb
 Renderer& Renderer::wrap_tex(const Texture& tex,const Pos4f& src,const WrapTextureCallback& callback) {
   TextureWrapper wrapper{*this,tex,src};
 
-  return wrap_tex(tex,[&] { callback(wrapper); });
+  return wrap_tex(tex.handle(),[&] { callback(wrapper); });
 }
 
-Renderer& Renderer::wrap_tex(const Texture& tex,const WrapCallback& callback) {
-  const auto* prev_tex = curr_tex_;
+Renderer& Renderer::wrap_tex(GLuint handle,const WrapCallback& callback) {
+  const auto prev_tex = curr_tex_handle_;
 
-  begin_tex(tex);
-  curr_tex_ = &tex;
+  begin_tex(handle);
+  curr_tex_handle_ = handle;
 
   callback();
 
-  if(prev_tex != nullptr) {
-    begin_tex(*prev_tex);
+  if(prev_tex != 0) {
+    begin_tex(prev_tex);
   } else {
     end_tex();
   }
-  curr_tex_ = prev_tex;
+  curr_tex_handle_ = prev_tex;
 
   return *this;
 }
@@ -214,13 +222,13 @@ Renderer& Renderer::wrap_tex(const Texture& tex,const WrapCallback& callback) {
 Renderer& Renderer::wrap_sprite(const Sprite& sprite,const WrapSpriteCallback& callback) {
   SpriteWrapper wrapper{*this,sprite};
 
-  return wrap_tex(sprite.texture(),[&] { callback(wrapper); });
+  return wrap_tex(sprite.handle(),[&] { callback(wrapper); });
 }
 
 Renderer& Renderer::wrap_sprite_atlas(const SpriteAtlas& atlas,const WrapSpriteAtlasCallback& callback) {
   SpriteAtlasWrapper wrapper{*this,atlas};
 
-  return wrap_tex(atlas.texture(),[&] { callback(wrapper); });
+  return wrap_tex(atlas.handle(),[&] { callback(wrapper); });
 }
 
 Renderer& Renderer::wrap_font_atlas(const FontAtlas& font,const Pos3i& pos,
@@ -237,7 +245,7 @@ Renderer& Renderer::wrap_font_atlas(const FontAtlas& font,const Pos3i& pos,const
                                     const Size2i& spacing,const WrapFontAtlasCallback& callback) {
   FontAtlasWrapper wrapper{*this,font,pos,rune_size,spacing};
 
-  return wrap_tex(font.texture(),[&] { callback(wrapper); });
+  return wrap_tex(font.handle(),[&] { callback(wrapper); });
 }
 
 Pos5f Renderer::build_dest_pos5f(const Pos3i& pos,const Size2i& size) const {
@@ -328,7 +336,7 @@ Renderer::FontAtlasWrapper& Renderer::FontAtlasWrapper::draw_bg(const Color4f& c
   ren.wrap_color(color,[&] {
     ren.draw_quad(Pos3i{pos.x - bg_padding_.w,pos.y - bg_padding_.h,pos.z},calc_total_size(str_size));
   });
-  ren.begin_tex(font.texture()); // Bind back the font texture.
+  ren.begin_tex(font.handle()); // Bind back the font texture.
 
   return *this;
 }

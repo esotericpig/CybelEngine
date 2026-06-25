@@ -162,7 +162,7 @@ public:
   Renderer& begin_add_blend();
   Renderer& end_blend();
 
-  virtual Renderer& begin_tex(const Texture& tex) = 0;
+  Renderer& begin_tex(const Texture& tex);
   virtual Renderer& end_tex() = 0;
 
   Renderer& wrap_color(const Color4f& color,const WrapCallback& callback);
@@ -212,8 +212,9 @@ protected:
   Color4f clear_color_{};
 
   Color4f curr_color_{1.0f};
-  // NOTE: This is only safe because only use in wrap_tex()-like funcs.
-  const Texture* curr_tex_ = nullptr;
+  GLuint curr_tex_handle_ = 0;
+
+  virtual Renderer& begin_tex(GLuint handle) = 0;
 
 private:
   struct BlendMode {
@@ -231,7 +232,7 @@ private:
 
   Renderer& begin_blend(const BlendMode& mode);
 
-  Renderer& wrap_tex(const Texture& tex,const WrapCallback& callback);
+  Renderer& wrap_tex(GLuint handle,const WrapCallback& callback);
 };
 
 } // namespace cybel

@@ -29,6 +29,7 @@
 #include <concepts>
 #include <filesystem>
 #include <initializer_list>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -47,7 +48,7 @@ public:
   void add_asset_dirs(std::initializer_list<std::filesystem::path> dirs,
                       const std::filesystem::path& sub_dir = "");
 
-  /// If your Game doesn't use assets, pass in null to shrink assets,
+  /// If your Game doesn't use assets, pass in null to shrink the assets,
   /// or call shrink_assets() directly.
   void load_assets(std::shared_ptr<AssetLoader> asset_loader);
   void reload_assets();
@@ -133,10 +134,22 @@ private:
     void check() const;
     void zombify();
 
-    /// For Ghost assets, `id` is unused, but this is safer than creating an overload.
+    /// For Ghost assets, `id` is unused, but this is safer than creating an overload
+    /// because it prevents non-Ghost assets from calling the wrong function.
     template <AssetIdLike Id>
     T* add(Id id_like,AssetPtr<T> asset_ptr);
   };
+
+  template <typename... >
+  struct AssetTypes final {};
+
+  using CpuAssetTypes = AssetTypes<Image>;
+  using GpuAssetTypes = AssetTypes<Texture,Sprite,SpriteAtlas,FontAtlas>;
+  using AudioAssetTypes = AssetTypes<Music,Sound>;
+
+  using GhostGpuAssetTypes = AssetTypes<Texture>;
+
+  using ZombieGpuAssetTypes = AssetTypes<Texture>;
 
   std::shared_ptr<AssetLoader> asset_loader_{};
   std::vector<std::filesystem::path> asset_dirs_{}; // Insertion order matters.
@@ -146,6 +159,7 @@ private:
 
   std::tuple<
     AssetBag<Image>,
+
     AssetBag<Texture>,
     AssetBag<Sprite>,
     AssetBag<SpriteAtlas>,
@@ -155,6 +169,7 @@ private:
     AssetBag<Sound>
   > asset_bags_{
     AssetBag<Image>{"Image",8},
+
     AssetBag<Texture>{"Texture",64},
     AssetBag<Sprite>{"Sprite",64},
     AssetBag<SpriteAtlas>{"SpriteAtlas",16},
@@ -184,13 +199,13 @@ private:
   };
 
   template <typename... Ts,typename AssetBags>
-  void reset_assets(AssetBags& asset_bags);
+  void reset_assets(AssetTypes<Ts...>,AssetBags& asset_bags);
   template <typename... Ts,typename AssetBags>
-  void shrink_assets(AssetBags& asset_bags);
+  void shrink_assets(AssetTypes<Ts...>,AssetBags& asset_bags);
   template <typename... Ts,typename AssetBags>
-  void check_assets(const AssetBags& asset_bags) const;
+  void check_assets(AssetTypes<Ts...>,const AssetBags& asset_bags) const;
   template <typename... Ts,typename AssetBags>
-  void zombify_assets(AssetBags& asset_bags);
+  void zombify_assets(AssetTypes<Ts...>,AssetBags& asset_bags);
 
   template <typename T,AssetIdLike Id,typename AssetBags,typename... Args>
   T* load_asset_file(AssetBags& asset_bags,Id id,const std::filesystem::path& file,Args&&... args);
@@ -221,24 +236,24 @@ template <typename T,typename... Args>
 concept UnkeyedAsset = std::constructible_from<T,Args...>;
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::reset_assets(AssetBags& asset_bags) {
+void AssetMan::reset_assets(AssetTypes<Ts...>,AssetBags& asset_bags) {
   (std::get<AssetBag<Ts>>(asset_bags).reset(),...);
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::shrink_assets(AssetBags& asset_bags) {
+void AssetMan::shrink_assets(AssetTypes<Ts...>,AssetBags& asset_bags) {
   (std::get<AssetBag<Ts>>(asset_bags).shrink(),...);
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::check_assets([[maybe_unused]] const AssetBags& asset_bags) const {
+void AssetMan::check_assets(AssetTypes<Ts...>,[[maybe_unused]] const AssetBags& asset_bags) const {
 #if !defined(NDEBUG)
   (std::get<AssetBag<Ts>>(asset_bags).check(),...);
 #endif
 }
 
 template <typename... Ts,typename AssetBags>
-void AssetMan::zombify_assets(AssetBags& asset_bags) {
+void AssetMan::zombify_assets(AssetTypes<Ts...>,AssetBags& asset_bags) {
   (std::get<AssetBag<Ts>>(asset_bags).zombify(),...);
 }
 
@@ -310,6 +325,9 @@ decltype(auto) AssetMan::load_asset_file_in_dirs(std::string_view name,const std
                                                  OnAssetFile&& on_asset_file) {
   if(asset_dirs_.empty() || !file.is_relative()) {
     return std::forward<OnAssetFile>(on_asset_file)(file);
+  }
+  if(asset_dirs_.size() == 1) {
+    return std::forward<OnAssetFile>(on_asset_file)(asset_dirs_[0] / file);
   }
 
   std::string sdl_errors{};
@@ -555,6 +573,13 @@ void AssetMan::AssetBag<T>::check() const {
 }
 
 template <typename T>
+void AssetMan::AssetBag<T>::zombify() {
+  for(auto& asset_ptr : assets) {
+    if(asset_ptr) { asset_ptr->zombify(AssetManKey{}); }
+  }
+}
+
+template <typename T>
 template <AssetIdLike Id>
 T* AssetMan::AssetBag<T>::add(Id id_like,AssetPtr<T> asset_ptr) {
   const auto id = static_cast<asset_id_t>(id_like);
@@ -576,13 +601,6 @@ T* AssetMan::AssetBag<T>::add(Id id_like,AssetPtr<T> asset_ptr) {
   }
 
   return asset;
-}
-
-template <typename T>
-void AssetMan::AssetBag<T>::zombify() {
-  for(auto& asset_ptr : assets) {
-    if(asset_ptr) { asset_ptr->zombify(AssetManKey{}); }
-  }
 }
 
 } // namespace cybel

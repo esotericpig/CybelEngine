@@ -15,8 +15,6 @@
 #include "cybel/types/pos.h"
 #include "cybel/types/size.h"
 
-#include <functional>
-
 namespace cybel {
 
 class Sprite final {
@@ -27,18 +25,19 @@ public:
     int padding = 0;
   };
 
-  static Pos4f build_src(const Texture& texture,const Pos2i& offset,const Size2i& size,int padding);
-  static Size2i calc_size(const Texture& texture,const Pos2i& offset,const Size2i& size,int padding);
+  static Pos4f build_src(const Size2i& texture_size,const Pos2i& offset,const Size2i& size,int padding);
+  static Size2i calc_size(const Size2i& texture_size,const Pos2i& offset,const Size2i& size,int padding);
 
-  explicit Sprite(AssetManKey,Texture& texture);
-  explicit Sprite(AssetManKey,Texture& texture,const Config& config);
+  explicit Sprite(AssetManKey,const Texture& texture);
+  explicit Sprite(AssetManKey,const Texture& texture,const Config& config);
 
-  const Texture& texture() const;
-  const Pos4f& src() const;
   const Size2i& size() const;
 
-protected:
-  std::reference_wrapper<Texture> texture_;
+  const Pos4f& src() const;
+  GLuint handle() const;
+
+private:
+  GLuint handle_ = 0;
   Size2i size_{};
   Pos4f src_{};
 };
