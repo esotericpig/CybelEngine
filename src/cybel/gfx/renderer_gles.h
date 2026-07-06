@@ -17,6 +17,7 @@
 // - https://github.com/g-truc/glm/blob/master/manual.md#-12-using-separated-headers
 #include <glm/mat4x4.hpp>
 
+#include <memory>
 #include <set>
 #include <stack>
 
@@ -170,8 +171,6 @@ private:
   Program prog_{};
   GLint proj_mat_loc_ = -1;
   GLint model_mat_loc_ = -1;
-  GLint vertex_pos_loc_ = -1;
-  GLint tex_coord_loc_ = -1;
   GLint color_loc_ = -1;
   GLint use_tex_loc_ = -1;
   GLint tex_2d_loc_ = -1;

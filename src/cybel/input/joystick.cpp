@@ -7,8 +7,6 @@
 
 #include "joystick.h"
 
-#include "cybel/util/util.h"
-
 namespace cybel {
 
 Joystick::Joystick(Joystick&& other) noexcept {
@@ -42,8 +40,7 @@ void Joystick::open(int id) noexcept {
   handle_ = SDL_JoystickOpen(id);
 
   if(handle_ == NULL) {
-    std::cerr << "[WARN] Failed to open joystick [" << id << "]: " << Util::get_sdl_error() << '.'
-              << std::endl;
+    std::cerr << "[WARN] Failed to open joystick [" << id << "]: " << SDL_GetError() << '.' << std::endl;
     return;
   }
 
@@ -59,7 +56,9 @@ void Joystick::close() noexcept {
   }
 }
 
-bool Joystick::matches(int id) const { return handle_ != NULL && id_ == id; }
+bool Joystick::matches(int id) const {
+  return handle_ != NULL && id_ == id;
+}
 
 int Joystick::id() const { return id_; }
 

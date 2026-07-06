@@ -8,7 +8,6 @@
 #include "sound.h"
 
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 namespace cybel {
 
@@ -19,7 +18,7 @@ Sound::Sound(AssetManKey,const std::filesystem::path& file) {
   handle_ = Mix_LoadWAV(file_cstr);
 
   if(!handle_) {
-    throw CybelError{"Failed to load Sound file `",file_cstr,"`: ",Util::get_sdl_mix_error(),'.'};
+    throw CybelError{"Failed to load Sound file `{}`: {}.",file_cstr,Mix_GetError()};
   }
 }
 

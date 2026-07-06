@@ -224,6 +224,7 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/audio/music.cpp"
     "src/cybel/audio/sound.cpp"
     "src/cybel/gfx/font_atlas.cpp"
+    "src/cybel/gfx/gl_util.cpp"
     "src/cybel/gfx/image.cpp"
     "src/cybel/gfx/renderer.cpp"
     "src/cybel/gfx/renderer_gl.cpp"
@@ -256,7 +257,6 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/util/file_sys.cpp"
     "src/cybel/util/rando.cpp"
     "src/cybel/util/timer.cpp"
-    "src/cybel/util/util.cpp"
     "src/cybel/vfx/particle.cpp"
     # @glob_src
 )

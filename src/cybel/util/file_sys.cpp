@@ -7,8 +7,6 @@
 
 #include "file_sys.h"
 
-#include "cybel/util/util.h"
-
 #include <cstdlib>
 #include <exception>
 #include <system_error>
@@ -35,7 +33,7 @@ std::filesystem::path FileSys::fetch_base_dir() {
       std::cerr << "[WARN] The game's Base Path `" << base_dir << "` isn't a folder." << std::endl;
     }
   } else {
-    std::cerr << "[WARN] Failed to get the game's Base Path: " + Util::get_sdl_error() + '.' << std::endl;
+    std::cerr << "[WARN] Failed to get the game's Base Path: " << SDL_GetError() << '.' << std::endl;
   }
 
   return dir;

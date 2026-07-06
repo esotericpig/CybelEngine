@@ -7,8 +7,6 @@
 
 #include "game_ctrl.h"
 
-#include "cybel/util/util.h"
-
 namespace cybel {
 
 GameCtrl::GameCtrl(GameCtrl&& other) noexcept {
@@ -42,7 +40,7 @@ void GameCtrl::open(int id) noexcept {
   handle_ = SDL_GameControllerOpen(id);
 
   if(handle_ == NULL) {
-    std::cerr << "[WARN] Failed to open game controller [" << id << "]: " << Util::get_sdl_error() << '.'
+    std::cerr << "[WARN] Failed to open game controller [" << id << "]: " << SDL_GetError() << '.'
               << std::endl;
     return;
   }
@@ -59,7 +57,9 @@ void GameCtrl::close() noexcept {
   }
 }
 
-bool GameCtrl::matches(int id) const { return handle_ != NULL && id_ == id; }
+bool GameCtrl::matches(int id) const {
+  return handle_ != NULL && id_ == id;
+}
 
 int GameCtrl::id() const { return id_; }
 

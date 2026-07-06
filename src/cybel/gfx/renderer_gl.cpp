@@ -9,9 +9,9 @@
 
 #if defined(CYBEL_RENDERER_GL)
 
+#include "cybel/gfx/gl_util.h"
 #include "cybel/metrics/metric_man.h"
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 namespace cybel {
 
@@ -36,7 +36,7 @@ void RendererGl::init() {
   const auto error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    throw CybelError{"Failed to init OpenGL renderer: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to init OpenGL Renderer: {}.",GlUtil::fetch_error_str(error)};
   }
 }
 

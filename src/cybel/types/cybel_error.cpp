@@ -9,12 +9,10 @@
 
 namespace cybel {
 
+CybelError::CybelError()
+  : std::runtime_error{"Unknown error."} {}
+
 CybelError::CybelError(std::string_view msg)
-  : msg_{msg} {}
-
-CybelError::CybelError(const std::string& msg)
-  : msg_{msg} {}
-
-const char* CybelError::what() const noexcept { return msg_.c_str(); }
+  : std::runtime_error{std::string{msg}} {}
 
 } // namespace cybel

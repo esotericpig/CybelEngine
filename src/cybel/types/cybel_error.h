@@ -10,28 +10,28 @@
 
 #include "cybel/common.h"
 
-#include "cybel/util/util.h"
+#include "cybel/text/text_util.h"
+
+#include <format>
+#include <stdexcept>
+#include <string_view>
 
 namespace cybel {
 
-class CybelError : public std::exception {
+class CybelError : public std::runtime_error {
 public:
-  explicit CybelError() = default;
+  using std::runtime_error::runtime_error;
+
+  explicit CybelError();
   explicit CybelError(std::string_view msg);
-  explicit CybelError(const std::string& msg);
 
-  template <typename... MsgArgs>
-  explicit CybelError(const MsgArgs&... msg_args);
-
-  const char* what() const noexcept override;
-
-private:
-  std::string msg_{};
+  template <typename... Args>
+  explicit CybelError(std::format_string<Args...> fmt_str,Args&&... args);
 };
 
-template <typename... MsgArgs>
-CybelError::CybelError(const MsgArgs&... msg_args)
-  : msg_{Util::build_str(msg_args...)} {}
+template <typename... Args>
+CybelError::CybelError(std::format_string<Args...> fmt_str,Args&&... args)
+  : std::runtime_error{TextUtil::fmt(fmt_str,std::forward<Args>(args)...)} {}
 
 } // namespace cybel
 #endif

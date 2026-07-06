@@ -8,7 +8,6 @@
 #include "image.h"
 
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 #include <algorithm>
 
@@ -22,7 +21,7 @@ Image::Image(AssetManKey,const std::filesystem::path& file)
   handle_ = IMG_Load(file_cstr);
 
   if(!handle_) {
-    throw CybelError{"Failed to load Image file `",file_cstr,"`: ",Util::get_sdl_img_error(),'.'};
+    throw CybelError{"Failed to load Image file `{}`: {}.",file_cstr,IMG_GetError()};
   }
 
   size_ = Size2i{std::max(handle_->w,0),std::max(handle_->h,0)};
@@ -34,7 +33,7 @@ Image::Image(const Size2i& size,const Color4f& color)
   handle_ = SDL_CreateRGBSurfaceWithFormat(0,size_.w,size_.h,32,SDL_PIXELFORMAT_RGBA32);
 
   if(!handle_) {
-    throw CybelError{"Failed to create Image from ",id_,": ",Util::get_sdl_img_error(),'.'};
+    throw CybelError{"Failed to create Image from {}: {}.",id_,IMG_GetError()};
   }
 
   const auto pixel = SDL_MapRGBA(
@@ -86,7 +85,7 @@ Image Image::dup() const {
   image.size_ = size_;
 
   if(!image.handle_) {
-    throw CybelError{"Failed to duplicate Image `",id_,"`: ",Util::get_sdl_img_error(),'.'};
+    throw CybelError{"Failed to duplicate Image `{}`: {}.",id_,IMG_GetError()};
   }
 
   return image;
@@ -118,7 +117,7 @@ Image& Image::edit_pixels(const EditPixel& edit_pixel) {
 
     if(!new_handle) {
       std::cerr << "[WARN] Failed to convert Image `" << id_ << "` for editing pixels: "
-                << Util::get_sdl_error() << '.' << std::endl;
+                << SDL_GetError() << '.' << std::endl;
       return *this;
     }
 
@@ -163,7 +162,7 @@ void Image::lock() const {
   if(is_locked_ || !SDL_MUSTLOCK(handle_)) { return; }
 
   if(SDL_LockSurface(handle_) != 0) {
-    throw CybelError{"Failed to lock Image `",id_,"`: ",Util::get_sdl_error(),'.'};
+    throw CybelError{"Failed to lock Image `{}`: {}.",id_,SDL_GetError()};
   }
 
   is_locked_ = true;

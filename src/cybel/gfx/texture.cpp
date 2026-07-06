@@ -7,8 +7,8 @@
 
 #include "texture.h"
 
+#include "cybel/gfx/gl_util.h"
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 #include <algorithm>
 
@@ -16,7 +16,7 @@ namespace cybel {
 
 Texture::Texture(AssetManKey,const Image& image)
   : size_{image.size()} {
-  Util::clear_gl_errors();
+  GlUtil::clear_errors();
 
   const auto bypp = image.bytes_per_pixel();
   GLenum image_fmt = GL_RGBA;
@@ -32,15 +32,14 @@ Texture::Texture(AssetManKey,const Image& image)
       break;
 
     default:
-      throw CybelError{"Unsupported Bytes Per Pixel `",static_cast<int>(bypp),
-                       "` for Image `",image.id(),"`."};
+      throw CybelError{"Unsupported Bytes Per Pixel `{}` for Image `{}`.",bypp,image.id()};
   }
 
   glGenTextures(1,&handle_);
   glBindTexture(GL_TEXTURE_2D,handle_);
 
   // I didn't have any problems without this, but could be needed.
-  // See: https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_upload_and_pixel_reads
+  // - https://www.khronos.org/opengl/wiki/Common_Mistakes#Texture_upload_and_pixel_reads
   if(bypp <= 3) {
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
   } else {
@@ -72,8 +71,8 @@ Texture::Texture(AssetManKey,const Image& image)
   if(error != GL_NO_ERROR) {
     // Just eat the errors, so a blank texture is shown instead of crashing.
     std::cerr << "[WARN] Failed to gen/bind Texture for Image `" << image.id()
-              << "`; error `" << error << "`: " << Util::get_gl_error(error) << '.' << std::endl;
-    Util::clear_gl_errors();
+              << "`; error `" << error << "`: " << GlUtil::fetch_error_str(error) << '.' << std::endl;
+    GlUtil::clear_errors();
   }
 }
 
@@ -82,7 +81,7 @@ Texture::Texture(AssetManKey key,const Color4f& color)
 
 Texture::Texture(AssetManKey,const Size2i& size,const Color4f& color)
   : size_{std::max(size.w,1),std::max(size.h,1)} {
-  Util::clear_gl_errors();
+  GlUtil::clear_errors();
 
   const auto r = color.byte_r();
   const auto g = color.byte_g();
@@ -123,8 +122,8 @@ Texture::Texture(AssetManKey,const Size2i& size,const Color4f& color)
   if(error != GL_NO_ERROR) {
     // Just eat the errors, so a blank texture is shown instead of crashing.
     std::cerr << "[WARN] Failed to gen/bind Texture for Color " << color.to_byte_str()
-              << "; error `" << error << "`: " << Util::get_gl_error(error) << '.' << std::endl;
-    Util::clear_gl_errors();
+              << "; error `" << error << "`: " << GlUtil::fetch_error_str(error) << '.' << std::endl;
+    GlUtil::clear_errors();
   }
 }
 

@@ -8,7 +8,6 @@
 #include "text_reader_buf.h"
 
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 namespace cybel {
 
@@ -20,7 +19,7 @@ TextReaderBuf::TextReaderBuf(const std::filesystem::path& file,std::size_t buffe
   handle_ = SDL_RWFromFile(file_cstr,"r");
 
   if(!handle_) {
-    throw CybelError{"Failed to open file [",file_cstr,"] for reading: ",Util::get_sdl_error(),'.'};
+    throw CybelError{"Failed to open file `{}` for reading: {}.",file_cstr,SDL_GetError()};
   }
 
   // Init to needing data to read (begin=end).
@@ -70,16 +69,17 @@ TextReaderBuf::int_type TextReaderBuf::underflow() {
   std::size_t read_count = buffer_.size();
 
   // Unfortunately, SDL2's SDL_RWread() returns 0 for either EOF or error,
-  //     with no info about how many bytes were read before EOF.
+  // with no info about how many bytes were read before EOF.
+  //
   // Because of this, we have to rely on the last value in `buffer_` that is not 0.
-  //     Terrible design.
+  // Terrible design.
   std::ranges::fill(buffer_,0);
-  Util::clear_sdl_error();
+  SDL_ClearError();
 
   if(SDL_RWread(handle_,buffer_.data(),sizeof(char_type) * read_count,1) == 0) {
     close();
 
-    const std::string error = Util::get_sdl_error();
+    const std::string_view error = SDL_GetError();
 
     if(!error.empty()) {
       std::cerr << "[WARN] Failed to read data: " << error << '.' << std::endl;
@@ -99,9 +99,13 @@ TextReaderBuf::int_type TextReaderBuf::underflow() {
   return traits_type::to_int_type(*gptr());
 }
 
-TextReaderBuf::int_type TextReaderBuf::pbackfail(int_type) { return traits_type::eof(); }
+TextReaderBuf::int_type TextReaderBuf::pbackfail(int_type) {
+  return traits_type::eof();
+}
 
-TextReaderBuf::int_type TextReaderBuf::overflow(int_type) { return traits_type::eof(); }
+TextReaderBuf::int_type TextReaderBuf::overflow(int_type) {
+  return traits_type::eof();
+}
 
 bool TextReaderBuf::is_open() const { return handle_; }
 

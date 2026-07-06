@@ -7,9 +7,9 @@
 
 #include "renderer.h"
 
+#include "cybel/gfx/gl_util.h"
 #include "cybel/text/rune_view.h"
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 #include <stack>
 
@@ -54,7 +54,7 @@ void Renderer::init_gpu_context() {
   const GLenum error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    throw CybelError{"Failed to init OpenGL [",error,"]: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to init OpenGL: {}.",GlUtil::fetch_error_str(error)};
   }
 }
 
@@ -65,7 +65,7 @@ void Renderer::on_gpu_context_loss(GpuContextKey) {
 void Renderer::on_gpu_context_restore(GpuContextKey) {
   curr_tex_handle_ = 0;
 
-  Util::clear_gl_errors();
+  GlUtil::clear_errors();
   init_gpu_context();
 }
 

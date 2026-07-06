@@ -8,13 +8,12 @@
 #include "audio_player.h"
 
 #include "cybel/util/rando.h"
-#include "cybel/util/util.h"
 
 namespace cybel {
 
 AudioPlayer::AudioPlayer(int music_types) {
   if(Mix_Init(music_types) == 0) {
-    std::cerr << "[WARN] Failed to init AudioPlayer: " << Util::get_sdl_mix_error() << '.' << std::endl;
+    std::cerr << "[WARN] Failed to init AudioPlayer: " << Mix_GetError() << '.' << std::endl;
     return; // Don't fail, since audio is optional.
   }
 
@@ -37,7 +36,7 @@ AudioPlayer::AudioPlayer(int music_types) {
 
   if(result != 0) {
     Mix_Quit();
-    std::cerr << "[WARN] Failed to open Audio device: " << Util::get_sdl_mix_error() << '.' << std::endl;
+    std::cerr << "[WARN] Failed to open Audio device: " << Mix_GetError() << '.' << std::endl;
     return; // Don't fail, since audio is optional.
   }
 
@@ -66,8 +65,8 @@ void AudioPlayer::play_music(const Music* music) {
 
   // -1 to play indefinitely.
   if(Mix_PlayMusic(music->handle(),-1) != 0) {
-    std::cerr << "[WARN] Failed to play Music `" << music->id() << "`: "
-              << Util::get_sdl_mix_error() << '.' << std::endl;
+    std::cerr << "[WARN] Failed to play Music `" << music->id() << "`: " << Mix_GetError() << '.'
+              << std::endl;
     // Don't fail, since music is optional.
   } else {
     curr_music_id_ = music->id();

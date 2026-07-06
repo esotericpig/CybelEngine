@@ -5,23 +5,20 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#ifndef CYBEL_UTIL_UTIL_H_
-#define CYBEL_UTIL_UTIL_H_
+#ifndef CYBEL_UTIL_ALGO_UTIL_H_
+#define CYBEL_UTIL_ALGO_UTIL_H_
 
 #include "cybel/common.h"
 
 #include <algorithm>
 #include <cassert>
 #include <iterator>
-#include <sstream>
 #include <unordered_set>
 #include <vector>
 
 namespace cybel {
 
-namespace Util {
-  template <typename... Args>
-  std::string build_str(const Args&... args);
+namespace AlgoUtil {
   template <typename... Args>
   std::size_t build_hash(const Args&... args);
 
@@ -31,39 +28,19 @@ namespace Util {
   std::string join_with(const std::vector<T>& vec,std::string_view separator);
   template <typename T>
   std::vector<T> unique(const std::vector<T>& vec);
-
-  void clear_sdl_error();
-  void clear_gl_errors();
-
-  std::string get_sdl_error();
-  std::string get_sdl_img_error();
-  std::string get_sdl_mix_error();
-  std::string get_gl_error();
-  std::string get_gl_error(GLenum error);
-  std::string get_glew_error(GLenum error);
-  std::string get_emscripten_result(int result);
 }
 
 template <typename... Args>
-std::string Util::build_str(const Args&... args) {
-  // See Example at bottom:
-  // - https://en.cppreference.com/w/cpp/language/fold
-  std::ostringstream ss{};
-  (ss << ... << args);
-
-  return ss.str();
-}
-
-template <typename... Args>
-std::size_t Util::build_hash(const Args&... args) {
+std::size_t AlgoUtil::build_hash(const Args&... args) {
   std::size_t seed = 0;
+
   ((seed ^= std::hash<Args>{}(args) + 0x9e3779b9 + (seed << 6) + (seed >> 2)),... );
 
   return seed;
 }
 
 template <typename T>
-void Util::grow_for_index(std::vector<T>& vec,std::size_t index) {
+void AlgoUtil::grow_for_index(std::vector<T>& vec,std::size_t index) {
   if(index < vec.size()) { return; }
 
   const auto new_size = static_cast<std::size_t>(static_cast<double>(index + 1) * 1.5);
@@ -73,7 +50,7 @@ void Util::grow_for_index(std::vector<T>& vec,std::size_t index) {
 }
 
 template <typename T>
-std::string Util::join_with(const std::vector<T>& vec,std::string_view separator) {
+std::string AlgoUtil::join_with(const std::vector<T>& vec,std::string_view separator) {
   if(vec.empty()) { return ""; }
 
   std::string result{};
@@ -90,7 +67,7 @@ std::string Util::join_with(const std::vector<T>& vec,std::string_view separator
 }
 
 template <typename T>
-std::vector<T> Util::unique(const std::vector<T>& vec) {
+std::vector<T> AlgoUtil::unique(const std::vector<T>& vec) {
   if(vec.size() <= 1) { return vec; }
 
   std::unordered_set<T> seen{};
@@ -100,7 +77,7 @@ std::vector<T> Util::unique(const std::vector<T>& vec) {
   unique.reserve(vec.size());
 
   std::ranges::copy_if(vec,std::back_inserter(unique),[&seen](const auto& e) {
-    // Is unique? (Inserted for the first time?)
+    // Inserted for the first time? (Unique?)
     return seen.insert(e).second;
   });
 

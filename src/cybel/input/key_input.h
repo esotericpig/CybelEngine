@@ -10,7 +10,7 @@
 
 #include "cybel/common.h"
 
-#include "cybel/util/util.h"
+#include "cybel/util/algo_util.h"
 
 namespace cybel {
 
@@ -51,7 +51,7 @@ public:
   class Hash {
   public:
     std::size_t operator()(const KeyInput& ki) const {
-      return Util::build_hash(ki.key_,ki.mods_);
+      return AlgoUtil::build_hash(ki.key_,ki.mods_);
     }
   };
 

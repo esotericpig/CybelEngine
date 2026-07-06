@@ -24,8 +24,8 @@
 
 namespace cybel {
 
-// NOTE: Decided not to use forwarding template funcs because
-//       IDEs can't show the actual (non-template) params when using the funcs.
+// NOTE: Decided not to use forwarding template functions because
+//       IDEs can't show the actual (non-template) params when using the functions.
 
 class CpuGfxLoader final {
 public:

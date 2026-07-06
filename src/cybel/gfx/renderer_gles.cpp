@@ -9,9 +9,9 @@
 
 #if defined(CYBEL_RENDERER_GLES)
 
+#include "cybel/gfx/gl_util.h"
 #include "cybel/metrics/metric_man.h"
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 // - https://github.com/g-truc/glm/blob/master/manual.md#-12-using-separated-headers
 #include <glm/gtc/matrix_transform.hpp>
@@ -68,7 +68,7 @@ void RendererGles::init() {
   const auto error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    throw CybelError{"Failed to init GLES renderer: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to init GLES renderer: {}.",GlUtil::fetch_error_str(error)};
   }
 }
 
@@ -121,13 +121,11 @@ void RendererGles::init_prog() {
   error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    throw CybelError{"Failed to use GLES program: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to use GLES program: {}.",GlUtil::fetch_error_str(error)};
   }
 
   proj_mat_loc_ = glGetUniformLocation(prog_.handle(),"proj_mat");
   model_mat_loc_ = glGetUniformLocation(prog_.handle(),"model_mat");
-  vertex_pos_loc_ = glGetUniformLocation(prog_.handle(),"vertex_pos");
-  tex_coord_loc_ = glGetUniformLocation(prog_.handle(),"tex_coord");
   color_loc_ = glGetUniformLocation(prog_.handle(),"color");
   use_tex_loc_ = glGetUniformLocation(prog_.handle(),"use_tex");
   tex_2d_loc_ = glGetUniformLocation(prog_.handle(),"tex_2d");
@@ -142,7 +140,7 @@ void RendererGles::init_prog() {
   error = glGetError();
 
   if(error != GL_NO_ERROR) {
-    throw CybelError{"Failed to init GLES program: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to init GLES program: {}.",GlUtil::fetch_error_str(error)};
   }
 }
 
@@ -333,7 +331,7 @@ RendererGles::QuadBuffer* RendererGles::quad_buffer(GLuint id,int index) {
 RendererGles::Shader::Shader(GLenum type,const std::string& src)
   : handle_{glCreateShader(type)} {
   if(handle_ == 0) {
-    throw CybelError{"Failed to create GLES shader [",type,"]: ",Util::get_gl_error(glGetError()),'.'};
+    throw CybelError{"Failed to create GLES shader [{}]: {}.",type,GlUtil::fetch_error_str()};
   }
 
   GLenum error = GL_NO_ERROR;
@@ -346,7 +344,7 @@ RendererGles::Shader::Shader(GLenum type,const std::string& src)
 
   if(error != GL_NO_ERROR) {
     destroy();
-    throw CybelError{"Failed to set source of GLES shader [",type,"]: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to set source of GLES shader [{}]: {}.",type,GlUtil::fetch_error_str(error)};
   }
 
   glCompileShader(handle_);
@@ -354,7 +352,7 @@ RendererGles::Shader::Shader(GLenum type,const std::string& src)
 
   if(error != GL_NO_ERROR) {
     destroy();
-    throw CybelError{"Failed to compile GLES shader [",type,"]: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to compile GLES shader [{}]: {}.",type,GlUtil::fetch_error_str(error)};
   }
 
   GLint compiled = GL_FALSE;
@@ -364,8 +362,7 @@ RendererGles::Shader::Shader(GLenum type,const std::string& src)
     const auto log = fetch_info_log(handle_,InfoLogType::kShader);
 
     destroy();
-    throw CybelError{"Failed to compile GLES shader [",type,"]: ",Util::get_gl_error(glGetError()),
-                     ".\n> ",log};
+    throw CybelError{"Failed to compile GLES shader [{}]: {}.\n> {}",type,GlUtil::fetch_error_str(),log};
   }
 }
 
@@ -386,7 +383,7 @@ void RendererGles::Program::init(const Shader& vert_shader,const Shader& frag_sh
   handle_ = glCreateProgram();
 
   if(handle_ == 0) {
-    throw CybelError{"Failed to create GLES program: ",Util::get_gl_error(glGetError()),'.'};
+    throw CybelError{"Failed to create GLES program: {}.",GlUtil::fetch_error_str(glGetError())};
   }
 
   GLenum error = GL_NO_ERROR;
@@ -397,7 +394,7 @@ void RendererGles::Program::init(const Shader& vert_shader,const Shader& frag_sh
 
   if(error != GL_NO_ERROR) {
     destroy();
-    throw CybelError{"Failed to attach shaders to GLES program: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to attach shaders to GLES program: {}.",GlUtil::fetch_error_str(error)};
   }
 
   glLinkProgram(handle_);
@@ -405,7 +402,7 @@ void RendererGles::Program::init(const Shader& vert_shader,const Shader& frag_sh
 
   if(error != GL_NO_ERROR) {
     destroy();
-    throw CybelError{"Failed to link GLES program: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to link GLES program: {}.",GlUtil::fetch_error_str(error)};
   }
 
   GLint linked = GL_FALSE;
@@ -415,8 +412,7 @@ void RendererGles::Program::init(const Shader& vert_shader,const Shader& frag_sh
     const auto log = fetch_info_log(handle_,InfoLogType::kProgram);
 
     destroy();
-    throw CybelError{"Failed to link GLES program: ",Util::get_gl_error(glGetError()),
-                     ".\n> ",log};
+    throw CybelError{"Failed to link GLES program: {}.\n> ",GlUtil::fetch_error_str(),log};
   }
 }
 
@@ -471,7 +467,7 @@ void RendererGles::QuadBuffer::init() {
 
   if(error != GL_NO_ERROR) {
     destroy();
-    throw CybelError{"Failed to init GLES QuadBuffer: ",Util::get_gl_error(error),'.'};
+    throw CybelError{"Failed to init GLES QuadBuffer: {}.",GlUtil::fetch_error_str(error)};
   }
 }
 

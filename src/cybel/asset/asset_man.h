@@ -21,9 +21,10 @@
 #include "cybel/gfx/sprite.h"
 #include "cybel/gfx/sprite_atlas.h"
 #include "cybel/gfx/texture.h"
+#include "cybel/text/text_util.h"
 #include "cybel/types/color.h"
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
+#include "cybel/util/algo_util.h"
 
 #include <algorithm>
 #include <concepts>
@@ -339,12 +340,12 @@ decltype(auto) AssetMan::load_asset_file_in_dirs(std::string_view name,const std
 
       if(!is_regular_file(asset_file,ec)) { continue; }
 
-      Util::clear_sdl_error();
+      SDL_ClearError();
       return std::forward<OnAssetFile>(on_asset_file)(asset_file);
     } catch(const CybelError& e) {
       std::cerr << "[WARN] " << e.what() << '\n';
 
-      const auto sdl_error = Util::get_sdl_error(); // Covers all gfx & audio.
+      const std::string_view sdl_error = SDL_GetError(); // Covers all gfx & audio.
 
       if(!sdl_error.empty()) {
         sdl_errors += "\n- ";
@@ -353,9 +354,9 @@ decltype(auto) AssetMan::load_asset_file_in_dirs(std::string_view name,const std
     }
   }
 
-  std::string err_msg = Util::build_str(
-    "Failed to load ",name," asset file `",file,"` in any asset folder [",
-    Util::join_with(asset_dirs_,", "),"]."
+  std::string err_msg = TextUtil::fmt(
+    "Failed to load {} asset file `{}` in any asset folder [{}].",
+    name,file.string(),AlgoUtil::join_with(asset_dirs_,", ")
   );
 
   if(!sdl_errors.empty()) {
@@ -594,7 +595,7 @@ T* AssetMan::AssetBag<T>::add(Id id_like,AssetPtr<T> asset_ptr) {
       count = id + 1;
     }
     if(id >= assets.size()) {
-      Util::grow_for_index(assets,id);
+      AlgoUtil::grow_for_index(assets,id);
     }
 
     assets[id] = std::move(asset_ptr);

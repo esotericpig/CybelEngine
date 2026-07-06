@@ -8,7 +8,6 @@
 #include "music.h"
 
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 namespace cybel {
 
@@ -20,7 +19,7 @@ Music::Music(AssetManKey,const std::filesystem::path& file)
   handle_ = Mix_LoadMUS(file_cstr);
 
   if(!handle_) {
-    throw CybelError{"Failed to load Music file `",file_cstr,"`: ",Util::get_sdl_mix_error(),'.'};
+    throw CybelError{"Failed to load Music file `{}`: {}.",file_cstr,Mix_GetError()};
   }
 }
 

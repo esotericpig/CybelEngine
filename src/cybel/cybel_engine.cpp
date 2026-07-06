@@ -7,12 +7,12 @@
 
 #include "cybel_engine.h"
 
+#include "cybel/gfx/gl_util.h"
 #include "cybel/gfx/gpu_context_key.h"
 #include "cybel/metrics/metric_man.h"
 #include "cybel/scene/scene_context.h"
 #include "cybel/text/text_util.h"
 #include "cybel/types/cybel_error.h"
-#include "cybel/util/util.h"
 
 #if defined(CYBEL_RENDERER_GLES)
   #include "cybel/gfx/renderer_gles.h"
@@ -49,10 +49,10 @@ CybelEngine::CybelEngine(Config config)
 
   // Don't use SDL_INIT_AUDIO here, since audio is optional.
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_EVENTS) != 0) {
-    throw CybelError{"Failed to init SDL: ",Util::get_sdl_error(),'.'};
+    throw CybelError{"Failed to init SDL: {}.",SDL_GetError()};
   }
   if(IMG_Init(config.image_types) == 0) {
-    throw CybelError{"Failed to init SDL_image: ",Util::get_sdl_img_error(),'.'};
+    throw CybelError{"Failed to init SDL_image: {}.",IMG_GetError()};
   }
 
   init_config(config);
@@ -102,7 +102,7 @@ void CybelEngine::init_config(Config& config) {
     SDL_DisplayMode dm{};
 
     if(SDL_GetCurrentDisplayMode(0,&dm) != 0) {
-      std::cerr << "[WARN] Failed to get current display mode: " << Util::get_sdl_error() << '.' << std::endl;
+      std::cerr << "[WARN] Failed to get current display mode: " << SDL_GetError() << '.' << std::endl;
       // Don't fail; fall back to Config.size.
     } else if(dm.w > 0 && dm.h > 0) {
       size = calc_scaled_view(Size2i{dm.w,dm.h},config.scale_factor,config.target_size);
@@ -178,7 +178,7 @@ void CybelEngine::init_gui(const Config& config) {
   );
 
   if(!core_.window) {
-    throw CybelError{"Failed to create window: ",Util::get_sdl_error(),'.'};
+    throw CybelError{"Failed to create window: {}.",SDL_GetError()};
   }
 
   // On Desktop, the SDL_WINDOW_RESIZABLE flag in SDL_CreateWindow() increases the size for some reason
@@ -190,17 +190,17 @@ void CybelEngine::init_gpu_context() {
   core_.gl_context = SDL_GL_CreateContext(core_.window);
 
   if(!core_.gl_context) {
-    throw CybelError{"Failed to create OpenGL context: ",Util::get_sdl_error(),'.'};
+    throw CybelError{"Failed to create OpenGL context: {}.",SDL_GetError()};
   }
 
   const GLenum error = glewInit();
 
   if(error != GLEW_OK) {
-    throw CybelError{"Failed to init OpenGL GLEW [",error,"]: ",Util::get_glew_error(error),'.'};
+    throw CybelError{"Failed to init OpenGL GLEW [{}]: {}.",error,GlUtil::glew_error_str(error)};
   }
 
   set_vsync(is_vsync_);
-  Util::clear_gl_errors(); // Mainly for WebGL context restored.
+  GlUtil::clear_errors(); // Mainly for WebGL context restored.
 }
 
 void CybelEngine::check_versions() {
@@ -219,7 +219,7 @@ void CybelEngine::check_versions() {
   if(!GLEW_VERSION_2_1) {
     std::cerr << "[WARN] OpenGL version is < 2.1." << std::endl;
 
-    const std::string msg = Util::build_str(
+    const std::string msg = TextUtil::build_str(
       "Your system's OpenGL version is less than 2.1.\n",
       "This game might not function properly.\n",
       "Please consider updating your graphics drivers or installing Mesa.\n\n",
@@ -559,7 +559,7 @@ void CybelEngine::set_fullscreen(bool fullscreen,bool windowed) {
   if(result != 0) {
     const char* desc = fullscreen ? (windowed ? "windowed fullscreen" : "fullscreen") : "windowed";
     std::cerr << "[WARN] Failed to set window to [" << desc << "] with error [" << result << "]: "
-              << Util::get_sdl_error() << '.' << std::endl;
+              << SDL_GetError() << '.' << std::endl;
   }
 }
 

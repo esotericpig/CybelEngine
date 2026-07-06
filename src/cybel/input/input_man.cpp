@@ -24,7 +24,7 @@ void InputMan::init_joypad() {
   // SDL_INIT_GAMECONTROLLER also auto-initializes SDL_INIT_JOYSTICK.
   if(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
     // Don't fail, since optional.
-    std::cerr << "[WARN] Failed to init Game Controllers & Joysticks: " << Util::get_sdl_error() << '.'
+    std::cerr << "[WARN] Failed to init Game Controllers & Joysticks: " << SDL_GetError() << '.'
               << std::endl;
     return;
   }
@@ -57,7 +57,7 @@ void InputMan::use_fake_joypad(bool use_game_ctrl,FakeJoypadInputType input_type
   );
 
   if(id == -1) {
-    std::cerr << "[WARN] Failed to create fake joypad: " << Util::get_sdl_error() << '.' << std::endl;
+    std::cerr << "[WARN] Failed to create fake joypad: " << SDL_GetError() << '.' << std::endl;
     return;
   }
 

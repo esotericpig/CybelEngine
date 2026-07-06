@@ -15,7 +15,7 @@
 #include "cybel/input/joypad_input.h"
 #include "cybel/input/joystick.h"
 #include "cybel/input/key_input.h"
-#include "cybel/util/util.h"
+#include "cybel/util/algo_util.h"
 
 #include <cassert>
 #include <functional>
@@ -124,7 +124,7 @@ template <InputIdLike Id>
 void InputMan::map_input(Id id_like,const WrapMapInput& wrap) {
   const auto id = static_cast<input_id_t>(id_like);
 
-  Util::grow_for_index(id_to_state_,id);
+  AlgoUtil::grow_for_index(id_to_state_,id);
   if(id > max_id_) { max_id_ = id; }
 
   InputMapper mapper{*this,id};
