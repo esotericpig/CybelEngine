@@ -22,6 +22,7 @@
         "CYBEL_USE_LIBS": true,
         "CYBEL_USE_CONFIG_PKGS": true,
 
+        "CYBEL_BUILD_EXAMPLES": false,
         "CYBEL_USE_SANITIZE": false,
         "CYBEL_USE_METRICS": false,
         "CYBEL_RENDERER": "GL"

@@ -20,6 +20,7 @@ option(CYBEL_USE_CONFIG_PKGS
     ON
 )
 
+option(CYBEL_BUILD_EXAMPLES "Build examples?" OFF)
 option(CYBEL_USE_SANITIZE "Use sanitizers in Debug build to detect memory leaks?" OFF)
 option(CYBEL_USE_METRICS "Use metrics, such as profiling and draw count?" OFF)
 
@@ -36,6 +37,7 @@ message("
   CYBEL_USE_LIBS?                 ${CYBEL_USE_LIBS}
   CYBEL_USE_CONFIG_PKGS?          ${CYBEL_USE_CONFIG_PKGS}
 
+  CYBEL_BUILD_EXAMPLES?           ${CYBEL_BUILD_EXAMPLES}
   CYBEL_USE_SANITIZE?             ${CYBEL_USE_SANITIZE}
   CYBEL_USE_METRICS?              ${CYBEL_USE_METRICS}
   CYBEL_RENDERER:                 '${CYBEL_RENDERER}'
@@ -52,8 +54,10 @@ set(CYBEL_RENDERER_GLES OFF)
 
 if(EMSCRIPTEN OR CYBEL_RENDERER STREQUAL "GLES")
   set(CYBEL_RENDERER_GLES ON)
-else()
+elseif(CYBEL_RENDERER STREQUAL "GL")
   set(CYBEL_RENDERER_GL ON)
+else()
+  message(FATAL_ERROR "Invalid CYBEL_RENDERER: '${CYBEL_RENDERER}'.")
 endif()
 
 if(NOT "${CYBEL_CMAKE_DIR}/modules" IN_LIST CMAKE_MODULE_PATH)
@@ -81,6 +85,10 @@ endif()
 
 if(CYBEL_USE_CONFIG_PKGS)
   list(APPEND CYBEL_FIND_PKG_CONFIG CONFIG)
+endif()
+
+if(PROJECT_IS_TOP_LEVEL OR CYBEL_BUILD_EXAMPLES)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 endif()
 
 #===========================================
@@ -121,7 +129,9 @@ set_target_properties(CybelEngine PROPERTIES
     EXPORT_COMPILE_COMMANDS ON
     POSITION_INDEPENDENT_CODE ON
 )
-target_compile_features(CybelEngine PUBLIC "cxx_std_${CYBEL_CXX_V}")
+target_compile_features(CybelEngine PUBLIC
+    "cxx_std_${CYBEL_CXX_V}"
+)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   target_compile_options(CybelEngine PRIVATE
@@ -149,6 +159,9 @@ target_link_options(CybelEngine PRIVATE
     $<$<CONFIG:Debug>:${CYBEL_SANITIZE_FLAGS}>
 )
 
+#===========================================
+# Compile Definitions
+#===========================================
 set(cybel_compile_defs "")
 
 if(EMSCRIPTEN)
@@ -305,6 +318,13 @@ if(NOT CYBEL_OBJECT_LIB)
       "${CMAKE_CURRENT_BINARY_DIR}/CybelEngineConfigVersion.cmake"
       DESTINATION "${CYBEL_INSTALL_CMAKE_DIR}"
   )
+endif()
+
+#===========================================
+# Examples
+#===========================================
+if(CYBEL_BUILD_EXAMPLES)
+  add_subdirectory("examples")
 endif()
 
 #===========================================
