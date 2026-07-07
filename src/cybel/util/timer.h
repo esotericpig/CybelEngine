@@ -23,8 +23,8 @@ public:
   void start();
   Duration stop();
 
-  void resume();
   const Duration& pause();
+  void resume();
 
   void sleep_for_fps(const Duration& target_fps);
 

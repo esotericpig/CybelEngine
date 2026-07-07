@@ -41,7 +41,7 @@ public:
 
 private:
   // Every 1s, print stats.
-  ChronoTicker print_stats_ticker{Duration::from_secs(1.0f),ChronoTicker::kLoop | ChronoTicker::kStart};
+  ChronoTicker print_stats_ticker{Duration::from_secs(1.0f),TickerFlag::kLoop | TickerFlag::kStart};
 
   void print_stats(const SceneContext& ctx) {
     std::cout << TextUtil::fmt(

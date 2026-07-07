@@ -18,11 +18,8 @@
 
 namespace cybel {
 
-/// Spoon!
-template <typename T>
-class Ticker final {
-public:
-  enum Flags : std::uint8_t {
+namespace TickerFlag {
+  enum : std::uint8_t {
     kNone = 0,
 
     kOneShot = 1 << 0, /// Default.
@@ -31,22 +28,27 @@ public:
     kStart = 1 << 2,
     kFireAsap = 1 << 3,
   };
+}
 
+/// Spoon!
+template <typename T>
+class Ticker final {
+public:
   bool is_ticking = false;
   bool is_looping = false;
   T value{};
   T interval{};
 
   explicit Ticker() noexcept = default;
-  explicit Ticker(T interval,int flags = kNone) noexcept;
-  explicit Ticker(T value,T interval,int flags = kNone) noexcept;
+  explicit Ticker(T interval,int flags = TickerFlag::kNone) noexcept;
+  explicit Ticker(T value,T interval,int flags = TickerFlag::kNone) noexcept;
 
-  void start(int flags = kNone);
+  void start(int flags = TickerFlag::kNone);
   void stop();
-  void toggle(int flags = kNone);
+  void toggle(int flags = TickerFlag::kNone);
 
-  void resume();
   void pause();
+  void resume();
 
   /// If fires, resets the value to 0.
   ///
@@ -68,6 +70,7 @@ public:
 private:
   bool update(const FrameStep& step);
 
+  void maybe_change(int flags);
   void reset_value();
 };
 
@@ -81,25 +84,23 @@ Ticker<T>::Ticker(T interval,int flags) noexcept
 
 template <typename T>
 Ticker<T>::Ticker(T value,T interval,int flags) noexcept
-  : is_looping{(flags & kLoop) != 0},
-    value{(flags & kFireAsap) ? interval : value},
+  : is_looping{(flags & TickerFlag::kLoop) != 0},
+    value{(flags & TickerFlag::kFireAsap) ? interval : value},
     interval{interval} {
-  if(flags & kStart) { resume(); }
+  if(flags & TickerFlag::kStart) { resume(); }
 }
 
 template <typename T>
 void Ticker<T>::start(int flags) {
-  // Only if explicitly requested, change looping.
-  if(flags & kOneShot) {
-    is_looping = false;
-  } else if(flags & kLoop) {
-    is_looping = true;
+  maybe_change(flags);
+
+  if(flags & TickerFlag::kFireAsap) {
+    value = interval;
+  } else {
+    reset_value();
   }
 
-  stop();
   resume();
-
-  if(flags & kFireAsap) { value = interval; }
 }
 
 template <typename T>
@@ -111,13 +112,7 @@ void Ticker<T>::stop() {
 template <typename T>
 void Ticker<T>::toggle(int flags) {
   if(is_ticking) {
-    // Only if explicitly requested, change looping.
-    if(flags & kOneShot) {
-      is_looping = false;
-    } else if(flags & kLoop) {
-      is_looping = true;
-    }
-
+    maybe_change(flags);
     stop();
   } else {
     start(flags);
@@ -125,13 +120,13 @@ void Ticker<T>::toggle(int flags) {
 }
 
 template <typename T>
-void Ticker<T>::resume() {
-  is_ticking = true;
+void Ticker<T>::pause() {
+  is_ticking = false;
 }
 
 template <typename T>
-void Ticker<T>::pause() {
-  is_ticking = false;
+void Ticker<T>::resume() {
+  is_ticking = true;
 }
 
 template <typename T>
@@ -152,19 +147,17 @@ bool Ticker<T>::tick(const FrameStep& step) {
 template <typename T>
 int Ticker<T>::spoon_ticks(const FrameStep& step) {
   if(!update(step)) { return 0; }
+  if(value < interval) { return 0; }
 
-  int ticks = 0;
+  int ticks = 1;
 
-  if(value >= interval) {
-    do {
-      ++ticks;
-      value -= interval;
-    } while(value >= interval);
+  while((value -= interval) >= interval) {
+    ++ticks;
+  }
 
-    if(!is_looping) {
-      pause();
-      value += interval; // Stay at end with overflow.
-    }
+  if(!is_looping) {
+    pause();
+    value += interval; // Stay at end with overflow.
   }
 
   return ticks;
@@ -187,6 +180,16 @@ bool Ticker<T>::update(const FrameStep& step) {
   }
 
   return true;
+}
+
+template <typename T>
+void Ticker<T>::maybe_change(int flags) {
+  // Only if explicitly requested, change looping.
+  if(flags & TickerFlag::kOneShot) {
+    is_looping = false;
+  } else if(flags & TickerFlag::kLoop) {
+    is_looping = true;
+  }
 }
 
 template <typename T>

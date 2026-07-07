@@ -34,13 +34,6 @@ Duration Timer::stop() {
   return duration;
 }
 
-void Timer::resume() {
-  if(!is_ticking_) {
-    is_ticking_ = true;
-    start_time_ = now();
-  }
-}
-
 const Duration& Timer::pause() {
   if(is_ticking_) {
     duration_.value_ += (now() - start_time_);
@@ -48,6 +41,13 @@ const Duration& Timer::pause() {
   }
 
   return duration_;
+}
+
+void Timer::resume() {
+  if(!is_ticking_) {
+    is_ticking_ = true;
+    start_time_ = now();
+  }
 }
 
 void Timer::sleep_for_fps(const Duration& target_fps) {

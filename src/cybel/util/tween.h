@@ -32,8 +32,8 @@ public:
   void play();
   void stop();
 
-  void resume();
   void pause();
+  void resume();
 
   void fade(const FrameStep& step);
   void flash(const FrameStep& step);
@@ -42,6 +42,8 @@ public:
 
 private:
   bool update(const FrameStep& step);
+
+  void reset();
 };
 
 using Tween0f = Tween<float>;
@@ -61,25 +63,24 @@ Tween<T>::Tween(T progress,T duration,bool play)
 
 template <typename T>
 void Tween<T>::play() {
-  stop();
+  reset();
   resume();
 }
 
 template <typename T>
 void Tween<T>::stop() {
   pause();
-  value = T{};
-  progress = T{};
-}
-
-template <typename T>
-void Tween<T>::resume() {
-  is_playing = true;
+  reset();
 }
 
 template <typename T>
 void Tween<T>::pause() {
   is_playing = false;
+}
+
+template <typename T>
+void Tween<T>::resume() {
+  is_playing = true;
 }
 
 template <typename T>
@@ -101,7 +102,7 @@ bool Tween<T>::update(const FrameStep& step) {
   if(!is_playing) { return false; }
 
   if(progress >= T{1.0}) {
-    is_playing = false;
+    pause();
     return false;
   }
 
@@ -109,12 +110,18 @@ bool Tween<T>::update(const FrameStep& step) {
   progress += (static_cast<T>(step.delta_time) / duration);
 
   if(progress > T{1.0}) {
-    // Don't set `is_playing` to false or return false,
-    // so that 100% value/progress shows once.
+    // Don't pause (set `is_playing` to false) and/or return false,
+    // so that 100% value/progress shows at least once.
     progress = T{1.0};
   }
 
   return true;
+}
+
+template <typename T>
+void Tween<T>::reset() {
+  value = T{};
+  progress = T{};
 }
 
 template <typename T>
