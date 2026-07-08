@@ -71,7 +71,7 @@ Texture::Texture(AssetManKey,const Image& image)
   if(error != GL_NO_ERROR) {
     // Just eat the errors, so a blank texture is shown instead of crashing.
     std::cerr << "[WARN] Failed to gen/bind Texture for Image `" << image.id()
-              << "`; error `" << error << "`: " << GlUtil::fetch_error_str(error) << '.' << std::endl;
+              << "`: " << GlUtil::fetch_error_str(error) << '.' << std::endl;
     GlUtil::clear_errors();
   }
 }
@@ -122,7 +122,7 @@ Texture::Texture(AssetManKey,const Size2i& size,const Color4f& color)
   if(error != GL_NO_ERROR) {
     // Just eat the errors, so a blank texture is shown instead of crashing.
     std::cerr << "[WARN] Failed to gen/bind Texture for Color " << color.to_byte_str()
-              << "; error `" << error << "`: " << GlUtil::fetch_error_str(error) << '.' << std::endl;
+              << ": " << GlUtil::fetch_error_str(error) << '.' << std::endl;
     GlUtil::clear_errors();
   }
 }
