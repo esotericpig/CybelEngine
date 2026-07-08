@@ -9,19 +9,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_library(CybelExamplesBuildConfig INTERFACE)
-add_library(CybelExamples::BuildConfig ALIAS CybelExamplesBuildConfig)
+add_library(CybelEngineExamplesBuild INTERFACE)
+add_library(CybelEngine::ExamplesBuild ALIAS CybelEngineExamplesBuild)
 
 #===========================================
 # Build Setup
 #===========================================
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  target_compile_options(CybelExamplesBuildConfig INTERFACE
+  target_compile_options(CybelEngineExamplesBuild INTERFACE
       /utf-8
 #      /W4 /permissive-
   )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(CybelExamplesBuildConfig INTERFACE
+  target_compile_options(CybelEngineExamplesBuild INTERFACE
       "-finput-charset=UTF-8"
 
       -Wall -Wconversion -Wextra -Wpedantic -Wundef
@@ -62,10 +62,10 @@ if(EMSCRIPTEN)
       --use-port=sdl2_image:formats=png
       --use-port=sdl2_mixer
   )
-  target_compile_options(CybelExamplesBuildConfig INTERFACE
+  target_compile_options(CybelEngineExamplesBuild INTERFACE
       ${web_compile_and_link_opts}
   )
-  target_link_options(CybelExamplesBuildConfig INTERFACE
+  target_link_options(CybelEngineExamplesBuild INTERFACE
       ${web_compile_and_link_opts}
 
       # Link Options.
@@ -113,7 +113,7 @@ foreach(example IN LISTS examples)
   endif()
 
   target_link_libraries("${example}" PRIVATE
-      CybelExamples::BuildConfig
+      CybelEngine::ExamplesBuild
       CybelEngine::CybelEngine
   )
   target_include_directories("${example}" PRIVATE
