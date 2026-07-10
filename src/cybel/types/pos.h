@@ -10,6 +10,9 @@
 
 #include "cybel/common.h"
 
+#include <ostream>
+#include <type_traits>
+
 namespace cybel {
 
 template <typename T>
@@ -21,30 +24,23 @@ public:
   T x{};
   T y{};
 
-  explicit Pos2() noexcept = default;
-  explicit Pos2(T x,T y) noexcept
-    : x(x),y(y) {}
+  constexpr auto operator<=>(const Pos2&) const = default;
 
-  auto operator<=>(const Pos2&) const = default;
+  constexpr Pos2 operator-() const;
 
-  Pos2 operator-() const { return Pos2{-x,-y}; }
-
-  Pos2& set(T x,T y) {
-    this->x = x;
-    this->y = y;
-
-    return *this;
-  }
+  constexpr Pos2& set(T x,T y);
 
   template <typename T2>
-  Pos2<T2> to_pos2() const { return Pos2<T2>{static_cast<T2>(x),static_cast<T2>(y)}; }
-
+  constexpr Pos2<T2> to_pos2() const;
   template <typename T2>
-  Pos3<T2> to_pos3() const { return Pos3<T2>{static_cast<T2>(x),static_cast<T2>(y),T2{}}; }
+  constexpr Pos3<T2> to_pos3() const;
 };
 
 using Pos2f = Pos2<float>;
 using Pos2i = Pos2<int>;
+
+static_assert(std::is_aggregate_v<Pos2f>);
+static_assert(std::is_aggregate_v<Pos2i>);
 
 template <typename T>
 class Pos3 {
@@ -53,34 +49,24 @@ public:
   T y{};
   T z{};
 
-  explicit Pos3() noexcept = default;
-  // NOTE: Not defaulting z to 0 on purpose, to help distinguish between Pos2.
-  explicit Pos3(T x,T y,T z) noexcept
-    : x(x),y(y),z(z) {}
+  constexpr auto operator<=>(const Pos3&) const = default;
 
-  auto operator<=>(const Pos3&) const = default;
+  constexpr Pos3 operator-() const;
 
-  Pos3 operator-() const { return Pos3{-x,-y,-z}; }
-
-  Pos3& set(T x,T y) { return set(x,y,z); }
-
-  Pos3& set(T x,T y,T z) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
-
-    return *this;
-  }
+  constexpr Pos3& set(T x,T y);
+  constexpr Pos3& set(T x,T y,T z);
 
   template <typename T2>
-  Pos2<T2> to_pos2() const { return Pos2<T2>{static_cast<T2>(x),static_cast<T2>(y)}; }
-
+  constexpr Pos2<T2> to_pos2() const;
   template <typename T2>
-  Pos3<T2> to_pos3() const { return Pos3<T2>{static_cast<T2>(x),static_cast<T2>(y),static_cast<T2>(z)}; }
+  constexpr Pos3<T2> to_pos3() const;
 };
 
 using Pos3f = Pos3<float>;
 using Pos3i = Pos3<int>;
+
+static_assert(std::is_aggregate_v<Pos3f>);
+static_assert(std::is_aggregate_v<Pos3i>);
 
 struct Pos4f {
   float x1{};
@@ -105,6 +91,65 @@ std::ostream& operator<<(std::ostream& out,const Pos2<T>& pos) {
 template <typename T>
 std::ostream& operator<<(std::ostream& out,const Pos3<T>& pos) {
   return out << '(' << pos.x << ',' << pos.y << ',' << pos.z << ')';
+}
+
+template <typename T>
+constexpr Pos2<T> Pos2<T>::operator-() const {
+  return Pos2{-x,-y};
+}
+
+template <typename T>
+constexpr Pos2<T>& Pos2<T>::set(T x,T y) {
+  this->x = x;
+  this->y = y;
+
+  return *this;
+}
+
+template <typename T>
+template <typename T2>
+constexpr Pos2<T2> Pos2<T>::to_pos2() const {
+  return Pos2<T2>{static_cast<T2>(x),static_cast<T2>(y)};
+}
+
+template <typename T>
+template <typename T2>
+constexpr Pos3<T2> Pos2<T>::to_pos3() const {
+  return Pos3<T2>{static_cast<T2>(x),static_cast<T2>(y)};
+}
+
+template <typename T>
+constexpr Pos3<T> Pos3<T>::operator-() const {
+  return Pos3{-x,-y,-z};
+}
+
+template <typename T>
+constexpr Pos3<T>& Pos3<T>::set(T x,T y) {
+  this->x = x;
+  this->y = y;
+
+  return *this;
+}
+
+template <typename T>
+constexpr Pos3<T>& Pos3<T>::set(T x,T y,T z) {
+  this->x = x;
+  this->y = y;
+  this->z = z;
+
+  return *this;
+}
+
+template <typename T>
+template <typename T2>
+constexpr Pos2<T2> Pos3<T>::to_pos2() const {
+  return Pos2<T2>{static_cast<T2>(x),static_cast<T2>(y)};
+}
+
+template <typename T>
+template <typename T2>
+constexpr Pos3<T2> Pos3<T>::to_pos3() const {
+  return Pos3<T2>{static_cast<T2>(x),static_cast<T2>(y),static_cast<T2>(z)};
 }
 
 } // namespace cybel
