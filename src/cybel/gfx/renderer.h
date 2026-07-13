@@ -31,7 +31,7 @@ namespace cybel {
 /// Alternatively, the wrap_*() functions do preserve the previous states when nesting.
 class Renderer {
 public:
-  class TextureWrapper {
+  class TextureWrapper final {
   public:
     Renderer& ren;
     const Texture& tex;
@@ -43,7 +43,7 @@ public:
     TextureWrapper& draw_quad(const Pos3i& pos,const Size2i& size);
   };
 
-  class SpriteWrapper {
+  class SpriteWrapper final {
   public:
     Renderer& ren;
     const Sprite& sprite;
@@ -54,7 +54,7 @@ public:
     SpriteWrapper& draw_quad(const Pos3i& pos,const Size2i& size);
   };
 
-  class SpriteAtlasWrapper {
+  class SpriteAtlasWrapper final {
   public:
     Renderer& ren;
     const SpriteAtlas& atlas;
@@ -67,7 +67,7 @@ public:
     SpriteAtlasWrapper& draw_quad(const Pos2i& cell,const Pos3i& pos,const Size2i& size);
   };
 
-  class FontAtlasWrapper {
+  class FontAtlasWrapper final {
   public:
     Renderer& ren;
     const FontAtlas& font;
@@ -119,7 +119,7 @@ public:
     Size2i bg_padding_{};
   };
 
-  struct QuadBufferData {
+  struct QuadBufferData final {
     GLuint tex_handle = 0;
     Pos3f normal{};
     Pos3f vertices[4] = {Pos3f{},Pos3f{},Pos3f{},Pos3f{}};
@@ -134,12 +134,12 @@ public:
   static constexpr Pos4f kDefaultSrc{0.0f,0.0f,1.0f,1.0f};
 
   explicit Renderer(const Size2i& size,const Size2i& target_size,const Color4f& clear_color);
-
-  Renderer(const Renderer& other) = delete;
-  Renderer(Renderer&& other) noexcept = delete;
   virtual ~Renderer() noexcept = default;
 
+  Renderer(const Renderer& other) = delete;
   Renderer& operator=(const Renderer& other) = delete;
+
+  Renderer(Renderer&& other) noexcept = delete;
   Renderer& operator=(Renderer&& other) noexcept = delete;
 
   virtual void on_gpu_context_loss(GpuContextKey);
@@ -217,7 +217,7 @@ protected:
   virtual Renderer& begin_tex(GLuint handle) = 0;
 
 private:
-  struct BlendMode {
+  struct BlendMode final {
     GLenum src_factor{};
     GLenum dst_factor{};
   };

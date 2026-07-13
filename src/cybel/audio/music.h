@@ -20,12 +20,12 @@ namespace cybel {
 class Music final {
 public:
   explicit Music(AssetManKey,const std::filesystem::path& file);
-
-  Music(const Music& other) = delete;
-  Music(Music&& other) noexcept;
   ~Music() noexcept;
 
+  Music(const Music& other) = delete;
   Music& operator=(const Music& other) = delete;
+
+  Music(Music&& other) noexcept;
   Music& operator=(Music&& other) noexcept;
 
   const std::string& id() const;
@@ -37,8 +37,8 @@ private:
   std::string id_{};
   Mix_Music* handle_ = nullptr;
 
-  void move_from(Music&& other) noexcept;
   void destroy() noexcept;
+  void move_from(Music&& other) noexcept;
 };
 
 } // namespace cybel

@@ -15,18 +15,18 @@ namespace cybel {
 class GameCtrl final {
 public:
   explicit GameCtrl() noexcept = default;
-
-  GameCtrl(const GameCtrl& other) = delete;
-  GameCtrl(GameCtrl&& other) noexcept;
   ~GameCtrl() noexcept;
 
+  GameCtrl(const GameCtrl& other) = delete;
   GameCtrl& operator=(const GameCtrl& other) = delete;
+
+  GameCtrl(GameCtrl&& other) noexcept;
   GameCtrl& operator=(GameCtrl&& other) noexcept;
-  explicit operator bool() const;
 
   void open(int id) noexcept;
   void close() noexcept;
 
+  explicit operator bool() const;
   bool matches(int id) const;
   int id() const;
 
@@ -34,7 +34,7 @@ public:
 
 private:
   int id_ = -1;
-  SDL_GameController* handle_ = NULL;
+  SDL_GameController* handle_ = nullptr;
 
   void move_from(GameCtrl&& other) noexcept;
 };

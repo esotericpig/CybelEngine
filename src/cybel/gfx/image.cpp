@@ -48,19 +48,6 @@ Image::Image(const Size2i& size,const Color4f& color)
   SDL_FillRect(handle_,nullptr,pixel);
 }
 
-Image::Image(Image&& other) noexcept {
-  move_from(std::move(other));
-}
-
-void Image::move_from(Image&& other) noexcept {
-  destroy();
-
-  id_ = std::exchange(other.id_,"");
-  handle_ = std::exchange(other.handle_,nullptr);
-  size_ = std::exchange(other.size_,Size2i{});
-  is_locked_ = std::exchange(other.is_locked_,false);
-}
-
 Image::~Image() noexcept {
   destroy();
 }
@@ -73,9 +60,23 @@ void Image::destroy() noexcept {
   }
 }
 
+Image::Image(Image&& other) noexcept {
+  move_from(std::move(other));
+}
 Image& Image::operator=(Image&& other) noexcept {
-  if(this != &other) { move_from(std::move(other)); }
+  if(this != &other) {
+    destroy();
+    move_from(std::move(other));
+  }
+
   return *this;
+}
+
+void Image::move_from(Image&& other) noexcept {
+  id_ = std::exchange(other.id_,"");
+  handle_ = std::exchange(other.handle_,nullptr);
+  size_ = std::exchange(other.size_,Size2i{});
+  is_locked_ = std::exchange(other.is_locked_,false);
 }
 
 Image Image::dup() const {

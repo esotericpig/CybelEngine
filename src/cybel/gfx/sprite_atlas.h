@@ -30,15 +30,15 @@ public:
   };
 
   explicit SpriteAtlas(AssetManKey,const Texture& texture,const Config& config);
+  virtual ~SpriteAtlas() noexcept = default;
 
   SpriteAtlas(const SpriteAtlas& other) = delete;
+  SpriteAtlas& operator=(const SpriteAtlas& other) = delete;
+
   SpriteAtlas(SpriteAtlas&& other) noexcept = default;
   /// Prevents object slicing.
   template <std::derived_from<SpriteAtlas> T>
   SpriteAtlas(T&& other) noexcept = delete;
-  virtual ~SpriteAtlas() noexcept = default;
-
-  SpriteAtlas& operator=(const SpriteAtlas& other) = delete;
   SpriteAtlas& operator=(SpriteAtlas&& other) noexcept = default;
   /// Prevents object slicing.
   template <std::derived_from<SpriteAtlas> T>

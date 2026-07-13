@@ -25,12 +25,12 @@ namespace cybel {
 class Rando final {
 public:
   static Rando& it();
-
-  Rando(const Rando& other) = delete;
-  Rando(Rando&& other) noexcept = delete;
   ~Rando() noexcept = default;
 
+  Rando(const Rando& other) = delete;
   Rando& operator=(const Rando& other) = delete;
+
+  Rando(Rando&& other) noexcept = delete;
   Rando& operator=(Rando&& other) noexcept = delete;
 
   bool rand_bool();

@@ -52,11 +52,12 @@ class MetricMan final {
 public:
   class ScopeProfiler final {
   public:
-    ScopeProfiler(const ScopeProfiler& other) = default;
-    ScopeProfiler(ScopeProfiler&& other) noexcept = default;
     ~ScopeProfiler() noexcept;
 
+    ScopeProfiler(const ScopeProfiler& other) = default;
     ScopeProfiler& operator=(const ScopeProfiler& other) = default;
+
+    ScopeProfiler(ScopeProfiler&& other) noexcept = default;
     ScopeProfiler& operator=(ScopeProfiler&& other) noexcept = default;
 
     friend class MetricMan;
@@ -74,11 +75,12 @@ public:
 
   static MetricMan& it();
 
-  MetricMan(const MetricMan& other) = delete;
-  MetricMan(MetricMan&& other) noexcept = delete;
   ~MetricMan() noexcept = default;
 
+  MetricMan(const MetricMan& other) = delete;
   MetricMan& operator=(const MetricMan& other) = delete;
+
+  MetricMan(MetricMan&& other) noexcept = delete;
   MetricMan& operator=(MetricMan&& other) noexcept = delete;
 
   [[nodiscard]] std::size_t register_profiler(std::string_view name);

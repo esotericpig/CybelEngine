@@ -248,6 +248,7 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/input/game_ctrl.cpp"
     "src/cybel/input/input_man.cpp"
     "src/cybel/input/joystick.cpp"
+    "src/cybel/input/key_input.cpp"
     "src/cybel/io/text_reader.cpp"
     "src/cybel/io/text_reader_buf.cpp"
     "src/cybel/metrics/metric_man.cpp"

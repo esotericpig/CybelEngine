@@ -24,7 +24,7 @@ public:
   T x{};
   T y{};
 
-  constexpr auto operator<=>(const Pos2&) const = default;
+  constexpr auto operator<=>(const Pos2& other) const = default;
 
   constexpr Pos2 operator-() const;
 
@@ -49,7 +49,7 @@ public:
   T y{};
   T z{};
 
-  constexpr auto operator<=>(const Pos3&) const = default;
+  constexpr auto operator<=>(const Pos3& other) const = default;
 
   constexpr Pos3 operator-() const;
 

@@ -23,17 +23,6 @@ Music::Music(AssetManKey,const std::filesystem::path& file)
   }
 }
 
-Music::Music(Music&& other) noexcept {
-  move_from(std::move(other));
-}
-
-void Music::move_from(Music&& other) noexcept {
-  destroy();
-
-  id_ = std::exchange(other.id_,"");
-  handle_ = std::exchange(other.handle_,nullptr);
-}
-
 Music::~Music() noexcept {
   destroy();
 }
@@ -45,10 +34,22 @@ void Music::destroy() noexcept {
   }
 }
 
+Music::Music(Music&& other) noexcept {
+  move_from(std::move(other));
+}
+
 Music& Music::operator=(Music&& other) noexcept {
-  if(this != &other) { move_from(std::move(other)); }
+  if(this != &other) {
+    destroy();
+    move_from(std::move(other));
+  }
 
   return *this;
+}
+
+void Music::move_from(Music&& other) noexcept {
+  id_ = std::exchange(other.id_,"");
+  handle_ = std::exchange(other.handle_,nullptr);
 }
 
 const std::string& Music::id() const { return id_; }

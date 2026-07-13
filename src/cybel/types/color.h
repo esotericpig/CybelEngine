@@ -12,8 +12,6 @@
 
 namespace cybel {
 
-// TODO: This class should probably be constexpr.
-
 /// Clamped floats to [0,1].
 class Color4f final {
 public:

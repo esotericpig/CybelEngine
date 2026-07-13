@@ -52,12 +52,12 @@ public:
   ///
   /// See: https://wiki.libsdl.org/SDL2_mixer/Mix_Init
   explicit AudioPlayer(int music_types);
-
-  AudioPlayer(const AudioPlayer& other) = delete;
-  AudioPlayer(AudioPlayer&& other) noexcept = delete;
   ~AudioPlayer() noexcept;
 
+  AudioPlayer(const AudioPlayer& other) = delete;
   AudioPlayer& operator=(const AudioPlayer& other) = delete;
+
+  AudioPlayer(AudioPlayer&& other) noexcept = delete;
   AudioPlayer& operator=(AudioPlayer&& other) noexcept = delete;
 
   void play_music(const Music* music);

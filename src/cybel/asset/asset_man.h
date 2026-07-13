@@ -121,7 +121,7 @@ private:
   using Assets = std::vector<AssetPtr<T>>;
 
   template <typename T>
-  class AssetBag {
+  class AssetBag final {
   public:
     const char* name = "";
     bool is_ghost{};

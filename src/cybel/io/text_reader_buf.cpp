@@ -26,18 +26,6 @@ TextReaderBuf::TextReaderBuf(const std::filesystem::path& file,std::size_t buffe
   setg(buffer_.data(),buffer_.data(),buffer_.data()); // (begin,current,end)
 }
 
-TextReaderBuf::TextReaderBuf(TextReaderBuf&& other) noexcept
-  : Base(std::move(other)) {
-  move_from(std::move(other));
-}
-
-void TextReaderBuf::move_from(TextReaderBuf&& other) noexcept {
-  close();
-
-  handle_ = std::exchange(other.handle_,nullptr);
-  buffer_ = std::move(other.buffer_);
-}
-
 TextReaderBuf::~TextReaderBuf() noexcept {
   close();
 }
@@ -49,13 +37,24 @@ void TextReaderBuf::close() noexcept {
   }
 }
 
+TextReaderBuf::TextReaderBuf(TextReaderBuf&& other) noexcept
+  : std::streambuf(std::move(other)) {
+  move_from(std::move(other));
+}
+
 TextReaderBuf& TextReaderBuf::operator=(TextReaderBuf&& other) noexcept {
   if(this != &other) {
-    Base::operator=(std::move(other));
+    close();
+    std::streambuf::operator=(std::move(other));
     move_from(std::move(other));
   }
 
   return *this;
+}
+
+void TextReaderBuf::move_from(TextReaderBuf&& other) noexcept {
+  handle_ = std::exchange(other.handle_,nullptr);
+  buffer_ = std::move(other.buffer_);
 }
 
 TextReaderBuf::int_type TextReaderBuf::underflow() {

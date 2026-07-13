@@ -19,12 +19,12 @@ namespace cybel {
 class Sound final {
 public:
   explicit Sound(AssetManKey,const std::filesystem::path& file);
-
-  Sound(const Sound& other) = delete;
-  Sound(Sound&& other) noexcept;
   ~Sound() noexcept;
 
+  Sound(const Sound& other) = delete;
   Sound& operator=(const Sound& other) = delete;
+
+  Sound(Sound&& other) noexcept;
   Sound& operator=(Sound&& other) noexcept;
 
   Mix_Chunk* handle() const;
@@ -32,8 +32,8 @@ public:
 private:
   Mix_Chunk* handle_ = nullptr;
 
-  void move_from(Sound&& other) noexcept;
   void destroy() noexcept;
+  void move_from(Sound&& other) noexcept;
 };
 
 } // namespace cybel

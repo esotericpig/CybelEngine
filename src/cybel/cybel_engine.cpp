@@ -22,11 +22,17 @@
 
 namespace cybel {
 
+namespace {
+  SDL_Window* main_window_ = nullptr;
+}
+
 CybelEngine& CybelEngine::init(const Config& config) {
   static CybelEngine engine{config};
 
   // First time initializing?
   if(!is_init_.exchange(true)) {
+    main_window_ = engine.core_.window;
+
 #if defined(__EMSCRIPTEN__)
     emscripten_set_webglcontextlost_callback("#canvas",&engine,false,on_webgl_context_change);
     emscripten_set_webglcontextrestored_callback("#canvas",&engine,false,on_webgl_context_change);
@@ -43,8 +49,9 @@ CybelEngine& CybelEngine::init(const Config& config) {
 }
 
 CybelEngine::CybelEngine(Config config)
-  : title_{config.title},
-    is_vsync_{config.vsync} {
+  : is_vsync_{config.vsync} {
+  if(!config.title.empty()) { title_ = config.title; }
+
   init_hints();
 
   // Don't use SDL_INIT_AUDIO here, since audio is optional.
@@ -416,6 +423,31 @@ void CybelEngine::nav_back_in_web() {
 #endif
 }
 
+void CybelEngine::show_error(const std::string& error) {
+  show_error(title_,error,main_window_);
+}
+
+void CybelEngine::show_error(const std::string& title,const std::string& error) {
+  show_error(title,error,main_window_);
+}
+
+void CybelEngine::show_error(const std::string& title,const std::string& error,SDL_Window* window) {
+  std::cerr << "[ERROR] " << error << std::endl;
+
+  // SDL_ShowSimpleMessageBox() can be called before/after SDL_Init()/SDL_Quit().
+
+  constexpr std::size_t max_len = 80;
+
+  // Avoid copy if possible.
+  if(error.length() <= max_len) {
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,title.c_str(),error.c_str(),window);
+  } else {
+    const auto wrapped_error = TextUtil::wrap_words(error,max_len);
+
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,title.c_str(),wrapped_error.c_str(),window);
+  }
+}
+
 SceneBag CybelEngine::build_scene(scene_id_t id) {
   return game_->build_scene(id,*scene_ctx_);
 }
@@ -513,35 +545,6 @@ void CybelEngine::on_input_event(input_id_t input_id) {
 void CybelEngine::handle_input() {
   game_->handle_scene_input(*input_man_,*scene_ctx_);
   scene_man_.curr_scene().handle_scene_input(*input_man_,*scene_ctx_);
-}
-
-void CybelEngine::show_error(const std::string& error) const {
-  show_error(title_,error);
-}
-
-void CybelEngine::show_error(const std::string& title,const std::string& error) const {
-  show_error(title,error,core_.window);
-}
-
-void CybelEngine::show_error_no_window(const std::string& title,const std::string& error) {
-  show_error(title,error,nullptr);
-}
-
-void CybelEngine::show_error(const std::string& title,const std::string& error,SDL_Window* window) {
-  std::cerr << "[ERROR] " << error << std::endl;
-
-  // SDL_ShowSimpleMessageBox() can be called before/after SDL_Init()/SDL_Quit().
-
-  constexpr std::size_t max_len = 80;
-
-  // Avoid copy if possible.
-  if(error.length() <= max_len) {
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,title.c_str(),error.c_str(),window);
-  } else {
-    const auto wrapped_error = TextUtil::wrap_words(error,max_len);
-
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,title.c_str(),wrapped_error.c_str(),window);
-  }
 }
 
 void CybelEngine::set_icon(const Image& img) { SDL_SetWindowIcon(core_.window,img.handle()); }

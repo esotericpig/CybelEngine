@@ -28,12 +28,12 @@ namespace cybel {
 class TextReaderBuf final : public std::streambuf {
 public:
   explicit TextReaderBuf(const std::filesystem::path& file,std::size_t buffer_size = 4 * 1024);
-
-  TextReaderBuf(const TextReaderBuf& other) = delete;
-  TextReaderBuf(TextReaderBuf&& other) noexcept;
   ~TextReaderBuf() noexcept override;
 
+  TextReaderBuf(const TextReaderBuf& other) = delete;
   TextReaderBuf& operator=(const TextReaderBuf& other) = delete;
+
+  TextReaderBuf(TextReaderBuf&& other) noexcept;
   TextReaderBuf& operator=(TextReaderBuf&& other) noexcept;
 
   /// Mainly used for testing purposes.
@@ -59,13 +59,11 @@ protected:
   int_type overflow(int_type c) override;
 
 private:
-  using Base = std::streambuf;
-
   SDL_RWops* handle_ = nullptr;
   std::vector<char_type> buffer_{};
 
-  void move_from(TextReaderBuf&& other) noexcept;
   void close() noexcept;
+  void move_from(TextReaderBuf&& other) noexcept;
 };
 
 } // namespace cybel

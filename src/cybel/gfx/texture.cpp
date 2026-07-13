@@ -127,17 +127,6 @@ Texture::Texture(AssetManKey,const Size2i& size,const Color4f& color)
   }
 }
 
-Texture::Texture(Texture&& other) noexcept {
-  move_from(std::move(other));
-}
-
-void Texture::move_from(Texture&& other) noexcept {
-  destroy();
-
-  handle_ = std::exchange(other.handle_,0);
-  size_ = std::exchange(other.size_,Size2i{});
-}
-
 Texture::~Texture() noexcept {
   destroy();
 }
@@ -149,9 +138,22 @@ void Texture::destroy() noexcept {
   }
 }
 
+Texture::Texture(Texture&& other) noexcept {
+  move_from(std::move(other));
+}
+
 Texture& Texture::operator=(Texture&& other) noexcept {
-  if(this != &other) { move_from(std::move(other)); }
+  if(this != &other) {
+    destroy();
+    move_from(std::move(other));
+  }
+
   return *this;
+}
+
+void Texture::move_from(Texture&& other) noexcept {
+  handle_ = std::exchange(other.handle_,0);
+  size_ = std::exchange(other.size_,Size2i{});
 }
 
 void Texture::zombify(AssetManKey) noexcept {

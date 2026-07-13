@@ -23,11 +23,12 @@ class Image final {
 public:
   class PixelsGuard final {
   public:
-    PixelsGuard(const PixelsGuard& other) = default;
-    PixelsGuard(PixelsGuard&& other) noexcept = default;
     ~PixelsGuard() noexcept;
 
+    PixelsGuard(const PixelsGuard& other) = default;
     PixelsGuard& operator=(const PixelsGuard& other) = default;
+
+    PixelsGuard(PixelsGuard&& other) noexcept = default;
     PixelsGuard& operator=(PixelsGuard&& other) noexcept = default;
 
     const void* pixels() const;
@@ -44,12 +45,12 @@ public:
 
   explicit Image(AssetManKey,const std::filesystem::path& file);
   explicit Image(const Size2i& size,const Color4f& color);
-
-  Image(const Image& other) = delete;
-  Image(Image&& other) noexcept;
   ~Image() noexcept;
 
+  Image(const Image& other) = delete;
   Image& operator=(const Image& other) = delete;
+
+  Image(Image&& other) noexcept;
   Image& operator=(Image&& other) noexcept;
 
   Image dup() const;
@@ -74,8 +75,8 @@ private:
 
   explicit Image() noexcept = default;
 
-  void move_from(Image&& other) noexcept;
   void destroy() noexcept;
+  void move_from(Image&& other) noexcept;
 
   void lock() const;
   void unlock() const noexcept;

@@ -15,18 +15,18 @@ namespace cybel {
 class Joystick final {
 public:
   explicit Joystick() noexcept = default;
-
-  Joystick(const Joystick& other) = delete;
-  Joystick(Joystick&& other) noexcept;
   ~Joystick() noexcept;
 
+  Joystick(const Joystick& other) = delete;
   Joystick& operator=(const Joystick& other) = delete;
+
+  Joystick(Joystick&& other) noexcept;
   Joystick& operator=(Joystick&& other) noexcept;
-  explicit operator bool() const;
 
   void open(int id) noexcept;
   void close() noexcept;
 
+  explicit operator bool() const;
   bool matches(int id) const;
   int id() const;
 
@@ -34,7 +34,7 @@ public:
 
 private:
   int id_ = -1;
-  SDL_Joystick* handle_ = NULL;
+  SDL_Joystick* handle_ = nullptr;
 
   void move_from(Joystick&& other) noexcept;
 };

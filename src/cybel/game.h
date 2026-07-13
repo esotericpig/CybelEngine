@@ -20,12 +20,16 @@ class CybelEngine;
 
 class Game : public Scene {
 public:
-  virtual void on_game_start([[maybe_unused]] CybelEngine& engine,[[maybe_unused]] SceneContext& ctx) {}
+  virtual void on_game_start(CybelEngine& engine,SceneContext& ctx);
 
-  virtual SceneBag build_scene([[maybe_unused]] scene_id_t id,[[maybe_unused]] SceneContext& ctx) {
-    return SceneBag{};
-  }
+  virtual SceneBag build_scene(scene_id_t id,SceneContext& ctx);
 };
+
+inline void Game::on_game_start(CybelEngine&,SceneContext&) {}
+
+inline SceneBag Game::build_scene(scene_id_t,SceneContext&) {
+  return SceneBag{};
+}
 
 } // namespace cybel
 #endif

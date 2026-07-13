@@ -24,7 +24,7 @@ public:
   explicit Size2(T w,T h) noexcept
     : w(w),h(h) {}
 
-  auto operator<=>(const Size2&) const = default;
+  auto operator<=>(const Size2& other) const = default;
 
   bool in_bounds(const Pos2<T>& pos,const Size2& size) const {
     return ((pos.x + size.w) >= 0 && pos.x < w) &&

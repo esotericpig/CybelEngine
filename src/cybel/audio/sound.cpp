@@ -22,16 +22,6 @@ Sound::Sound(AssetManKey,const std::filesystem::path& file) {
   }
 }
 
-Sound::Sound(Sound&& other) noexcept {
-  move_from(std::move(other));
-}
-
-void Sound::move_from(Sound&& other) noexcept {
-  destroy();
-
-  handle_ = std::exchange(other.handle_,nullptr);
-}
-
 Sound::~Sound() noexcept {
   destroy();
 }
@@ -43,10 +33,21 @@ void Sound::destroy() noexcept {
   }
 }
 
+Sound::Sound(Sound&& other) noexcept {
+  move_from(std::move(other));
+}
+
 Sound& Sound::operator=(Sound&& other) noexcept {
-  if(this != &other) { move_from(std::move(other)); }
+  if(this != &other) {
+    destroy();
+    move_from(std::move(other));
+  }
 
   return *this;
+}
+
+void Sound::move_from(Sound&& other) noexcept {
+  handle_ = std::exchange(other.handle_,nullptr);
 }
 
 Mix_Chunk* Sound::handle() const { return handle_; }

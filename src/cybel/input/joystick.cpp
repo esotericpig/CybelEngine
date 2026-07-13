@@ -9,38 +9,35 @@
 
 namespace cybel {
 
-Joystick::Joystick(Joystick&& other) noexcept {
-  move_from(std::move(other));
-}
-
-void Joystick::move_from(Joystick&& other) noexcept {
-  close();
-
-  handle_ = other.handle_;
-  other.handle_ = NULL;
-
-  id_ = std::exchange(other.id_,-1);
-}
-
 Joystick::~Joystick() noexcept {
   close();
 }
 
+Joystick::Joystick(Joystick&& other) noexcept {
+  move_from(std::move(other));
+}
+
 Joystick& Joystick::operator=(Joystick&& other) noexcept {
-  if(this != &other) { move_from(std::move(other)); }
+  if(this != &other) {
+    close();
+    move_from(std::move(other));
+  }
 
   return *this;
 }
 
-Joystick::operator bool() const { return handle_ != NULL; }
+void Joystick::move_from(Joystick&& other) noexcept {
+  id_ = std::exchange(other.id_,-1);
+  handle_ = std::exchange(other.handle_,nullptr);
+}
 
 void Joystick::open(int id) noexcept {
   close();
 
   handle_ = SDL_JoystickOpen(id);
 
-  if(handle_ == NULL) {
-    std::cerr << "[WARN] Failed to open joystick [" << id << "]: " << SDL_GetError() << '.' << std::endl;
+  if(!handle_) {
+    std::cerr << "[WARN] Failed to open Joystick `" << id << "`: " << SDL_GetError() << '.' << std::endl;
     return;
   }
 
@@ -48,16 +45,18 @@ void Joystick::open(int id) noexcept {
 }
 
 void Joystick::close() noexcept {
-  if(handle_ != NULL) {
+  if(handle_) {
     SDL_JoystickClose(handle_);
-    handle_ = NULL;
+    handle_ = nullptr;
 
     id_ = -1;
   }
 }
 
+Joystick::operator bool() const { return handle_ != nullptr; }
+
 bool Joystick::matches(int id) const {
-  return handle_ != NULL && id_ == id;
+  return handle_ && id_ == id;
 }
 
 int Joystick::id() const { return id_; }

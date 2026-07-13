@@ -60,10 +60,8 @@ private:
 };
 
 int main() {
-  CybelEngine* engine = nullptr;
-
   try {
-    engine = &CybelEngine::init(CybelEngine::Config{
+    CybelEngine& engine = CybelEngine::init(CybelEngine::Config{
       .title = "00 Window | Cybel Engine",
 
       // Make the window 50% of screen size, instead of using `size`.
@@ -77,15 +75,10 @@ int main() {
       .vsync = false,                   // default: true
       .clear_color = Color4f::kCopper,  // default: Black
     });
-  } catch(const CybelError& e) {
-    CybelEngine::show_error_no_window("00 Window | Cybel Engine",e.what());
-    return 1;
-  }
 
-  try {
-    engine->run(std::make_unique<MyGame>());
+    engine.run(std::make_unique<MyGame>());
   } catch(const CybelError& e) {
-    engine->show_error(e.what());
+    CybelEngine::show_error(e.what());
     return 1;
   }
 }

@@ -32,6 +32,10 @@ namespace cybel {
 
 class CybelEngine final {
 public:
+  static constexpr int kFallbackWidth = 1600;
+  static constexpr int kFallbackHeight = 900;
+  static constexpr int kFallbackFps = 60;
+
   struct Config final {
     std::string title{};
     float scale_factor = 0.0f;
@@ -60,29 +64,24 @@ public:
     int music_types = MIX_INIT_OGG;
   };
 
-  static constexpr int kFallbackWidth = 1600;
-  static constexpr int kFallbackHeight = 900;
-  static constexpr int kFallbackFps = 60;
-
   static CybelEngine& init(const Config& config);
-
-  CybelEngine(const CybelEngine& other) = delete;
-  CybelEngine(CybelEngine&& other) noexcept = delete;
   ~CybelEngine() noexcept = default;
 
+  CybelEngine(const CybelEngine& other) = delete;
   CybelEngine& operator=(const CybelEngine& other) = delete;
+
+  CybelEngine(CybelEngine&& other) noexcept = delete;
   CybelEngine& operator=(CybelEngine&& other) noexcept = delete;
 
   void run(std::unique_ptr<Game> game);
   void request_stop();
   void nav_back_in_web();
 
+  static void show_error(const std::string& error);
+  static void show_error(const std::string& title,const std::string& error);
+
   void sync_size(bool force = true);
   void resize(const Size2i& size,bool force = true);
-
-  void show_error(const std::string& error) const;
-  void show_error(const std::string& title,const std::string& error) const;
-  static void show_error_no_window(const std::string& title,const std::string& error);
 
   void set_icon(const Image& img);
   void set_title(const std::string& title);
@@ -129,21 +128,22 @@ private:
     SDL_GLContext gl_context = nullptr;
 
     explicit EngineCore() noexcept = default;
-    EngineCore(const EngineCore& other) = delete;
-    EngineCore(EngineCore&& other) noexcept = delete;
     ~EngineCore() noexcept;
 
+    EngineCore(const EngineCore& other) = delete;
     EngineCore& operator=(const EngineCore& other) = delete;
+
+    EngineCore(EngineCore&& other) noexcept = delete;
     EngineCore& operator=(EngineCore&& other) noexcept = delete;
   };
 
   static inline std::atomic<bool> is_init_ = false;
+  static inline std::string title_{"Cybel Engine"};
 
   // NOTE: The variables in this section must be defined first so that their dtors are called last.
   EngineCore core_{};
   std::unique_ptr<AudioPlayer> audio_player_{};
 
-  std::string title_{};
   int target_fps_ = 0;
   Duration target_dpf_{};
   float avg_fps_{};

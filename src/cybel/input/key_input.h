@@ -17,32 +17,12 @@ namespace cybel {
 using key_mods_t = Uint16;
 
 namespace KeyMods {
-  // Ignore Caps Lock, etc.
-  // See: https://wiki.libsdl.org/SDL2/SDL_Keymod
-  inline const key_mods_t kNormMods = static_cast<key_mods_t>(
-    ~(KMOD_NUM | KMOD_CAPS | KMOD_MODE | KMOD_SCROLL)
-  );
+  /// Ignores Caps Lock, etc.
+  key_mods_t norm_mods(key_mods_t mods);
 
-  inline key_mods_t norm_mods(key_mods_t mods) {
-    return mods & kNormMods;
-  }
-
-  /**
-   * If the left or right versions (duplicates) of the modifier keys are pressed,
-   *     make sure that both left & right bits are set.
-   *
-   * See: https://wiki.libsdl.org/SDL2/SDL_Keymod
-   */
-  inline key_mods_t norm_dup_mods(key_mods_t mods) {
-    if(mods != KMOD_NONE) {
-      if(mods & KMOD_CTRL) { mods |= KMOD_CTRL; }
-      if(mods & KMOD_SHIFT) { mods |= KMOD_SHIFT; }
-      if(mods & KMOD_ALT) { mods |= KMOD_ALT; }
-      if(mods & KMOD_GUI) { mods |= KMOD_GUI; }
-    }
-
-    return mods;
-  }
+  /// If the left or right versions (duplicates) of the modifier keys are pressed,
+  /// makes sure that both the left & right bits are set.
+  key_mods_t norm_dup_mods(key_mods_t mods);
 }
 
 template <typename T>
@@ -50,33 +30,45 @@ class KeyInput {
 public:
   class Hash {
   public:
-    std::size_t operator()(const KeyInput& ki) const {
-      return AlgoUtil::build_hash(ki.key_,ki.mods_);
-    }
+    std::size_t operator()(const KeyInput& ki) const;
   };
 
-  explicit KeyInput(T key) noexcept
-    : key_(key),mods_(KMOD_NONE) {}
+  explicit constexpr KeyInput(T key) noexcept;
+  explicit constexpr KeyInput(key_mods_t mods,T key) noexcept;
 
-  explicit KeyInput(key_mods_t mods,T key) noexcept
-    : key_(key),mods_(KeyMods::norm_mods(mods)) {}
+  constexpr bool operator==(const KeyInput& other) const = default;
 
-  bool operator==(const KeyInput& other) const {
-    return key_ == other.key_ && mods_ == other.mods_;
-  }
-
-  T key() const { return key_; }
-  key_mods_t mods() const { return mods_; }
+  constexpr key_mods_t mods() const;
+  constexpr T key() const;
 
 private:
+  key_mods_t mods_{KMOD_NONE};
   T key_{};
-  key_mods_t mods_{};
 };
 
 using RawKey = SDL_Scancode;
 using RawKeyInput = KeyInput<RawKey>;
 using SymKey = SDL_KeyCode;
 using SymKeyInput = KeyInput<SymKey>;
+
+template <typename T>
+std::size_t KeyInput<T>::Hash::operator()(const KeyInput& ki) const {
+  return AlgoUtil::build_hash(ki.mods_,ki.key_);
+}
+
+template <typename T>
+constexpr KeyInput<T>::KeyInput(T key) noexcept
+  : key_{key} {}
+
+template <typename T>
+constexpr KeyInput<T>::KeyInput(key_mods_t mods,T key) noexcept
+  : mods_{KeyMods::norm_mods(mods)},key_{key} {}
+
+template <typename T>
+constexpr key_mods_t KeyInput<T>::mods() const { return mods_; }
+
+template <typename T>
+constexpr T KeyInput<T>::key() const { return key_; }
 
 } // namespace cybel
 #endif

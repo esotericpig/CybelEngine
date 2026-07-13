@@ -23,12 +23,12 @@ public:
   explicit Texture(AssetManKey,const Image& image);
   explicit Texture(AssetManKey,const Color4f& color);
   explicit Texture(AssetManKey,const Size2i& size,const Color4f& color);
-
-  Texture(const Texture& other) = delete;
-  Texture(Texture&& other) noexcept;
   ~Texture() noexcept;
 
+  Texture(const Texture& other) = delete;
   Texture& operator=(const Texture& other) = delete;
+
+  Texture(Texture&& other) noexcept;
   Texture& operator=(Texture&& other) noexcept;
 
   /// For WebGL context lost/restored so that it won't try to delete the now invalid OpenGL handle.
@@ -42,8 +42,8 @@ private:
   GLuint handle_ = 0;
   Size2i size_{};
 
-  void move_from(Texture&& other) noexcept;
   void destroy() noexcept;
+  void move_from(Texture&& other) noexcept;
 };
 
 } // namespace cybel
