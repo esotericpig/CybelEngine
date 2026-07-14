@@ -15,7 +15,7 @@
 
 namespace cybel {
 
-struct ViewDimens {
+struct ViewDimens final {
   Size2i size{};
   Size2i target_size{};
   Size2i init_size{};

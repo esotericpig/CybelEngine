@@ -69,8 +69,6 @@ private:
   explicit constexpr Duration(value_t value) noexcept;
 };
 
-constexpr Duration Duration::kZero{};
-
 constexpr Duration Duration::from_millis(double millis) noexcept {
   return Duration{}.set_from_millis(millis);
 }
@@ -182,6 +180,8 @@ constexpr std::uint32_t Duration::whole_secs() const {
 constexpr std::uint32_t Duration::whole_fps() const {
   return static_cast<std::uint32_t>(fps());
 }
+
+constexpr Duration Duration::kZero{};
 
 } // namespace cybel
 #endif

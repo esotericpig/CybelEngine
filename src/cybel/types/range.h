@@ -10,20 +10,32 @@
 
 #include "cybel/common.h"
 
+#include <type_traits>
+
 namespace cybel {
 
-class Range2i {
+class Range2i final {
 public:
   int min{};
   int max{};
 
-  explicit Range2i() noexcept = default;
-  explicit Range2i(int min,int max) noexcept;
+  constexpr bool in_range(int value) const;
 
-  bool in_range(int value) const;
-
-  Range2i& set(int min,int max);
+  constexpr Range2i& set(int min,int max);
 };
+
+static_assert(std::is_aggregate_v<Range2i>);
+
+constexpr bool Range2i::in_range(int value) const {
+  return value >= min && value <= max;
+}
+
+constexpr Range2i& Range2i::set(int min,int max) {
+  this->min = min;
+  this->max = max;
+
+  return *this;
+}
 
 } // namespace cybel
 #endif

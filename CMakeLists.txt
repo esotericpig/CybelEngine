@@ -262,7 +262,6 @@ target_sources(CybelEngine PRIVATE
     "src/cybel/text/text_util.cpp"
     "src/cybel/types/color.cpp"
     "src/cybel/types/cybel_error.cpp"
-    "src/cybel/types/range.cpp"
     "src/cybel/ui/ui_box_node.cpp"
     "src/cybel/ui/ui_flex_grid.cpp"
     "src/cybel/ui/ui_quad.cpp"

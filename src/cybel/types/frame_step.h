@@ -14,7 +14,7 @@
 
 namespace cybel {
 
-struct FrameStep {
+struct FrameStep final {
   Duration dpf{};
   double delta_time{};
 };

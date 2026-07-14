@@ -7,9 +7,10 @@
 
 #include "metric_man.h"
 
+#include "cybel/text/text_util.h"
+
 #include <algorithm>
 #include <cassert>
-#include <format>
 #include <iostream>
 
 namespace cybel {
@@ -112,13 +113,13 @@ void MetricMan::end_frame() {
     print_and_reset_timer_.start();
 
     std::cout << "[METRICS]\n";
-    std::cout << std::format(
+    std::cout << TextUtil::fmt(
       "  {:<7} , {:<{}} , {:<11} , {:<11} , {:<11} , {:<11} , {:<11}\n",
       "[Type]","[Name]",max_name_len_,"[Last]","[Avg]","[EMA]","[Life Avg]","[Life EMA]"
     );
 
     for(const auto& profiler : profilers_) {
-      std::cout << std::format(
+      std::cout << TextUtil::fmt(
         "  {:<7} , {:<{}} , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms , {:>8.4f} ms\n",
         "[PROF]",
         profiler.name,max_name_len_,
@@ -130,7 +131,7 @@ void MetricMan::end_frame() {
       );
     }
     for(const auto& counter : counters_) {
-      std::cout << std::format(
+      std::cout << TextUtil::fmt(
         "  {:<7} , {:<{}} , {:>11} , {:>11.2f} , {:>11.2f} , {:>11.2f} , {:>11.2f}\n",
         "[COUNT]",
         counter.name,max_name_len_,
